@@ -36,6 +36,8 @@ Database:
 
 An initial layout for your page.
 --------------------------------
+
 ![sketch-1.jpg](./sketch-1.jpg)
+
 ![sketch-2.jpg](./sketch-2.jpg)
 
