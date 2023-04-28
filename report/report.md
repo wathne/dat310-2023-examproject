@@ -1,3 +1,6 @@
+**REPORT**
+----------
+
 What does the application do?
 -----------------------------
 The application is an imageboard:
@@ -6,11 +9,11 @@ The application is an imageboard:
 - Show posts in thread (vertical scroll).
 - Create new post in thread.
 - Image upload is optional except for the initial post in a new thread.
-Implements all required functionality as specified in examproject.md.
+- Implements all required functionality as specified in examproject.md.
 
 Maybe:
 - Image restrictions.
-- Generate and store thumbnails to save bandwidth, click image for full version.
+- Generate and store thumbnails to save bandwidth, click to load full version.
 - Thread count limit.
 - Voting/Likes.
 - Users with admin rights.
@@ -21,18 +24,17 @@ Maybe:
 What data is stored in files/ database?
 ---------------------------------------
 Files:
-(- Image files.)
+- (Image files.)
 
 Database:
 - Users.
 - Threads.
 - Posts.
 - Image metadata and file paths.
-(- Image files.)
+- (Image files.)
 
 
 An initial layout for your page.
 --------------------------------
-Header: Login, logout.
-Main(board): Show threads (vertical scroll), create new thread.
-Main(thread): Show posts in thread (vertical scroll), create new post in thread.
+See the sketch.
+
