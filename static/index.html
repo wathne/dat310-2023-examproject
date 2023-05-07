@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/1790ab758d.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <header>
+        <h1 id="logo">Good Travels</h1>
+        <nav id="searchBar">
+            <ul>
+                <li class="search"><input class="buy_now" type="submit" value="Sort"></li>
+                <li class="search"><input class="buy_now" type="submit" value="Filter"></li>
+                <li class="search"><input type="text" placeholder="Search...">&nbsp;<button type="submit">Search</button></li>
+            </ul>
+        </nav>
+        <nav id="menuBar">
+            <ul>
+                <li id="icons"><a style="a:link" href="index.html" target="_blank"><i class="fas fa-home"></i></a></li>
+                <li id="icons"><a href="product.html" target="_blank"><i class="fa-solid fa-user"></i></a></li>
+                <li class="burgerIcon"><i class="fa-solid fa-bars"></i></li>
+            </ul>
+        </nav>
+    </header>
+
+    <ul class="menu">
+        <li class="menuSubmits"><input class="login" type="submit" value="Login"></li>
+        <li class="menuSubmits"><input class="login" type="submit" value="Register"></li>
+        <li class="menuSubmits"><input class="login" type="submit" value="Logout"></li>
+    </ul>
+
+    <main>
+        <div id="MakeNewThread">
+            <ul id="NewThreadComment">
+                <li><input type="submit" value="New Thread" onclick="NewThread()"></li>
+                <li><input type="submit" value="Close" onclick="CloseNewThread()"></li>
+            </ul>
+        </div>
+        <div id="NewThread">
+        </div>
+        <div id="thread">
+            <article>
+                <img src="pictures\croatia.jpg">
+                <div id="review">
+                    <h1>Thread title</h1>
+                    <p>Initial post text, turnicated</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <label><input class="buy_now" type="submit" value="Open thread"></label>
+                </div>
+            </article>
+            <article>
+                <img src="pictures\taipei.jpg">
+                <div id="review">
+                    <h1>Thread title</h1>
+                    <p>Initial post text, turnicated</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <label><input class="buy_now" type="submit" value="Open thread"></label>
+                </div>
+            </article>
+            <article>
+                <img src="pictures\malaga.jpg">
+                <div id="review">
+                    <h1>Thread title</h1>
+                    <p>Initial post text, turnicated</p>
+                    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                    <label><input class="buy_now" type="submit" value="Open thread"></label>
+                </div>
+            </article>
+        </div>
+    </main>
+    
+    <footer>
+
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
