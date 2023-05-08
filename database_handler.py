@@ -1,91 +1,958 @@
 """Database handler.
 
-WIP: Database specifications are work in progress and may change.
+WIP: Database table specifications are work in progress and may change.
 
-Database, user specification:
+Database users table:
     {
-        "userid": int(INTEGER),
-        "username": str(TEXT),
-        "passwordhash": str(TEXT),
+        "user_group": int(INTEGER),
+        "user_id": int(INTEGER),
+        "user_name": str(TEXT),
+        "user_password_hash": str(TEXT),
+        "user_timestamp": int(INTEGER),
     }
-    (userid is PRIMARY KEY)
-    (username is UNIQUE)
+    (user_id is PRIMARY KEY)
+    (user_name is UNIQUE)
 
-Database, image specification:
+Database images table:
     {
-        "imageid": int(INTEGER),
-        "userid": int(INTEGER),
-        "full": str(TEXT),
-        "small": str(TEXT) | None(NULL),
-        "medium": str(TEXT) | None(NULL),
-        "large": str(TEXT) | None(NULL),
+        "image_file_extension": str(TEXT),
+        "image_file_name": str(TEXT),
+        "image_id": int(INTEGER),
+        "image_timestamp": int(INTEGER),
+        "user_id": int(INTEGER),
     }
-    (imageid is PRIMARY KEY)
-    (userid is FOREIGN KEY)
+    (image_file_name is UNIQUE)
+    (image_id is PRIMARY KEY)
+    (user_id is FOREIGN KEY)
 
-Database, metadata specification:
+Database threads table:
     {
-        "metadataid": int(INTEGER),
-        "imageid": int(INTEGER),
-        "userid": int(INTEGER),
-        "json": str(TEXT),
-        "reserved1": str(TEXT) | int(INTEGER) | None(NULL),
-        "reserved2": str(TEXT) | int(INTEGER) | None(NULL),
-        "reserved3": str(TEXT) | int(INTEGER) | None(NULL),
-        "reserved4": str(TEXT) | int(INTEGER) | None(NULL),
-        "reserved5": str(TEXT) | int(INTEGER) | None(NULL),
+        "post_id": int(INTEGER) | None(NULL),
+        "thread_id": int(INTEGER),
+        "thread_last_modified": int(INTEGER),
+        "thread_subject": str(TEXT),
+        "thread_timestamp": int(INTEGER),
+        "user_id": int(INTEGER),
     }
-    (metadataid is PRIMARY KEY)
-    (imageid is FOREIGN KEY)
-    (userid is FOREIGN KEY)
+    (post_id is FOREIGN KEY or NULL)
+    (thread_id is PRIMARY KEY)
+    (user_id is FOREIGN KEY)
+
+Database posts table:
+    {
+        "image_id": int(INTEGER) | None(NULL),
+        "post_id": int(INTEGER),
+        "post_last_modified": int(INTEGER),
+        "post_text": str(TEXT),
+        "post_timestamp": int(INTEGER),
+        "thread_id": int(INTEGER),
+        "user_id": int(INTEGER),
+    }
+    (image_id is FOREIGN KEY or NULL)
+    (post_id is PRIMARY KEY)
+    (thread_id is FOREIGN KEY)
+    (user_id is FOREIGN KEY)
 """
 
-#from sqlite3 import connect
+from sqlite3 import connect
 from sqlite3 import Connection
-#from sqlite3 import Error as AnySqlite3Error
+from sqlite3 import Cursor
+from sqlite3 import Error as AnySqlite3Error
+from sqlite3 import IntegrityError
+from sqlite3 import Row
+from time import time
+from typing import Callable
+from typing import cast
 
 
-# TODO(wathne): Implement insert_user().
 def insert_user(
-    con: Connection, # pylint: disable=unused-argument
-    username: str, # pylint: disable=unused-argument
-    passwordhash: str, # pylint: disable=unused-argument
+    db_con: Connection,
+    user_name: str,
+    user_password_hash: str,
+    user_group: int | None = None,
 ) -> int:
-    return 0
+    print("Database: Creating user ...")
+    if user_group is None:
+        user_group = 0
+        print("Database: user_group = 0, as fallback.")
+    timestamp: float = time() # Unix time.
+    user_timestamp: int = 0
+    try:
+        user_timestamp = int(timestamp)
+        print(f"Database: user_timestamp = {user_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: user_timestamp = 0, Unix time, as fallback.")
+        pass
+    sql: str = (
+        "INSERT INTO users ("
+            "user_group, "
+            "user_name, "
+            "user_password_hash, "
+            "user_timestamp"
+        ") VALUES ("
+            ":user_group, "
+            ":user_name, "
+            ":user_password_hash, "
+            ":user_timestamp"
+        ");"
+    )
+    parameters: dict[str, str | int] = {
+        "user_group": user_group,
+        "user_name": user_name,
+        "user_password_hash": user_password_hash,
+        "user_timestamp": user_timestamp,
+    }
+    db_cur: Cursor
+    db_cur_lastrowid: int | None = None
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql, parameters)
+            db_cur_lastrowid = db_cur.lastrowid
+    except IntegrityError as integrity_error:
+        print(integrity_error)
+        # TODO: Make this more robust.
+        if (integrity_error.args[0] ==
+                "UNIQUE constraint failed: users.user_name"):
+            print("Database: user_name already exists.")
+            print("Database: User creation failed.")
+            return -2
+        print("Database: User creation failed.")
+        return -1
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: User creation failed.")
+        return -1
+    else:
+        if db_cur_lastrowid is None:
+            print("Database: user_id is None.")
+            print("Database: User creation failed.")
+            return -1
+        print("Database: User creation completed successfully.")
+        return db_cur_lastrowid
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
 
 
-# TODO(wathne): Implement get_user_by_id().
-def get_user_by_id(
-    con: Connection, # pylint: disable=unused-argument
-    userid: int, # pylint: disable=unused-argument
+def retrieve_user_by_id(
+    db_con: Connection,
+    user_id: int,
 ) -> dict[str, str | int] | None:
-    return None
+    print("Database: Retrieving user ...")
+    sql: str = (
+        "SELECT "
+            "user_group, "
+            "user_id, "
+            "user_name, "
+            "user_password_hash, "
+            "user_timestamp"
+        " FROM users WHERE user_id = :user_id;"
+    )
+    parameters: dict[str, int] = {
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    user: dict[str, str | int] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql, parameters)
+            # TODO(wathne): For safety, limit this to 1 iteration.
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: User retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: User retrieval failed.")
+            return None
+        row = rows[0]
+        try:
+            user["user_group"] = int(row["user_group"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            user["user_group"] = 0
+            print("Database: user_group = 0, as fallback.")
+        try:
+            user["user_id"] = int(row["user_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: User retrieval failed.")
+            return None
+        user["user_name"] = str(row["user_name"])
+        user["user_password_hash"] = str(row["user_password_hash"])
+        try:
+            user["user_timestamp"] = int(row["user_timestamp"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            user["user_timestamp"] = 0
+            print("Database: user_timestamp = 0, Unix time, as fallback.")
+        print("Database: User retrieval completed successfully.")
+        return user
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
 
 
-# TODO(wathne): Implement get_user_by_name().
-def get_user_by_name(
-    con: Connection, # pylint: disable=unused-argument
-    username: str, # pylint: disable=unused-argument
+def retrieve_user_by_name(
+    db_con: Connection,
+    user_name: str,
 ) -> dict[str, str | int] | None:
-    return None
+    print("Database: Retrieving user ...")
+    sql: str = (
+        "SELECT "
+            "user_group, "
+            "user_id, "
+            "user_name, "
+            "user_password_hash, "
+            "user_timestamp"
+        " FROM users WHERE user_name = :user_name;"
+    )
+    parameters: dict[str, str] = {
+        "user_name": user_name,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    user: dict[str, str | int] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql, parameters)
+            # TODO(wathne): For safety, limit this to 1 iteration.
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: User retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: User retrieval failed.")
+            return None
+        row = rows[0]
+        try:
+            user["user_group"] = int(row["user_group"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            user["user_group"] = 0
+            print("Database: user_group = 0, as fallback.")
+        try:
+            user["user_id"] = int(row["user_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: User retrieval failed.")
+            return None
+        user["user_name"] = str(row["user_name"])
+        user["user_password_hash"] = str(row["user_password_hash"])
+        try:
+            user["user_timestamp"] = int(row["user_timestamp"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            user["user_timestamp"] = 0
+            print("Database: user_timestamp = 0, Unix time, as fallback.")
+        print("Database: User retrieval completed successfully.")
+        return user
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
 
 
-# TODO(wathne): Implement create_user_table().
-# pylint: disable-next=unused-argument
-def create_user_table(con: Connection) -> None:
-    return None
+def insert_image(
+    db_con: Connection,
+    user_id: int,
+    image_file_name: str,
+    image_file_extension: str,
+) -> int:
+    print("Database: Creating image ...")
+    timestamp: float = time() # Unix time.
+    image_timestamp: int = 0
+    try:
+        image_timestamp = int(timestamp)
+        print(f"Database: image_timestamp = {image_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: image_timestamp = 0, Unix time, as fallback.")
+        pass
+    sql: str = (
+        "INSERT INTO images ("
+            "image_file_extension, "
+            "image_file_name, "
+            "image_timestamp, "
+            "user_id"
+        ") VALUES ("
+            ":image_file_extension, "
+            ":image_file_name, "
+            ":image_timestamp, "
+            ":user_id"
+        ");"
+    )
+    parameters: dict[str, str | int] = {
+        "image_file_extension": image_file_extension,
+        "image_file_name": image_file_name,
+        "image_timestamp": image_timestamp,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    db_cur_lastrowid: int | None = None
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql, parameters)
+            db_cur_lastrowid = db_cur.lastrowid
+    except IntegrityError as integrity_error:
+        print(integrity_error)
+        # TODO: Make this more robust.
+        if (integrity_error.args[0] ==
+                "UNIQUE constraint failed: images.image_file_name"):
+            print("Database: image_file_name already exists.")
+            print("Database: Image creation failed.")
+            return -2
+        print("Database: Image creation failed.")
+        return -1
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Image creation failed.")
+        return -1
+    else:
+        if db_cur_lastrowid is None:
+            print("Database: image_id is None.")
+            print("Database: Image creation failed.")
+            return -1
+        print("Database: Image creation completed successfully.")
+        return db_cur_lastrowid
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
 
 
-# TODO(wathne): Implement create_image_table().
-# pylint: disable-next=unused-argument
-def create_image_table(con: Connection) -> None:
-    return None
+def retrieve_image(
+    db_con: Connection,
+    image_id: int,
+) -> dict[str, str | int] | None:
+    print("Database: Retrieving image ...")
+    sql: str = (
+        "SELECT "
+            "image_file_extension, "
+            "image_file_name, "
+            "image_id, "
+            "image_timestamp, "
+            "user_id"
+        " FROM images WHERE image_id = :image_id;"
+    )
+    parameters: dict[str, int] = {
+        "image_id": image_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    image: dict[str, str | int] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql, parameters)
+            # TODO(wathne): For safety, limit this to 1 iteration.
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Image retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: Image retrieval failed.")
+            return None
+        row = rows[0]
+        image["image_file_extension"] = str(row["image_file_extension"])
+        image["image_file_name"] = str(row["image_file_name"])
+        try:
+            image["image_id"] = int(row["image_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Image retrieval failed.")
+            return None
+        try:
+            image["image_timestamp"] = int(row["image_timestamp"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            image["image_timestamp"] = 0
+            print("Database: image_timestamp = 0, Unix time, as fallback.")
+        try:
+            image["user_id"] = int(row["user_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Image retrieval failed.")
+            return None
+        print("Database: Image retrieval completed successfully.")
+        return image
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
 
 
-# TODO(wathne): Implement create_metadata_table().
-# pylint: disable-next=unused-argument
-def create_metadata_table(con: Connection) -> None:
-    return None
+def insert_thread(
+    db_con: Connection,
+    user_id: int,
+    thread_subject: str,
+) -> int:
+    print("Database: Creating thread ...")
+    post_id: None = None
+    timestamp: float = time() # Unix time.
+    thread_timestamp: int = 0
+    try:
+        thread_timestamp = int(timestamp)
+        print(f"Database: thread_timestamp = {thread_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: thread_timestamp = 0, Unix time, as fallback.")
+        pass
+    thread_last_modified: int = thread_timestamp
+    sql: str = (
+        "INSERT INTO threads ("
+            "post_id, "
+            "thread_last_modified, "
+            "thread_subject, "
+            "thread_timestamp, "
+            "user_id"
+        ") VALUES ("
+            ":post_id, "
+            ":thread_last_modified, "
+            ":thread_subject, "
+            ":thread_timestamp, "
+            ":user_id"
+        ");"
+    )
+    parameters: dict[str, str | int | None] = {
+        "post_id": post_id,
+        "thread_last_modified": thread_last_modified,
+        "thread_subject": thread_subject,
+        "thread_timestamp": thread_timestamp,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    db_cur_lastrowid: int | None = None
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql, parameters)
+            db_cur_lastrowid = db_cur.lastrowid
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Thread creation failed.")
+        return -1
+    else:
+        if db_cur_lastrowid is None:
+            print("Database: thread_id is None.")
+            print("Database: Thread creation failed.")
+            return -1
+        print("Database: Thread creation completed successfully.")
+        return db_cur_lastrowid
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def retrieve_thread(
+    db_con: Connection,
+    thread_id: int,
+) -> dict[str, str | int | None] | None:
+    print("Database: Retrieving thread ...")
+    sql: str = (
+        "SELECT "
+            "post_id, "
+            "thread_id, "
+            "thread_last_modified, "
+            "thread_subject, "
+            "thread_timestamp, "
+            "user_id"
+        " FROM threads WHERE thread_id = :thread_id;"
+    )
+    parameters: dict[str, int] = {
+        "thread_id": thread_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    thread: dict[str, str | int | None] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql, parameters)
+            # TODO(wathne): For safety, limit this to 1 iteration.
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Thread retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: Thread retrieval failed.")
+            return None
+        row = rows[0]
+        if row["post_id"] is None:
+            thread["post_id"] = None
+            print("Database: post_id = None.")
+        else:
+            try:
+                thread["post_id"] = int(row["post_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                thread["post_id"] = None
+                print("Database: post_id = None, as fallback.")
+        try:
+            thread["thread_id"] = int(row["thread_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Thread retrieval failed.")
+            return None
+        try:
+            thread["thread_last_modified"] = int(row["thread_last_modified"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            thread["thread_last_modified"] = 0
+            print("Database: thread_last_modified = 0, Unix time, as fallback.")
+        thread["thread_subject"] = str(row["thread_subject"])
+        try:
+            thread["thread_timestamp"] = int(row["thread_timestamp"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            thread["thread_timestamp"] = 0
+            print("Database: thread_timestamp = 0, Unix time, as fallback.")
+        try:
+            thread["user_id"] = int(row["user_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Thread retrieval failed.")
+            return None
+        print("Database: Thread retrieval completed successfully.")
+        return thread
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def retrieve_threads(
+    db_con: Connection,
+) -> list[dict[str, str | int | None]] | None:
+    print("Database: Retrieving threads ...")
+    sql: str = (
+        "SELECT "
+            "post_id, "
+            "thread_id, "
+            "thread_last_modified, "
+            "thread_subject, "
+            "thread_timestamp, "
+            "user_id"
+        " FROM threads;"
+    )
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    threads: list[dict[str, str | int | None]] = []
+    thread: dict[str, str | int | None] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql)
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Threads retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: Threads retrieval failed.")
+            return None
+        for row in rows:
+            thread = {}
+            if row["post_id"] is None:
+                thread["post_id"] = None
+                print("Database: post_id = None.")
+            else:
+                try:
+                    thread["post_id"] = int(row["post_id"])
+                except (TypeError, ValueError) as int_error:
+                    print(int_error)
+                    thread["post_id"] = None
+                    print("Database: post_id = None, as fallback.")
+            try:
+                thread["thread_id"] = int(row["thread_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                print("Database: Thread retrieval failed. Skipping thread.")
+                continue
+            try:
+                thread["thread_last_modified"] = int(
+                    row["thread_last_modified"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                thread["thread_last_modified"] = 0
+                print("Database: thread_last_modified = 0, Unix time, as "
+                      "fallback.")
+            thread["thread_subject"] = str(row["thread_subject"])
+            try:
+                thread["thread_timestamp"] = int(row["thread_timestamp"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                thread["thread_timestamp"] = 0
+                print("Database: thread_timestamp = 0, Unix time, as fallback.")
+            try:
+                thread["user_id"] = int(row["user_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                print("Database: Thread retrieval failed. Skipping thread.")
+                continue
+            threads.append(thread)
+        if not threads:
+            print("Database: List of retrieved threads is empty.")
+            print("Database: Threads retrieval failed.")
+            return None
+        print("Database: Threads retrieval completed successfully.")
+        return threads
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def insert_post(
+    db_con: Connection,
+    user_id: int,
+    thread_id: int,
+    post_text: str,
+    image_id: int | None = None,
+) -> int:
+    print("Database: Creating post ...")
+    timestamp: float = time() # Unix time.
+    post_timestamp: int = 0
+    try:
+        post_timestamp = int(timestamp)
+        print(f"Database: post_timestamp = {post_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: post_timestamp = 0, Unix time, as fallback.")
+        pass
+    post_last_modified: int = post_timestamp
+    sql: str = (
+        "INSERT INTO posts ("
+            "image_id, "
+            "post_last_modified, "
+            "post_text, "
+            "post_timestamp, "
+            "thread_id, "
+            "user_id"
+        ") VALUES ("
+            ":image_id, "
+            ":post_last_modified, "
+            ":post_text, "
+            ":post_timestamp, "
+            ":thread_id, "
+            ":user_id"
+        ");"
+    )
+    parameters: dict[str, str | int | None] = {
+        "image_id": image_id,
+        "post_last_modified": post_last_modified,
+        "post_text": post_text,
+        "post_timestamp": post_timestamp,
+        "thread_id": thread_id,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    db_cur_lastrowid: int | None = None
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql, parameters)
+            db_cur_lastrowid = db_cur.lastrowid
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Post creation failed.")
+        return -1
+    else:
+        if db_cur_lastrowid is None:
+            print("Database: post_id is None.")
+            print("Database: Post creation failed.")
+            return -1
+        print("Database: Post creation completed successfully.")
+        return db_cur_lastrowid
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def retrieve_post(
+    db_con: Connection,
+    post_id: int,
+) -> dict[str, str | int | None] | None:
+    print("Database: Retrieving post ...")
+    sql: str = (
+        "SELECT "
+            "image_id, "
+            "post_id, "
+            "post_last_modified, "
+            "post_text, "
+            "post_timestamp, "
+            "thread_id, "
+            "user_id"
+        " FROM posts WHERE post_id = :post_id;"
+    )
+    parameters: dict[str, int] = {
+        "post_id": post_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    post: dict[str, str | int | None] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql, parameters)
+            # TODO(wathne): For safety, limit this to 1 iteration.
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Post retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: Post retrieval failed.")
+            return None
+        row = rows[0]
+        if row["image_id"] is None:
+            post["image_id"] = None
+            print("Database: image_id = None.")
+        else:
+            try:
+                post["image_id"] = int(row["image_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                post["image_id"] = None
+                print("Database: image_id = None, as fallback.")
+        try:
+            post["post_id"] = int(row["post_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Post retrieval failed.")
+            return None
+        try:
+            post["post_last_modified"] = int(row["post_last_modified"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            post["post_last_modified"] = 0
+            print("Database: post_last_modified = 0, Unix time, as fallback.")
+        post["post_text"] = str(row["post_text"])
+        try:
+            post["post_timestamp"] = int(row["post_timestamp"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            post["post_timestamp"] = 0
+            print("Database: post_timestamp = 0, Unix time, as fallback.")
+        try:
+            post["thread_id"] = int(row["thread_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Post retrieval failed.")
+            return None
+        try:
+            post["user_id"] = int(row["user_id"])
+        except (TypeError, ValueError) as int_error:
+            print(int_error)
+            print("Database: Post retrieval failed.")
+            return None
+        print("Database: Post retrieval completed successfully.")
+        return post
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def _create_users_table(db_con: Connection) -> bool:
+    print("Database: Creating 'users' table ...")
+    sql: str = (
+        "CREATE TABLE users ("
+            "user_group INTEGER NOT NULL, "
+            "user_id INTEGER, "
+            "user_name TEXT NOT NULL, "
+            "user_password_hash TEXT NOT NULL, "
+            "user_timestamp INTEGER NOT NULL, "
+            "PRIMARY KEY (user_id), "
+            "UNIQUE (user_name)"
+        ");"
+    )
+    db_cur: Cursor
+    try:
+        # The Connection context manager will commit the transaction.
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: 'users' table creation failed.")
+        return False
+    else:
+        print("Database: 'users' table created.")
+        return True
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def _create_images_table(db_con: Connection) -> bool:
+    print("Database: Creating 'images' table ...")
+    sql: str = (
+        "CREATE TABLE images ("
+            "image_file_extension TEXT NOT NULL, "
+            "image_file_name TEXT NOT NULL, "
+            "image_id INTEGER, "
+            "image_timestamp INTEGER NOT NULL, "
+            "user_id INTEGER NOT NULL, "
+            "UNIQUE (image_file_name), "
+            "PRIMARY KEY (image_id), "
+            "FOREIGN KEY (user_id) REFERENCES users (user_id)"
+        ");"
+    )
+    db_cur: Cursor
+    try:
+        # The Connection context manager will commit the transaction.
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: 'images' table creation failed.")
+        return False
+    else:
+        print("Database: 'images' table created.")
+        return True
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def _create_threads_table(db_con: Connection) -> bool:
+    print("Database: Creating 'threads' table ...")
+    sql: str = (
+        "CREATE TABLE threads ("
+            "post_id INTEGER, "
+            "thread_id INTEGER, "
+            "thread_last_modified INTEGER NOT NULL, "
+            "thread_subject TEXT NOT NULL, "
+            "thread_timestamp INTEGER NOT NULL, "
+            "user_id INTEGER NOT NULL, "
+            "FOREIGN KEY (post_id) REFERENCES posts (post_id), "
+            "PRIMARY KEY (thread_id), "
+            "FOREIGN KEY (user_id) REFERENCES users (user_id)"
+        ");"
+    )
+    db_cur: Cursor
+    try:
+        # The Connection context manager will commit the transaction.
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: 'threads' table creation failed.")
+        return False
+    else:
+        print("Database: 'threads' table created.")
+        return True
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def _create_posts_table(db_con: Connection) -> bool:
+    print("Database: Creating 'posts' table ...")
+    sql: str = (
+        "CREATE TABLE posts ("
+            "image_id INTEGER, "
+            "post_id INTEGER, "
+            "post_last_modified INTEGER NOT NULL, "
+            "post_text TEXT NOT NULL, "
+            "post_timestamp INTEGER NOT NULL, "
+            "thread_id INTEGER NOT NULL, "
+            "user_id INTEGER NOT NULL, "
+            "FOREIGN KEY (image_id) REFERENCES images (image_id), "
+            "PRIMARY KEY (post_id), "
+            "FOREIGN KEY (thread_id) REFERENCES threads (thread_id), "
+            "FOREIGN KEY (user_id) REFERENCES users (user_id)"
+        ");"
+    )
+    db_cur: Cursor
+    try:
+        # The Connection context manager will commit the transaction.
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: 'posts' table creation failed.")
+        return False
+    else:
+        print("Database: 'posts' table created.")
+        return True
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+def _setup_database(database_path: str = r"./database.db") -> bool:
+    print(f"Database: Connecting to '{database_path}' ...")
+    db_con: Connection
+    try:
+        db_con = connect(database=database_path)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Connection failed.")
+        return False
+    else:
+        print("Database: Connection opened.")
+        if not _create_users_table(db_con=db_con):
+            print("Database: Setup failed.")
+            return False
+        if not _create_images_table(db_con=db_con):
+            print("Database: Setup failed.")
+            return False
+        if not _create_threads_table(db_con=db_con):
+            print("Database: Setup failed.")
+            return False
+        if not _create_posts_table(db_con=db_con):
+            print("Database: Setup failed.")
+            return False
+        print("Database: Setup completed successfully.")
+        return True
+    finally:
+        # The finally clause is always executed on the way out.
+        db_con.close()
+        print("Database: Connection closed.")
 
 
 if __name__ == "__main__":
