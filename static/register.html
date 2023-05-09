@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/1790ab758d.js" crossorigin="anonymous"></script>
+</head>
+<body>
+
+    <header>
+        <h1 id="logo">Good Travels</h1>
+        <nav id="menuBar">
+            <ul>
+                <li id="icons"><a style="a:link" href="index.html"><i class="fas fa-home"></i></a></li>
+                <li id="icons"><a href="#"><i class="fa-solid fa-user"></i></a></li>
+                <li class="burgerIcon"><i class="fa-solid fa-bars"></i></li>
+            </ul>
+        </nav>
+    </header>
+
+    <ul class="menu">
+        <li class="menuSubmits"><a href="login.html"><input class="login" type="submit" value="Login"></a></li>
+        <li class="menuSubmits"><a href="register.html"><input class="login" type="submit" value="Register"></a></li>
+        <li class="menuSubmits"><input class="login" type="submit" value="Logout"></li>
+    </ul>
+
+    <main>
+        <h1>User registration</h1>
+        <div id="userRegistration">
+            <form action="#">
+                <label for="fname">First Name:</label><br>
+                <input type="text" id="fname"><br><br>
+                <label for="lname">Last Name:</label><br>
+                <input type="text" id="lname"><br><br>
+                <label for="address">Address:</label><br>
+                <input type="text" id="address"><br><br>
+                <label for="ZIP">ZIP-code:</label><br>
+                <input type="text" id="ZIP"><br><br>
+                <label for="city">City:</label><br>
+                <input type="text" id="city"><br><br>
+                <label for="phone">Phone number:</label><br>
+                <input type="text" id="phone"><br><br>
+                <label for="email">Email address</label><br>
+                <input type="email" id="email"><br><br>
+                <label for="confirmEmail">Confirm email address</label><br>
+                <input type="email" id="confirmEmail"><br><br>
+                <label for="password">Enter password</label><br>
+                <input type="password" id="password"><br><br>
+                <label for="repeatPassword">Repeat password</label><br>
+                <input type="password" id="repeatPassword"><br><br>
+                <input type="submit" value="Register user" id="registerUser">
+            </form>
+        </div>
+    </main>
+
+    <footer></footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
