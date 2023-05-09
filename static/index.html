@@ -14,31 +14,31 @@
         <h1 id="logo">Good Travels</h1>
         <nav id="searchBar">
             <ul>
-                <li class="search"><input class="buy_now" type="submit" value="Sort"></li>
-                <li class="search"><input class="buy_now" type="submit" value="Filter"></li>
+                <li class="search"><input type="submit" value="Sort"></li>
+                <li class="search"><input type="submit" value="Filter"></li>
                 <li class="search"><input type="text" placeholder="Search...">&nbsp;<button type="submit">Search</button></li>
             </ul>
         </nav>
         <nav id="menuBar">
             <ul>
-                <li id="icons"><a style="a:link" href="index.html" target="_blank"><i class="fas fa-home"></i></a></li>
-                <li id="icons"><a href="product.html" target="_blank"><i class="fa-solid fa-user"></i></a></li>
+                <li id="icons"><a href="index.html"><i class="fas fa-home"></i></a></li>
+                <li id="icons"><a href="user.html"><i class="fa-solid fa-user"></i></a></li>
                 <li class="burgerIcon"><i class="fa-solid fa-bars"></i></li>
             </ul>
         </nav>
     </header>
 
     <ul class="menu">
-        <li class="menuSubmits"><input class="login" type="submit" value="Login"></li>
-        <li class="menuSubmits"><input class="login" type="submit" value="Register"></li>
+        <li class="menuSubmits"><a href="login.html"><input class="login" type="submit" value="Login"></a></li>
+        <li class="menuSubmits"><a href="register.html"><input class="login" type="submit" value="Register"></a></li>
         <li class="menuSubmits"><input class="login" type="submit" value="Logout"></li>
     </ul>
 
     <main>
         <div id="MakeNewThread">
             <ul id="NewThreadComment">
-                <li><input type="submit" value="New Thread" onclick="NewThread()"></li>
-                <li><input type="submit" value="Close" onclick="CloseNewThread()"></li>
+                <li id="NewThreadButton"><i class="fa-solid fa-plus" onclick="NewThread()"></i></li>
+                <li>New Thread</li>
             </ul>
         </div>
         <div id="NewThread">
@@ -73,10 +73,8 @@
             </article>
         </div>
     </main>
-    
-    <footer>
 
-    </footer>
+    <footer></footer>
 
     <script src="script.js"></script>
 
