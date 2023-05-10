@@ -226,6 +226,8 @@ main h1 {
 
 #userRegistration form {
     padding: 10px;
+    background-color: rgb(244, 255, 250);
+    border-radius: 5px;
 }
 
 #userRegistration label {
@@ -241,6 +243,9 @@ main h1 {
 
 #userRegistration #registerUser {
     width: 273.2px;
+    position: inherit;
+    margin-top: 10%;
+    margin-left: 20%;
 }
 
 /*----------MAIN MENU----------*/
@@ -289,7 +294,6 @@ main h1 {
 /*----------MAIN FOR LOGIN----------*/
 
 #loginMain {
-    position: relative;
     margin-top: 100px;
     width: 90%;
     height: 28em;
@@ -346,4 +350,33 @@ footer {
     height: 50px;
     background-color: #A4D0A4;
     z-index: 3;
+}
+
+/*----------INPUTCONTROL FOR ALL REGISTER----------*/
+
+.input-control input {
+    border: 2px solid black;
+    border-radius: 5px;
+}
+
+#userRegistration label {
+    height: 3em;
+    width: 10em;
+    display: inline-block;
+}
+
+.input-control.success input{
+    border-color: #09c372;
+}
+
+.input-control.error input{
+    border-color: #ff3860;
+}
+
+#errorMessage {
+    height: 0.9em;
+    text-align: end;
+    position: relative;
+    font-size: 15px;
+    color: #ff3860;
 }
