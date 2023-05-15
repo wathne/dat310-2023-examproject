@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>tests</title>
+  <link
+    href="{{ url_for('static', filename='tests/style.css') }}"
+    rel="stylesheet"
+    type="text/css"
+  >
+</head>
+<body>
+  <header>
+  </header>
+  <main>
+    <p></p>
+    <p>g.user_group: "{{ g.user_group }}"</p>
+    <p>g.user_id: "{{ g.user_id }}"</p>
+    <p>g.user_name: "{{ g.user_name }}"</p>
+    <p></p>
+    <p>---------------------------------------------------------------------</p>
+    <p></p>
+    <p>
+      <a href="{{ url_for('_tests_index') }}"
+      >/tests/</a>
+    </p>
+    <p></p>
+    <p>
+      <a href="{{ url_for('_tests_api') }}"
+      >/tests/api</a>
+    </p>
+    <p></p>
+    <p>
+      <a href="{{ url_for('_tests_login_deprecated') }}"
+      >/tests/login_deprecated</a>
+    </p>
+    <p></p>
+    <p>
+      <a href="{{ url_for('_tests_user_info') }}"
+      >/tests/user_info</a>
+    </p>
+    <p></p>
+    <p>
+      <a href="{{ url_for('_tests_session_info') }}"
+      >/tests/session_info</a>
+    </p>
+    <p></p>
+    <p>
+      <a href="{{ url_for('index') }}"
+      >/index</a>
+    </p>
+    <p></p>
+    <p>---------------------------------------------------------------------</p>
+    <p></p>
+    {% block main %}{% endblock %}
+    <p></p>
+  </main>
+  <footer>
+  </footer>
+</body>
+</html>

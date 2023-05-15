@@ -1,0 +1,10 @@
+{% extends 'tests/base.html' %}
+{% block main %}
+{% for key, value in scs.items() %}
+  <p>{{ key }}: "{{ value }}"</p>
+{% endfor %}
+  <p></p>
+  <p>
+    <a href="{{ url_for('_tests_clear_session') }}">clear session</a>
+  </p>
+{% endblock %}
