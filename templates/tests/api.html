@@ -36,23 +36,44 @@
     <div id="main-extra" class="flex-main-extra">
       <div id="add-thread" class="default-hidden framed">
         <h3>Add thread</h3>
+        <div class="flex-left-aligned">
+          <div class="flex-centered thumbnail-container">
+            <img id="thumbnail-add-thread" class="thumbnail" alt="thumbnail">
+          </div>
+          <div>
+            <form id="form-add-thread">
+              <p>
+                <input
+                  name="subject"
+                  placeholder="thread subject"
+                  required
+                  type="text"
+                >
+              </p>
+              <p>
+                <textarea
+                  name="text"
+                  placeholder="post text"
+                ></textarea>
+              </p>
+              <p>
+                <input
+                  id="form-file-add-thread"
+                  accept="image/*"
+                  name="image"
+                  type="file"
+                >
+              </p>
+              <p>
+                <input
+                  type="submit"
+                  value="Add thread"
+                >
+              </p>
+            </form>
+          </div>
+        </div>
         <button class="button-cancel">Cancel</button>
-        <form id="form-add-thread">
-          <p>
-            <input
-              name="subject"
-              placeholder="thread subject"
-              required
-              type="text"
-            >
-          </p>
-          <p>
-            <input
-              type="submit"
-              value="Add thread"
-            >
-          </p>
-        </form>
       </div>
       <div id="register" class="default-hidden framed">
         <h3>Register</h3>

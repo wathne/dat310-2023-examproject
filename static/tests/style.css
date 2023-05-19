@@ -13,18 +13,6 @@
   justify-content: space-between;
 }
 
-.flex-left-aligned {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-start;
-}
-
-.flex-right-aligned {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-}
-
 .flex-main {
 }
 
@@ -38,6 +26,25 @@
 }
 
 .flex-footer {
+}
+
+.flex-left-aligned {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.flex-right-aligned {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.flex-centered {
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 
@@ -55,10 +62,23 @@
   padding: 0.5em 0.5em 0.5em 0.5em;
 }
 
+.thumbnail-container {
+  border-style: solid;
+  border-color: #000000;
+  border-width: 1px 1px 1px 1px;
+  height: 100px;
+  margin: 0.25em 0.25em 0.25em 0.25em;
+  width: 100px;
+}
+
+.thumbnail {
+  object-fit: contain;
+}
+
 .thread {
   background-color: lightgrey;
-  margin: 0.25em 0.25em 0.25em 0.25em;
   border-radius: 8px;
+  margin: 0.25em 0.25em 0.25em 0.25em;
   padding: 0.5em 0.5em 0.5em 0.5em;
 }
 
@@ -131,6 +151,12 @@ main #add-thread {
 }
 
 main #form-add-thread {
+}
+
+main #form-file-add-thread {
+}
+
+main #thumbnail-add-thread {
 }
 
 main #register {
