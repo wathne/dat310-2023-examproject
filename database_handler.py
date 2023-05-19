@@ -839,6 +839,103 @@ def retrieve_post(
         db_cur.close()
 
 
+def retrieve_posts(
+    db_con: Connection,
+    thread_id: int,
+) -> list[dict[str, str | int | None]] | None:
+    print("Database: Retrieving posts ...")
+    sql: str = (
+        "SELECT "
+            "image_id, "
+            "post_id, "
+            "post_last_modified, "
+            "post_text, "
+            "post_timestamp, "
+            "thread_id, "
+            "user_id"
+        " FROM posts WHERE thread_id = :thread_id;"
+    )
+    parameters: dict[str, int] = {
+        "thread_id": thread_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    rows: list[Row] = []
+    row: Row
+    posts: list[dict[str, str | int | None]] = []
+    post: dict[str, str | int | None] = {}
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            db_cur.execute(sql, parameters)
+            for db_cur_row in db_cur:
+                rows.append(db_cur_row)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Posts retrieval failed.")
+        return None
+    else:
+        if not rows:
+            print("Database: List of retrieved rows is empty.")
+            print("Database: Posts retrieval failed.")
+            return None
+        for row in rows:
+            post = {}
+            if row["image_id"] is None:
+                post["image_id"] = None
+                print("Database: image_id = None.")
+            else:
+                try:
+                    post["image_id"] = int(row["image_id"])
+                except (TypeError, ValueError) as int_error:
+                    print(int_error)
+                    post["image_id"] = None
+                    print("Database: image_id = None, as fallback.")
+            try:
+                post["post_id"] = int(row["post_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                print("Database: Post retrieval failed. Skipping post.")
+                continue
+            try:
+                post["post_last_modified"] = int(row["post_last_modified"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                post["post_last_modified"] = 0
+                print("Database: post_last_modified = 0, Unix time, as "
+                      "fallback.")
+            post["post_text"] = str(row["post_text"])
+            try:
+                post["post_timestamp"] = int(row["post_timestamp"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                post["post_timestamp"] = 0
+                print("Database: post_timestamp = 0, Unix time, as fallback.")
+            try:
+                post["thread_id"] = int(row["thread_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                print("Database: Post retrieval failed. Skipping post.")
+                continue
+            try:
+                post["user_id"] = int(row["user_id"])
+            except (TypeError, ValueError) as int_error:
+                print(int_error)
+                print("Database: Post retrieval failed. Skipping post.")
+                continue
+            posts.append(post)
+        if not posts:
+            print("Database: List of retrieved posts is empty.")
+            print("Database: Posts retrieval failed.")
+            return None
+        print("Database: Posts retrieval completed successfully.")
+        return posts
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
 def _create_users_table(db_con: Connection) -> bool:
     print("Database: Creating 'users' table ...")
     sql: str = (
