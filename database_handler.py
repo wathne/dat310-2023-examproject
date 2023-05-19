@@ -104,12 +104,12 @@ def insert_user(
         "user_timestamp": user_timestamp,
     }
     db_cur: Cursor
-    db_cur_lastrowid: int | None = None
+    user_id: int | None = None
     try:
         with db_con:
             db_cur = db_con.cursor()
             db_cur.execute(sql, parameters)
-            db_cur_lastrowid = db_cur.lastrowid
+            user_id = db_cur.lastrowid
     except IntegrityError as integrity_error:
         print(integrity_error)
         # TODO: Make this more robust.
@@ -125,12 +125,12 @@ def insert_user(
         print("Database: User creation failed.")
         return -1
     else:
-        if db_cur_lastrowid is None:
+        if user_id is None:
             print("Database: user_id is None.")
             print("Database: User creation failed.")
             return -1
         print("Database: User creation completed successfully.")
-        return db_cur_lastrowid
+        return user_id
     finally:
         # The finally clause is always executed on the way out.
         db_cur.close()
@@ -306,12 +306,12 @@ def insert_image(
         "user_id": user_id,
     }
     db_cur: Cursor
-    db_cur_lastrowid: int | None = None
+    image_id: int | None = None
     try:
         with db_con:
             db_cur = db_con.cursor()
             db_cur.execute(sql, parameters)
-            db_cur_lastrowid = db_cur.lastrowid
+            image_id = db_cur.lastrowid
     except IntegrityError as integrity_error:
         print(integrity_error)
         # TODO: Make this more robust.
@@ -327,12 +327,12 @@ def insert_image(
         print("Database: Image creation failed.")
         return -1
     else:
-        if db_cur_lastrowid is None:
+        if image_id is None:
             print("Database: image_id is None.")
             print("Database: Image creation failed.")
             return -1
         print("Database: Image creation completed successfully.")
-        return db_cur_lastrowid
+        return image_id
     finally:
         # The finally clause is always executed on the way out.
         db_cur.close()
@@ -409,9 +409,13 @@ def insert_thread(
     db_con: Connection,
     user_id: int,
     thread_subject: str,
+    post_text: str | None = None,
+    image_id: int | None = None,
 ) -> int:
     print("Database: Creating thread ...")
-    post_id: None = None
+    if post_text is None:
+        post_text = ""
+        print("Database: post_text set to empty string, as fallback.")
     timestamp: float = time() # Unix time.
     thread_timestamp: int = 0
     try:
@@ -421,8 +425,7 @@ def insert_thread(
         print(int_error)
         print("Database: thread_timestamp = 0, Unix time, as fallback.")
         pass
-    thread_last_modified: int = thread_timestamp
-    sql: str = (
+    sql_thread_insert: str = (
         "INSERT INTO threads ("
             "post_id, "
             "thread_last_modified, "
@@ -437,31 +440,72 @@ def insert_thread(
             ":user_id"
         ");"
     )
+    sql_post_insert: str = (
+        "INSERT INTO posts ("
+            "image_id, "
+            "post_last_modified, "
+            "post_text, "
+            "post_timestamp, "
+            "thread_id, "
+            "user_id"
+        ") VALUES ("
+            ":image_id, "
+            ":post_last_modified, "
+            ":post_text, "
+            ":post_timestamp, "
+            ":thread_id, "
+            ":user_id"
+        ");"
+    )
+    sql_thread_update: str = (
+        "UPDATE threads SET "
+            "post_id = :post_id"
+        " WHERE thread_id = :thread_id;"
+    )
     parameters: dict[str, str | int | None] = {
-        "post_id": post_id,
-        "thread_last_modified": thread_last_modified,
+        "image_id": image_id,
+        "post_id": None,
+        "post_last_modified": thread_timestamp,
+        "post_text": post_text,
+        "post_timestamp": thread_timestamp,
+        "thread_id": None,
+        "thread_last_modified": thread_timestamp,
         "thread_subject": thread_subject,
         "thread_timestamp": thread_timestamp,
         "user_id": user_id,
     }
     db_cur: Cursor
-    db_cur_lastrowid: int | None = None
+    post_id: int | None = None
+    thread_id: int | None = None
     try:
         with db_con:
             db_cur = db_con.cursor()
-            db_cur.execute(sql, parameters)
-            db_cur_lastrowid = db_cur.lastrowid
+            # thread insert
+            db_cur.execute(sql_thread_insert, parameters)
+            thread_id = db_cur.lastrowid
+            parameters["thread_id"] = thread_id
+            # post insert
+            db_cur.execute(sql_post_insert, parameters)
+            post_id = db_cur.lastrowid
+            parameters["post_id"] = post_id
+            # thread update
+            db_cur.execute(sql_thread_update, parameters)
     except AnySqlite3Error as err:
         print(err)
         print("Database: Thread creation failed.")
         return -1
     else:
-        if db_cur_lastrowid is None:
+        if thread_id is None:
             print("Database: thread_id is None.")
             print("Database: Thread creation failed.")
             return -1
+        if post_id is None:
+            print("Database: post_id is None.")
+            print("Database: Thread creation failed.")
+            # TODO: Delete thread.
+            return -1
         print("Database: Thread creation completed successfully.")
-        return db_cur_lastrowid
+        return thread_id
     finally:
         # The finally clause is always executed on the way out.
         db_cur.close()
@@ -641,10 +685,13 @@ def insert_post(
     db_con: Connection,
     user_id: int,
     thread_id: int,
-    post_text: str,
+    post_text: str | None = None,
     image_id: int | None = None,
 ) -> int:
     print("Database: Creating post ...")
+    if post_text is None:
+        post_text = ""
+        print("Database: post_text set to empty string, as fallback.")
     timestamp: float = time() # Unix time.
     post_timestamp: int = 0
     try:
@@ -654,7 +701,6 @@ def insert_post(
         print(int_error)
         print("Database: post_timestamp = 0, Unix time, as fallback.")
         pass
-    post_last_modified: int = post_timestamp
     sql: str = (
         "INSERT INTO posts ("
             "image_id, "
@@ -674,30 +720,30 @@ def insert_post(
     )
     parameters: dict[str, str | int | None] = {
         "image_id": image_id,
-        "post_last_modified": post_last_modified,
+        "post_last_modified": post_timestamp,
         "post_text": post_text,
         "post_timestamp": post_timestamp,
         "thread_id": thread_id,
         "user_id": user_id,
     }
     db_cur: Cursor
-    db_cur_lastrowid: int | None = None
+    post_id: int | None = None
     try:
         with db_con:
             db_cur = db_con.cursor()
             db_cur.execute(sql, parameters)
-            db_cur_lastrowid = db_cur.lastrowid
+            post_id = db_cur.lastrowid
     except AnySqlite3Error as err:
         print(err)
         print("Database: Post creation failed.")
         return -1
     else:
-        if db_cur_lastrowid is None:
+        if post_id is None:
             print("Database: post_id is None.")
             print("Database: Post creation failed.")
             return -1
         print("Database: Post creation completed successfully.")
-        return db_cur_lastrowid
+        return post_id
     finally:
         # The finally clause is always executed on the way out.
         db_cur.close()
