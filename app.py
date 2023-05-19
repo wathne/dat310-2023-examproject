@@ -159,30 +159,16 @@ TODO(wathne):
 
     /api/thumbnails/<image_id>
         [GET]    (Retrieve thumbnail.)
-
-    /api/threads
-        [GET]    (List threads.)
-        [POST]   (Create thread and also create top post.)
-
-    /api/threads/<thread_id>
-        [GET]    (Retrieve thread and posts.)
-        [POST]   (Create post.)
-
-    /api/threads/<thread_id>/posts
-        [GET]    (List posts.)
-        [POST]   (Create post.)
-
-    /api/posts/<post_id>
-        [GET]    (Retrieve post.)
 """
 
 #from database_handler import insert_image
-#from database_handler import insert_post
+from database_handler import insert_post
 from database_handler import insert_thread
 from database_handler import insert_user
 #from database_handler import retrieve_image
-#from database_handler import retrieve_post
-#from database_handler import retrieve_thread
+from database_handler import retrieve_post
+from database_handler import retrieve_posts
+from database_handler import retrieve_thread
 from database_handler import retrieve_threads
 #from database_handler import retrieve_user_by_id
 from database_handler import retrieve_user_by_name
@@ -333,9 +319,9 @@ def before_request() -> None:
     # Do not call load_user() if endpoint is whitelisted.
     endpoint_whitelist: set[str] = {
         "index", # Authentication is not required.
-        "login", # login() will call load_user().
+        "api_login", # api_login() will call load_user().
         "_tests_login_deprecated", # login_deprecated() will call load_user().
-        "register", # register() will call load_user().
+        "api_users", # api_users() will call load_user().
         #"static", # See path_whitelist below.
     }
     if request_.endpoint in endpoint_whitelist:
@@ -495,7 +481,7 @@ def _tests_login_deprecated() -> tuple[str, int]:
     rule="/api/login",
     methods=["POST"],
 )
-def login() -> Response:
+def api_login() -> Response:
     # pylint: disable=protected-access
     acg: ACG = cast(LP[ACG], g)._get_current_object()
     request_: Request = cast(LP[Request], request)._get_current_object()
@@ -522,7 +508,7 @@ def login() -> Response:
         return jsonify(None)
 
     # See before_request(), endpoint_whitelist.
-    # login() is whitelisted. We need to call load_user().
+    # api_login() is whitelisted. We need to call load_user().
     load_user()
     print(f"Login as user_id: {acg.user_id}.")
     if acg.user_id is None:
@@ -534,7 +520,7 @@ def login() -> Response:
     rule="/api/logout",
     methods=["POST"],
 )
-def logout() -> Response:
+def api_logout() -> Response:
     # pylint: disable=protected-access
     acg: ACG = cast(LP[ACG], g)._get_current_object()
     scs: SCS = cast(LP[SCS], session)._get_current_object()
@@ -555,7 +541,7 @@ def logout() -> Response:
     rule="/api/users",
     methods=["POST"],
 )
-def register() -> Response:
+def api_users() -> Response:
     # pylint: disable=protected-access
     acg: ACG = cast(LP[ACG], g)._get_current_object()
     request_: Request = cast(LP[Request], request)._get_current_object()
@@ -578,6 +564,7 @@ def register() -> Response:
     if db_con is None:
         return jsonify(None)
 
+    # Create user.
     user_id: int
     user_id = insert_user(
         db_con=db_con,
@@ -589,18 +576,18 @@ def register() -> Response:
     )
     # TODO(wathne): Return something.
     if user_id == -1:
-        print("user_id is -1, return None(NULL).")
+        print("user_id is -1, return None.")
         return jsonify(None)
     # user_name already exists.
     if user_id == -2:
-        print("user_id is -2, return None(NULL).")
+        print("user_id is -2, return None.")
         return jsonify(None)
 
     scs["username"] = request_dict_username
     scs["password"] = request_dict_password
 
     # See before_request(), endpoint_whitelist.
-    # register() is whitelisted. We need to call load_user().
+    # api_users() is whitelisted. We need to call load_user().
     load_user()
     print(f"Login as user_id: {acg.user_id}.")
     if acg.user_id is None:
@@ -612,20 +599,31 @@ def register() -> Response:
     rule="/api/threads",
     methods=["GET","POST"],
 )
-def threads() -> Response:
+def api_threads() -> Response:
     # pylint: disable=protected-access
     acg: ACG = cast(LP[ACG], g)._get_current_object()
     request_: Request = cast(LP[Request], request)._get_current_object()
     db_con: Connection | None = get_database_connection()
 
-    print(f"/api/threads [{request_.method}] as user_id: {acg.user_id}")
+    print(f"/api/threads [{request_.method}] "
+          f"as user_id: {acg.user_id}")
 
-    request_dict: dict[str, str | None] | None = None
+    request_dict: dict[str, str | int | None] | None = None
+    request_dict_image_id: int | None = None
+    request_dict_post_text: str | None = None
     request_dict_thread_subject: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_thread_subject = request_dict.get("thread_subject", None)
+        request_dict_image_id = cast(int | None,
+            request_dict.get("image_id", None),
+        )
+        request_dict_post_text = cast(str | None,
+            request_dict.get("post_text", None),
+        )
+        request_dict_thread_subject = cast(str | None,
+            request_dict.get("thread_subject", None),
+        )
 
     if acg.user_id is None:
         return jsonify(None)
@@ -636,14 +634,16 @@ def threads() -> Response:
     thread_id: int
     threads_: list[dict[str, str | int | None]] | None
 
+    # List threads.
     if request_.method == "GET":
         threads_ = retrieve_threads(
-                db_con=db_con,
-            )
+            db_con=db_con,
+        )
         if threads_ is None:
             return jsonify(None)
         return jsonify(threads_)
 
+    # Create thread and also create top post.
     if request_.method == "POST":
         if request_dict_thread_subject is None:
             return jsonify(None)
@@ -651,14 +651,196 @@ def threads() -> Response:
             db_con=db_con,
             user_id=acg.user_id,
             thread_subject=request_dict_thread_subject,
+            post_text=request_dict_post_text,
+            image_id=request_dict_image_id,
         )
         # TODO(wathne): Return something.
         if thread_id == -1:
-            print("thread_id is -1, return None(NULL).")
+            print("thread_id is -1, return None.")
             return jsonify(None)
         return jsonify(thread_id)
 
     return jsonify(None)
+
+
+# TODO(wathne): Combine api_thread() and api_thread_posts(). Check request path.
+@app.route(
+    rule="/api/threads/<int:thread_id>",
+    methods=["GET","POST"],
+)
+def api_thread(thread_id: int | None = None) -> Response:
+    # pylint: disable=protected-access
+    acg: ACG = cast(LP[ACG], g)._get_current_object()
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    db_con: Connection | None = get_database_connection()
+
+    print(f"/api/threads/{thread_id} [{request_.method}] "
+          f"as user_id: {acg.user_id}")
+
+    if thread_id is None:
+        return jsonify(None)
+
+    request_dict: dict[str, str | int | None] | None = None
+    request_dict_image_id: int | None = None
+    request_dict_post_text: str | None = None
+    if request_.is_json:
+        request_dict = request_.get_json(force=False, silent=True, cache=False)
+    if isinstance(request_dict, dict):
+        request_dict_image_id = cast(int | None,
+            request_dict.get("image_id", None),
+        )
+        request_dict_post_text = cast(str | None,
+            request_dict.get("post_text", None),
+        )
+
+    if acg.user_id is None:
+        return jsonify(None)
+
+    if db_con is None:
+        return jsonify(None)
+
+    post_id: int
+    thread_: dict[str, str | int | None] | None
+    posts: list[dict[str, str | int | None]] | None
+    thread_and_posts: dict[str,
+        dict[str, str | int | None] |
+        list[dict[str, str | int | None]]
+    ] = {}
+
+    # Retrieve thread and posts.
+    if request_.method == "GET":
+        thread_ = retrieve_thread(
+            db_con=db_con,
+            thread_id=thread_id,
+        )
+        if thread_ is None:
+            return jsonify(None)
+        posts = retrieve_posts(
+            db_con=db_con,
+            thread_id=thread_id,
+        )
+        if posts is None:
+            return jsonify(None)
+        thread_and_posts["thread"] = thread_
+        thread_and_posts["posts"] = posts
+        return jsonify(thread_and_posts)
+
+    # Create post.
+    if request_.method == "POST":
+        post_id = insert_post(
+            db_con=db_con,
+            user_id=acg.user_id,
+            thread_id=thread_id,
+            post_text=request_dict_post_text,
+            image_id=request_dict_image_id,
+        )
+        # TODO(wathne): Return something.
+        if post_id == -1:
+            print("post_id is -1, return None.")
+            return jsonify(None)
+        return jsonify(post_id)
+
+    return jsonify(None)
+
+
+# TODO(wathne): Combine api_thread() and api_thread_posts(). Check request path.
+@app.route(
+    rule="/api/threads/<int:thread_id>/posts",
+    methods=["GET","POST"],
+)
+def api_thread_posts(thread_id: int | None = None) -> Response:
+    # pylint: disable=protected-access
+    acg: ACG = cast(LP[ACG], g)._get_current_object()
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    db_con: Connection | None = get_database_connection()
+
+    print(f"/api/threads/{thread_id}/posts [{request_.method}] "
+          f"as user_id: {acg.user_id}")
+
+    if thread_id is None:
+        return jsonify(None)
+
+    request_dict: dict[str, str | int | None] | None = None
+    request_dict_image_id: int | None = None
+    request_dict_post_text: str | None = None
+    if request_.is_json:
+        request_dict = request_.get_json(force=False, silent=True, cache=False)
+    if isinstance(request_dict, dict):
+        request_dict_image_id = cast(int | None,
+            request_dict.get("image_id", None),
+        )
+        request_dict_post_text = cast(str | None,
+            request_dict.get("post_text", None),
+        )
+
+    if acg.user_id is None:
+        return jsonify(None)
+
+    if db_con is None:
+        return jsonify(None)
+
+    post_id: int
+    posts: list[dict[str, str | int | None]] | None
+
+    # List posts.
+    if request_.method == "GET":
+        posts = retrieve_posts(
+            db_con=db_con,
+            thread_id=thread_id,
+        )
+        if posts is None:
+            return jsonify(None)
+        return jsonify(posts)
+
+    # Create post.
+    if request_.method == "POST":
+        post_id = insert_post(
+            db_con=db_con,
+            user_id=acg.user_id,
+            thread_id=thread_id,
+            post_text=request_dict_post_text,
+            image_id=request_dict_image_id,
+        )
+        # TODO(wathne): Return something.
+        if post_id == -1:
+            print("post_id is -1, return None.")
+            return jsonify(None)
+        return jsonify(post_id)
+
+    return jsonify(None)
+
+
+@app.route(
+    rule="/api/posts/<int:post_id>",
+    methods=["GET"],
+)
+def api_post(post_id: int | None = None) -> Response:
+    # pylint: disable=protected-access
+    acg: ACG = cast(LP[ACG], g)._get_current_object()
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    db_con: Connection | None = get_database_connection()
+
+    print(f"/api/posts/{post_id} [{request_.method}] "
+          f"as user_id: {acg.user_id}")
+
+    if post_id is None:
+        return jsonify(None)
+
+    if acg.user_id is None:
+        return jsonify(None)
+
+    if db_con is None:
+        return jsonify(None)
+
+    # Retrieve post.
+    post: dict[str, str | int | None] | None
+    post = retrieve_post(
+        db_con=db_con,
+        post_id=post_id,
+    )
+    if post is None:
+        return jsonify(None)
+    return jsonify(post)
 
 
 if __name__ == "__main__":
