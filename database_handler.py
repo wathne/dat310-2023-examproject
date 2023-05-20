@@ -53,6 +53,7 @@ Database posts table:
     (user_id is FOREIGN KEY)
 """
 
+from collections.abc import Callable
 from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import Cursor
@@ -60,7 +61,6 @@ from sqlite3 import Error as AnySqlite3Error
 from sqlite3 import IntegrityError
 from sqlite3 import Row
 from time import time
-from typing import Callable
 from typing import cast
 
 
