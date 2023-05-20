@@ -21,7 +21,6 @@ Database images table:
         "image_timestamp": int(INTEGER),
         "user_id": int(INTEGER),
     }
-    (image_file_name is UNIQUE)
     (image_id is PRIMARY KEY)
     (user_id is FOREIGN KEY)
 
@@ -312,16 +311,6 @@ def insert_image(
             db_cur = db_con.cursor()
             db_cur.execute(sql, parameters)
             image_id = db_cur.lastrowid
-    except IntegrityError as integrity_error:
-        print(integrity_error)
-        # TODO: Make this more robust.
-        if (integrity_error.args[0] ==
-                "UNIQUE constraint failed: images.image_file_name"):
-            print("Database: image_file_name already exists.")
-            print("Database: Image creation failed.")
-            return -2
-        print("Database: Image creation failed.")
-        return -1
     except AnySqlite3Error as err:
         print(err)
         print("Database: Image creation failed.")
@@ -976,7 +965,6 @@ def _create_images_table(db_con: Connection) -> bool:
             "image_id INTEGER, "
             "image_timestamp INTEGER NOT NULL, "
             "user_id INTEGER NOT NULL, "
-            "UNIQUE (image_file_name), "
             "PRIMARY KEY (image_id), "
             "FOREIGN KEY (user_id) REFERENCES users (user_id)"
         ");"
