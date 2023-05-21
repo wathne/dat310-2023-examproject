@@ -14,16 +14,20 @@ const divLogoutElement = document.getElementById("logout");
 const divMainContentElement = document.getElementById("main-content");
 
 const formAddThreadElement = document.getElementById("form-add-thread");
-const formFileAddThreadElement = document.getElementById("form-file-add-thread");
 const formRegisterElement = document.getElementById("form-register");
 const formLoginElement = document.getElementById("form-login");
 const formLogoutElement = document.getElementById("form-logout");
+
+const inputFileAddThreadElement = document.getElementById("input-file-add-thread");
 
 const thumbnailAddThreadElement = document.getElementById("thumbnail-add-thread");
 
 const filterSearchElement = document.getElementById("filter-search");
 const filterSortOrderElement = document.getElementById("filter-sort-order");
 const filterCriteriaElement = document.getElementById("filter-criteria");
+
+// Placeholder URL.
+const pixelPNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 
 async function sessionRegister(username, password) {
@@ -32,8 +36,8 @@ async function sessionRegister(username, password) {
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         "username": username,
@@ -52,8 +56,8 @@ async function sessionLogin(username, password) {
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         "username": username,
@@ -72,8 +76,8 @@ async function sessionLogout() {
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
       },
       body: JSON.stringify(null),
     },
@@ -83,17 +87,19 @@ async function sessionLogout() {
 }
 
 
-// TODO(wathne): insertImage().
-async function insertImage(TODO) {
+async function insertImage(file) {
+  const formData = new FormData();
+  formData.append("file", file)
   const response = await fetch(
     "/api/images",
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "multipart/form-data",
+        "accept": "application/json",
+        // The request will fail if we explicitly set the content-type header.
+        //"content-type": "multipart/form-data",
       },
-      body: TODO,
+      body: formData,
     },
   );
   // Returns imageId or null.
@@ -101,52 +107,64 @@ async function insertImage(TODO) {
 }
 
 
-// TODO(wathne): retrieveImage().
 async function retrieveImage(imageId) {
   const response = await fetch(
     `/api/images/${imageId}`,
     {
       method: "GET",
       headers: {
-        "Accept": "image/*",
+        "accept": "image/*, application/json",
       },
     },
   );
-  // Returns image blob or null.
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    // Returns null.
+    return response.json();
+  }
+  // Returns image blob.
   return response.blob();
 }
-//https://developer.mozilla.org/en-US/docs/Web/API/Response/blob
-/*
-retrieveImage(imageId).then((blob) => {
-  const imageURL = URL.createObjectURL(blob);
-  testImage.src = imageURL;
-});
+/* // https://developer.mozilla.org/en-US/docs/Web/API/Response/blob
+ * retrieveImage(imageId).then((imageBlob) => {
+ *   if (imageBlob === null) {
+ *     return null;
+ *   }
+ *   const imageURL = URL.createObjectURL(imageBlob);
+ *   testImage.src = imageURL;
+ * });
+ * // To release imageURL, call URL.revokeObjectURL(imageURL).
 */
-// To release imageURL, call URL.revokeObjectURL(imageURL)
 
 
-// TODO(wathne): retrieveThumbnail().
 async function retrieveThumbnail(imageId) {
   const response = await fetch(
     `/api/thumbnails/${imageId}`,
     {
       method: "GET",
       headers: {
-        "Accept": "image/*",
+        "accept": "image/*, application/json",
       },
     },
   );
-  // Returns thumbnail blob or null.
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    // Returns null.
+    return response.json();
+  }
+  // Returns thumbnail blob.
   return response.blob();
 }
-//https://developer.mozilla.org/en-US/docs/Web/API/Response/blob
-/*
-retrieveThumbnail(imageId).then((blob) => {
-  const thumbnailURL = URL.createObjectURL(blob);
-  testThumbnail.src = thumbnailURL;
-});
+/* // https://developer.mozilla.org/en-US/docs/Web/API/Response/blob
+ * retrieveThumbnail(imageId).then((thumbnailBlob) => {
+ *   if (thumbnailBlob === null) {
+ *     return null;
+ *   }
+ *   const thumbnailURL = URL.createObjectURL(thumbnailBlob);
+ *   testThumbnail.src = thumbnailURL;
+ * });
+ * // To release thumbnailURL, call URL.revokeObjectURL(thumbnailURL).
 */
-// To release thumbnailURL, call URL.revokeObjectURL(thumbnailURL)
 
 
 async function insertThread(threadSubject, postText, imageId) {
@@ -155,8 +173,8 @@ async function insertThread(threadSubject, postText, imageId) {
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         "image_id": imageId,
@@ -176,13 +194,45 @@ async function retrieveThread(threadId) {
     {
       method: "GET",
       headers: {
-        "Accept": "application/json",
+        "accept": "application/json",
       },
     },
   );
   // Returns thread and posts or null.
   return response.json();
 }
+/* thread_and_posts = {
+ *   "thread": {
+ *     "post_id": int | null,
+ *     "thread_id": int,
+ *     "thread_last_modified": int,
+ *     "thread_subject": str,
+ *     "thread_timestamp": int,
+ *     "user_id": int,
+ *   },
+ *   "posts": [
+ *     {
+ *       "image_id": int | null,
+ *       "post_id": int,
+ *       "post_last_modified": int,
+ *       "post_text": str,
+ *       "post_timestamp": int,
+ *       "thread_id": int,
+ *       "user_id": int,
+ *     },
+ *     {
+ *       "image_id": int | null,
+ *       "post_id": int,
+ *       "post_last_modified": int,
+ *       "post_text": str,
+ *       "post_timestamp": int,
+ *       "thread_id": int,
+ *       "user_id": int,
+ *     },
+ *     ...
+ *   ],
+ * };
+*/
 
 
 async function retrieveThreads() {
@@ -191,13 +241,33 @@ async function retrieveThreads() {
     {
       method: "GET",
       headers: {
-        "Accept": "application/json",
+        "accept": "application/json",
       },
     },
   );
   // Returns threads or null.
   return response.json();
 }
+/* threads = [
+ *   {
+ *     "post_id": int | null,
+ *     "thread_id": int,
+ *     "thread_last_modified": int,
+ *     "thread_subject": str,
+ *     "thread_timestamp": int,
+ *     "user_id": int,
+ *   },
+ *   {
+ *     "post_id": int | null,
+ *     "thread_id": int,
+ *     "thread_last_modified": int,
+ *     "thread_subject": str,
+ *     "thread_timestamp": int,
+ *     "user_id": int,
+ *   },
+ *   ...
+ * ];
+*/
 
 
 async function insertPost(threadId, postText, imageId) {
@@ -206,8 +276,8 @@ async function insertPost(threadId, postText, imageId) {
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         "image_id": imageId,
@@ -226,8 +296,8 @@ async function insertPostV2(threadId, postText, imageId) {
     {
       method: "POST",
       headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
+        "accept": "application/json",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
         "image_id": imageId,
@@ -246,13 +316,22 @@ async function retrievePost(postId) {
     {
       method: "GET",
       headers: {
-        "Accept": "application/json",
+        "accept": "application/json",
       },
     },
   );
   // Returns post or null.
   return response.json();
 }
+/* post = {
+ *   "post_id": int | null,
+ *   "thread_id": int,
+ *   "thread_last_modified": int,
+ *   "thread_subject": str,
+ *   "thread_timestamp": int,
+ *   "user_id": int,
+ * };
+*/
 
 
 async function retrievePosts(postId) {
@@ -261,13 +340,36 @@ async function retrievePosts(postId) {
     {
       method: "GET",
       headers: {
-        "Accept": "application/json",
+        "accept": "application/json",
       },
     },
   );
   // Returns posts or null.
   return response.json();
 }
+/*
+ * posts = [
+ *   {
+ *     "image_id": int | null,
+ *     "post_id": int,
+ *     "post_last_modified": int,
+ *     "post_text": str,
+ *     "post_timestamp": int,
+ *     "thread_id": int,
+ *     "user_id": int,
+ *   },
+ *   {
+ *     "image_id": int | null,
+ *     "post_id": int,
+ *     "post_last_modified": int,
+ *     "post_text": str,
+ *     "post_timestamp": int,
+ *     "thread_id": int,
+ *     "user_id": int,
+ *   },
+ *   ...
+ * ];
+ */
 
 
 function threadValidation(formData) {
@@ -297,7 +399,7 @@ class LoginCredential {
 }
 
 
-// TODO(wathne): Add more elements.
+// TODO(wathne): Refactor rebuild() and async stuff.
 class Thread {
   constructor(
       postId,
@@ -315,13 +417,24 @@ class Thread {
     this.userId = userId;
 
     this.div = document.createElement("div");
-    this.div.setAttribute("class", "thread");
+    this.div.className = "thread";
 
     this.subjectElement = document.createElement("div");
-    this.subjectElement.setAttribute("class", "thread-subject");
+    this.subjectElement.className = "thread-subject";
+
+    this.thumbnailContainerElement = document.createElement("div");
+    this.thumbnailContainerElement.className = "thumbnail-container";
+    this.thumbnailElement = document.createElement("img");
+    this.thumbnailElement.className = "thumbnail";
+    this.thumbnailElement.alt = "";
+    this.thumbnailElement.src = pixelPNG;
+    this.thumbnailContainerElement.appendChild(this.thumbnailElement);
+
+    this.textElement = document.createElement("div");
+    this.textElement.className = "thread-text";
+
     // TODO(wathne): Delete testElement.
     this.testElement = document.createElement("div");
-    this.testElement.setAttribute("class", "thread-test");
 
     this.rebuild(
       threadLastModified,
@@ -344,19 +457,52 @@ class Thread {
       threadLastModified,
       threadSubject,
   ) {
+    this.imageId = null;
+    this.postText = null;
     this.threadLastModified = threadLastModified;
     this.threadSubject = threadSubject;
 
     this.subjectElement.textContent = this.threadSubject;
-    // TODO(wathne): Delete testElement.
-    this.testElement.textContent = this.toHumanReadable();
 
-    while (this.div.firstChild) {
-      this.div.removeChild(this.div.firstChild);
-    }
-    this.div.appendChild(this.subjectElement);
-    // TODO(wathne): Delete testElement.
-    this.div.appendChild(this.testElement);
+    retrievePost(this.postId)
+      .then((post) => {
+        this.imageId = post["image_id"];
+        this.postText = post["post_text"];
+        this.textElement.textContent = this.postText;
+        if (this.imageId === null) {
+          return null;
+        }
+        return retrieveImage(this.imageId);
+      })
+      .then((imageBlob) => {
+        if (imageBlob === null) {
+          return null;
+        }
+        const previousURL = this.thumbnailElement.src;
+        this.thumbnailElement.src = pixelPNG; // Placeholder URL.
+        URL.revokeObjectURL(previousURL); // Release previous URL.
+        this.thumbnailElement.src = URL.createObjectURL(imageBlob); // New URL.
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        // TODO(wathne): Delete testElement.
+        this.testElement.textContent = this.toHumanReadable();
+
+        while (this.div.firstChild) {
+          this.div.removeChild(this.div.firstChild);
+        }
+        this.div.appendChild(this.subjectElement);
+        if (true) {
+          this.div.appendChild(this.thumbnailContainerElement);
+        }
+        if (true) {
+          this.div.appendChild(this.textElement);
+        }
+        // TODO(wathne): Delete testElement.
+        this.div.appendChild(this.testElement);
+      });
   }
 
   isVisible() {
@@ -457,6 +603,8 @@ class AddThreadHandler {
 
     this.div = divAddThreadElement;
     this.form = formAddThreadElement;
+    this.inputFile = inputFileAddThreadElement;
+    this.thumbnail = thumbnailAddThreadElement;
     this.buttonStart = [];
     for (const element of buttonAddThreadElements) {
         this.buttonStart.push(element);
@@ -470,6 +618,7 @@ class AddThreadHandler {
 
     this.form.onsubmit = (event) => {return false;};
     this.form.addEventListener("submit", this);
+    this.inputFile.addEventListener("change", this);
     for (const element of this.buttonStart) {
       element.addEventListener("click", this);
     }
@@ -489,6 +638,17 @@ class AddThreadHandler {
           // TODO: Message about invalid formData.
           console.log("TODO: Message about invalid formData.");
         }
+      }
+    }
+    if (event.target === this.inputFile) {
+      if (event.type === "change") {
+        const formData = new FormData(this.form);
+        const dataObject = Object.fromEntries(formData);
+        const imageFile = dataObject["image"];
+        const previousURL = this.thumbnail.src;
+        this.thumbnail.src = pixelPNG; // Placeholder URL.
+        URL.revokeObjectURL(previousURL); // Release previous URL.
+        this.thumbnail.src = URL.createObjectURL(imageFile); // New URL.
       }
     }
     for (const element of this.buttonStart) {
@@ -764,6 +924,7 @@ class Imageboard {
     retrieveThreads().then((threads) => {
       if (threads !== null) {
         for (const thread of threads) {
+          // TODO(wathne): Multiple thread rebuilds in parallell.
           const postId = thread["post_id"];
           const threadId = thread["thread_id"];
           const threadLastModified = thread["thread_last_modified"];
@@ -788,15 +949,25 @@ class Imageboard {
 
   addThread(formData) {
     const dataObject = Object.fromEntries(formData);
-    const imageId = null; // TODO(wathne): Implement this.
-    const postText = dataObject["text"];
     const threadSubject = dataObject["subject"];
-
-    insertThread(threadSubject, postText, imageId).then((threadId) => {
-      if (threadId !== null) {
+    const postText = dataObject["text"];
+    const imageFile = dataObject["image"];
+    insertImage(imageFile)
+      .then((imageId) => {
+        if (imageId === null) {
+          return null;
+        }
+        return insertThread(threadSubject, postText, imageId);
+      })
+      .then((threadId) => {
+        if (threadId === null) {
+          return null;
+        }
         this.reloadThreads();
-      }
-    });
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   }
 
   filterThreads() {

@@ -72,7 +72,9 @@
 }
 
 .thumbnail {
+  height: 100px;
   object-fit: contain;
+  width: 100px;
 }
 
 .thread {
@@ -83,6 +85,9 @@
 }
 
 .thread-subject {
+}
+
+.thread-text {
 }
 
 .button-add-thread {
@@ -153,7 +158,7 @@ main #add-thread {
 main #form-add-thread {
 }
 
-main #form-file-add-thread {
+main #input-file-add-thread {
 }
 
 main #thumbnail-add-thread {
