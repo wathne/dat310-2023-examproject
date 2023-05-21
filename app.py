@@ -117,7 +117,6 @@ Database images table:
         "image_timestamp": int(INTEGER),
         "user_id": int(INTEGER),
     }
-    (image_file_name is UNIQUE)
     (image_id is PRIMARY KEY)
     (user_id is FOREIGN KEY)
 
@@ -161,11 +160,11 @@ TODO(wathne):
         [GET]    (Retrieve thumbnail.)
 """
 
-#from database_handler import insert_image
+from database_handler import insert_image
 from database_handler import insert_post
 from database_handler import insert_thread
 from database_handler import insert_user
-#from database_handler import retrieve_image
+from database_handler import retrieve_image
 from database_handler import retrieve_post
 from database_handler import retrieve_posts
 from database_handler import retrieve_thread
@@ -178,6 +177,7 @@ from flask import g # g is a LocalProxy.
 from flask import redirect
 from flask import render_template
 from flask import request # request is a LocalProxy.
+from flask import send_from_directory
 from flask import session # session is a LocalProxy.
 from flask import url_for
 from flask.ctx import _AppCtxGlobals as ACG # g real type.
@@ -185,19 +185,26 @@ from flask.json import jsonify
 from flask.sessions import SecureCookieSession as SCS # session real type.
 from flask.wrappers import Request # request real type.
 from flask.wrappers import Response
+from os.path import join as os_join
+from pathlib import Path
 from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import Error as AnySqlite3Error
 from typing import cast
+from werkzeug.datastructures import FileStorage
 from werkzeug.local import LocalProxy as LP
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
+from werkzeug.utils import secure_filename
 from werkzeug.wrappers.response import Response as WerkzeugResponse
 
 
-_database_path: str = r"./database.db"
-_images_path: str = r"./images/"
+DATABASE_PATH: str = r"./database.db"
+IMAGES_FOLDER: str = r"./images"
+IMAGES_EXTENSIONS: set[str] = {"gif", "jpeg", "jpg", "png"}
 app: Flask = Flask(import_name=__name__)
+# TODO(wathne): Flask will raise a RequestEntityTooLarge exception.
+#app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
 app.secret_key = "91d754bc1945369164b3b5d288ee41d3"
 
 
@@ -206,9 +213,9 @@ def get_database_connection() -> Connection | None:
     acg: ACG = cast(LP[ACG], g)._get_current_object()
     db_con_id: int | None = None
     if "db_con" not in acg:
-        print(f"Database: Connecting to '{_database_path}' ...")
+        print(f"Database: Connecting to '{DATABASE_PATH}' ...")
         try:
-            acg.db_con = connect(database=_database_path)
+            acg.db_con = connect(database=DATABASE_PATH)
         except AnySqlite3Error as connect_error:
             print(connect_error)
             print("Database: Connection failed (ID: None).")
@@ -229,9 +236,9 @@ def get_database_connection() -> Connection | None:
         print(cursor_error)
         print(f"Database: Connection failed (ID: {db_con_id}).")
         db_con_id = None
-        print(f"Database: Reconnecting to '{_database_path}' ...")
+        print(f"Database: Reconnecting to '{DATABASE_PATH}' ...")
         try:
-            acg.db_con = connect(database=_database_path)
+            acg.db_con = connect(database=DATABASE_PATH)
         except AnySqlite3Error as reconnect_error:
             print(reconnect_error)
             print("Database: Reconnection failed (ID: None).")
@@ -596,6 +603,102 @@ def api_users() -> Response:
 
 
 @app.route(
+    rule="/api/images",
+    methods=["POST"],
+)
+def api_images() -> Response:
+    # pylint: disable=protected-access
+    acg: ACG = cast(LP[ACG], g)._get_current_object()
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    db_con: Connection | None = get_database_connection()
+
+    print(f"/api/images [{request_.method}] "
+          f"as user_id: {acg.user_id}")
+
+    request_file: FileStorage | None = request_.files.get(
+        key="file",
+        default=None,
+    )
+
+    if acg.user_id is None:
+        return jsonify(None)
+
+    if db_con is None:
+        return jsonify(None)
+
+    # Upload image and also create thumbnail.
+    if request_file is None:
+        return jsonify(None)
+    if request_file.filename is None:
+        return jsonify(None)
+    request_secure_filename: str = secure_filename(request_file.filename)
+    image_file_name: str = Path(request_secure_filename).stem
+    image_file_extension: str = Path(request_secure_filename).suffix
+    image_id: int
+    image_id = insert_image(
+        db_con=db_con,
+        user_id=acg.user_id,
+        image_file_name=image_file_name,
+        image_file_extension=image_file_extension,
+    )
+    # TODO(wathne): Return something.
+    if image_id == -1:
+        print("image_id is -1, return None.")
+        return jsonify(None)
+    # TODO(wathne): Context manager? Close file?
+    request_file.save(os_join(
+        IMAGES_FOLDER,
+        "".join((str(image_id), image_file_extension)),
+    ))
+    request_file.close()
+    return jsonify(image_id)
+
+
+@app.route(
+    rule="/api/thumbnails/<int:image_id>",
+    methods=["GET"],
+)
+@app.route(
+    rule="/api/images/<int:image_id>",
+    methods=["GET"],
+)
+def api_image(image_id: int | None = None) -> Response:
+    # pylint: disable=protected-access
+    acg: ACG = cast(LP[ACG], g)._get_current_object()
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    db_con: Connection | None = get_database_connection()
+
+    print(f"/api/images/{image_id} [{request_.method}] "
+          f"as user_id: {acg.user_id}")
+
+    if image_id is None:
+        return jsonify(None)
+
+    if acg.user_id is None:
+        return jsonify(None)
+
+    if db_con is None:
+        return jsonify(None)
+
+    # Retrieve image.
+    image: dict[str, str | int] | None
+    image = retrieve_image(
+        db_con=db_con,
+        image_id=image_id,
+    )
+    if image is None:
+        return jsonify(None)
+    image_file_name: str = cast(str, image["image_file_name"])
+    image_file_extension: str = cast(str, image["image_file_extension"])
+    return send_from_directory(
+        directory=IMAGES_FOLDER,
+        path="".join((str(image_id), image_file_extension)),
+        download_name=image_file_name,
+        max_age=0,
+    )
+
+
+@app.route(
     rule="/api/threads",
     methods=["GET","POST"],
 )
@@ -632,16 +735,16 @@ def api_threads() -> Response:
         return jsonify(None)
 
     thread_id: int
-    threads_: list[dict[str, str | int | None]] | None
+    threads: list[dict[str, str | int | None]] | None
 
     # List threads.
     if request_.method == "GET":
-        threads_ = retrieve_threads(
+        threads = retrieve_threads(
             db_con=db_con,
         )
-        if threads_ is None:
+        if threads is None:
             return jsonify(None)
-        return jsonify(threads_)
+        return jsonify(threads)
 
     # Create thread and also create top post.
     if request_.method == "POST":
@@ -700,7 +803,7 @@ def api_thread(thread_id: int | None = None) -> Response:
         return jsonify(None)
 
     post_id: int
-    thread_: dict[str, str | int | None] | None
+    thread: dict[str, str | int | None] | None
     posts: list[dict[str, str | int | None]] | None
     thread_and_posts: dict[str,
         dict[str, str | int | None] |
@@ -709,11 +812,11 @@ def api_thread(thread_id: int | None = None) -> Response:
 
     # Retrieve thread and posts.
     if request_.method == "GET":
-        thread_ = retrieve_thread(
+        thread = retrieve_thread(
             db_con=db_con,
             thread_id=thread_id,
         )
-        if thread_ is None:
+        if thread is None:
             return jsonify(None)
         posts = retrieve_posts(
             db_con=db_con,
@@ -721,7 +824,7 @@ def api_thread(thread_id: int | None = None) -> Response:
         )
         if posts is None:
             return jsonify(None)
-        thread_and_posts["thread"] = thread_
+        thread_and_posts["thread"] = thread
         thread_and_posts["posts"] = posts
         return jsonify(thread_and_posts)
 
