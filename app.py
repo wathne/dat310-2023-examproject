@@ -325,11 +325,12 @@ def before_request() -> None:
 
     # Do not call load_user() if endpoint is whitelisted.
     endpoint_whitelist: set[str] = {
-        "index", # Authentication is not required.
         "api_login", # api_login() will call load_user().
-        "_tests_login_deprecated", # login_deprecated() will call load_user().
         "api_users", # api_users() will call load_user().
+        "index", # Authentication is not required.
         #"static", # See path_whitelist below.
+        "_tests_api", # Authentication is not required.
+        "_tests_login_deprecated", # login_deprecated() will call load_user().
     }
     if request_.endpoint in endpoint_whitelist:
         print(f"{request_.endpoint} is whitelisted, bypassing load_user().")
@@ -435,10 +436,16 @@ def _tests_index() -> tuple[str, int]:
 
 # Obsolete or testing, please ignore.
 @app.route(rule="/tests/api")
-def _tests_api() -> tuple[str, int]:
-    return (render_template(
-        template_name_or_list="tests/api.html",
-    ), 200)
+def _tests_api() -> WerkzeugResponse | Response:
+    # See before_request(), endpoint_whitelist.
+    # _tests_api() is whitelisted.
+    return redirect(
+        location=url_for(
+            endpoint="static",
+            filename="tests/api.html",
+        ),
+        code=302,
+    )
 
 
 # Obsolete or testing, please ignore.
