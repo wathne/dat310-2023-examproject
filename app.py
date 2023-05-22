@@ -327,6 +327,7 @@ def before_request() -> None:
     endpoint_whitelist: set[str] = {
         "api_login", # api_login() will call load_user().
         "api_users", # api_users() will call load_user().
+        "imageboard", # Authentication is not required.
         "index", # Authentication is not required.
         #"static", # See path_whitelist below.
         "_tests_api", # Authentication is not required.
@@ -339,6 +340,9 @@ def before_request() -> None:
     # Do not call load_user() if path is whitelisted.
     path_whitelist: set[str] = {
         "/static/api.js", # Authentication is not required.
+        "/static/imageboard.css", # Authentication is not required.
+        "/static/imageboard.html", # Authentication is not required.
+        "/static/imageboard.js", # Authentication is not required.
         "/static/index.html", # Authentication is not required.
         "/static/script.js", # Authentication is not required.
         "/static/style.css", # Authentication is not required.
@@ -366,6 +370,19 @@ def index() -> WerkzeugResponse | Response:
         location=url_for(
             endpoint="static",
             filename="index.html",
+        ),
+        code=302,
+    )
+
+
+@app.route(rule="/imageboard")
+def imageboard() -> WerkzeugResponse | Response:
+    # See before_request(), endpoint_whitelist.
+    # imageboard() is whitelisted.
+    return redirect(
+        location=url_for(
+            endpoint="static",
+            filename="imageboard.html",
         ),
         code=302,
     )
