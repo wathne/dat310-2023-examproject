@@ -30,15 +30,91 @@ const filterCriteriaElement = document.getElementById("filter-criteria");
 const pixelPNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
 
 
-function threadValidation(formData) {
+// This form validation function is a "first line of defence".
+// The server will do a final validation and may also return an error.
+function userValidation(formData) {
   const dataObject = Object.fromEntries(formData);
-  const threadSubject = dataObject["subject"];
+  const username = dataObject["username"];
+  const password = dataObject["password"];
+  const errors = [];
 
-  if (threadSubject === "") {
-    return false;
+  if (username.length === 0) {
+    errors.push("Your username can not be empty.")
   }
 
-  return true;
+  if (password.length < 8) {
+    errors.push("Your password must be at least 8 characters long.")
+  }
+
+  if (errors.length) {
+    return errors;
+  }
+  return null;
+}
+
+
+// This form validation function is a "first line of defence".
+// The server will do a final validation and may also return an error.
+function imageValidation(imageFile) {
+  const errors = [];
+
+  // Nothing here yet.
+
+  if (errors.length) {
+    return errors;
+  }
+  return null;
+}
+
+
+// This form validation function is a "first line of defence".
+// The server will do a final validation and may also return an error.
+function threadValidation(formData) {
+  const dataObject = Object.fromEntries(formData);
+  const imageFile = dataObject["image"];
+  const postText = dataObject["text"];
+  const threadSubject = dataObject["subject"];
+  const errors = [];
+
+  const imageErrors = imageValidation(imageFile);
+  if (imageErrors !== null) {
+    for (const imageError of imageErrors) {
+      errors.push(imageError);
+    }
+  }
+
+  if (threadSubject.length === 0) {
+    errors.push("The thread subject can not be empty.")
+  }
+
+  if (errors.length) {
+    return errors;
+  }
+  return null;
+}
+
+
+// This form validation function is a "first line of defence".
+// The server will do a final validation and may also return an error.
+function postValidation(formData) {
+  const dataObject = Object.fromEntries(formData);
+  const imageFile = dataObject["image"];
+  const postText = dataObject["text"];
+  const errors = [];
+
+  const imageErrors = imageValidation(imageFile);
+  if (imageErrors !== null) {
+    for (const imageError of imageErrors) {
+      errors.push(imageError);
+    }
+  }
+
+  // Nothing here yet.
+
+  if (errors.length) {
+    return errors;
+  }
+  return null;
 }
 
 
@@ -289,12 +365,16 @@ class AddThreadHandler {
     if (event.target === this.form) {
       if (event.type === "submit") {
         const formData = new FormData(this.form);
-        if (threadValidation(formData)) {
+        const threadErrors = threadValidation(formData);
+        if (threadErrors === null) {
+          // TODO(wathne): Make addThread async and await for success or error.
           this.parent.addThread(formData);
           this.div.style.display = "none";
         } else {
-          // TODO: Message about invalid formData.
-          console.log("TODO: Message about invalid formData.");
+          for (const threadError of threadErrors) {
+            // TODO: Message about invalid formData.
+            console.log(threadError);
+          }
         }
       }
     }
