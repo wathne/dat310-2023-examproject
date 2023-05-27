@@ -185,6 +185,7 @@ from flask.json import jsonify
 from flask.sessions import SecureCookieSession as SCS # session real type.
 from flask.wrappers import Request # request real type.
 from flask.wrappers import Response
+from os.path import isfile as os_isfile
 from os.path import join as os_join
 from pathlib import Path
 from sqlite3 import connect
@@ -715,10 +716,16 @@ def api_image(image_id: int | None = None) -> Response:
         return jsonify(None)
     image_file_name: str = cast(str, image["image_file_name"])
     image_file_extension: str = cast(str, image["image_file_extension"])
+    image_path: str = "".join((str(image_id), image_file_extension))
+    image_download_name: str = "".join((image_file_name, image_file_extension))
+    if not os_isfile(os_join(IMAGES_FOLDER, image_path)):
+        print(f'Image not found: "{image_path}" as "{image_download_name}"')
+        return jsonify(None)
+    print(f'Image sent: "{image_path}" as "{image_download_name}"')
     return send_from_directory(
         directory=IMAGES_FOLDER,
-        path="".join((str(image_id), image_file_extension)),
-        download_name=image_file_name,
+        path=image_path,
+        download_name=image_download_name,
         max_age=0,
     )
 
