@@ -164,6 +164,7 @@ class Post {
            `userId: "${this.userId}"`;
   }
 
+  // Private instance method.
   #empty() {
     this.retrievedPost = false;
     this.retrievedImage = false;
@@ -177,12 +178,13 @@ class Post {
     this.userId = null;
   }
 
+  // Private instance method.
   #demolish() {
     while (this.mainElement.firstChild) {
       this.mainElement.removeChild(this.mainElement.firstChild);
     }
     const previousURL = this.thumbnailElement.src;
-    if (previousURL !== pixelPNG) {
+    if (previousURL !== pixelPNG && previousURL !== "") {
       this.thumbnailElement.src = pixelPNG; // Placeholder URL.
       URL.revokeObjectURL(previousURL); // Release previous file reference.
       console.log(`Revoked URL: "${previousURL}"`); // TODO: Delete.
@@ -401,6 +403,7 @@ class Thread {
            `userId: "${this.userId}"`;
   }
 
+  // Private instance method.
   #empty() {
     this.retrievedThread = false;
     this.retrievedPost = false;
@@ -416,13 +419,14 @@ class Thread {
     this.userId = null;
   }
 
+  // Private instance method.
   #demolish() {
     while (this.mainElement.firstChild) {
       this.mainElement.removeChild(this.mainElement.firstChild);
     }
     this.threadSubjectElement.textContent = "";
     const previousURL = this.thumbnailElement.src;
-    if (previousURL !== pixelPNG) {
+    if (previousURL !== pixelPNG && previousURL !== "") {
       this.thumbnailElement.src = pixelPNG; // Placeholder URL.
       URL.revokeObjectURL(previousURL); // Release previous file reference.
       console.log(`Revoked URL: "${previousURL}"`); // TODO: Delete.
@@ -635,76 +639,86 @@ class Thread {
 
 
 class AddThreadHandler {
-  constructor(parent) {
-    // parent is necessary for this.parent.addThread(formData).
-    // See implementation of handleEvent(event).
-    this.parent = parent;
+  // Private instance fields.
+  #parent;
+  #mainElement;
+  #formElement;
+  #inputFileElement;
+  #thumbnailElement;
+  #buttonStartElements;
+  #buttonCancelElements;
 
-    this.div = divAddThreadElement;
-    this.form = formAddThreadElement;
-    this.inputFile = inputFileAddThreadElement;
-    this.thumbnail = thumbnailAddThreadElement;
-    this.buttonStart = [];
+  constructor(parent) {
+    // parent is necessary for this.#parent.addThread(formData).
+    // See implementation of handleEvent(event).
+    this.#parent = parent;
+    this.#mainElement = divAddThreadElement;
+    this.#formElement = formAddThreadElement;
+    this.#inputFileElement = inputFileAddThreadElement;
+    this.#thumbnailElement = thumbnailAddThreadElement;
+    this.#buttonStartElements = [];
     for (const element of buttonAddThreadElements) {
-        this.buttonStart.push(element);
+        this.#buttonStartElements.push(element);
     }
-    this.buttonCancel = [];
+    this.#buttonCancelElements = [];
     for (const element of buttonCancelElements) {
-      if (element.parentElement === this.div) {
-        this.buttonCancel.push(element);
+      if (element.parentElement === this.#mainElement) {
+        this.#buttonCancelElements.push(element);
       }
     }
-
-    this.form.onsubmit = (event) => {return false;};
-    this.form.addEventListener("submit", this);
-    this.inputFile.addEventListener("change", this);
-    for (const element of this.buttonStart) {
+    this.#formElement.onsubmit = (event) => {return false;};
+    this.#formElement.addEventListener("submit", this);
+    this.#inputFileElement.addEventListener("change", this);
+    for (const element of this.#buttonStartElements) {
       element.addEventListener("click", this);
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       element.addEventListener("click", this);
     }
   }
 
   handleEvent(event) {
-    if (event.target === this.form) {
+    if (event.target === this.#formElement) {
       if (event.type === "submit") {
-        const formData = new FormData(this.form);
-        const threadErrors = threadValidation(formData);
-        if (threadErrors === null) {
+        const formData = new FormData(this.#formElement);
+        const threadValidationErrors = threadValidation(formData);
+        if (threadValidationErrors === null) {
           // TODO(wathne): Make addThread async and await for success or error.
-          this.parent.addThread(formData);
-          this.div.style.display = "none";
+          this.#parent.addThread(formData);
+          this.#mainElement.style.display = "none";
         } else {
-          for (const threadError of threadErrors) {
+          for (const error of threadValidationErrors) {
             // TODO: Message about invalid formData.
-            console.log(threadError);
+            console.log(error);
           }
         }
       }
     }
-    if (event.target === this.inputFile) {
+    if (event.target === this.#inputFileElement) {
       if (event.type === "change") {
-        const formData = new FormData(this.form);
+        const formData = new FormData(this.#formElement);
         const dataObject = Object.fromEntries(formData);
         const imageFile = dataObject["image"];
-        const previousURL = this.thumbnail.src;
-        this.thumbnail.src = pixelPNG; // Placeholder URL.
-        URL.revokeObjectURL(previousURL); // Release previous URL.
-        this.thumbnail.src = URL.createObjectURL(imageFile); // New URL.
+        const previousURL = this.#thumbnailElement.src;
+        if (previousURL !== pixelPNG && previousURL !== "") {
+          this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
+          URL.revokeObjectURL(previousURL); // Release previous file reference.
+          console.log(`Revoked URL: "${previousURL}"`); // TODO: Delete.
+        }
+        this.#thumbnailElement.src = URL.createObjectURL(imageFile);
       }
     }
-    for (const element of this.buttonStart) {
+    for (const element of this.#buttonStartElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "block";
+          this.#mainElement.style.display = "block";
         }
       }
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "none";
+          this.#mainElement.style.display = "none";
         }
       }
     }
@@ -713,16 +727,20 @@ class AddThreadHandler {
 
 
 class FilterHandler {
+  // Private instance fields.
+  #parent;
+  #search;
+  #sortOrder;
+  #criteria;
+
   constructor(parent) {
-    // parent is necessary for this.parent.filterThreads().
-    // parent is necessary for this.parent.sortThreads().
+    // parent is necessary for this.#parent.filterThreads().
+    // parent is necessary for this.#parent.sortThreads().
     // See implementation of handleEvent(event).
-    this.parent = parent;
-
-    this.search_ = filterSearchElement.value;
-    this.sortOrder = filterSortOrderElement.checked;
-    this.criteria = filterCriteriaElement.value;
-
+    this.#parent = parent;
+    this.#search = filterSearchElement.value;
+    this.#sortOrder = filterSortOrderElement.checked;
+    this.#criteria = filterCriteriaElement.value;
     filterSearchElement.addEventListener("input", this);
     filterSortOrderElement.addEventListener("input", this);
     filterCriteriaElement.addEventListener("input", this);
@@ -731,40 +749,40 @@ class FilterHandler {
   // Example: console.log(this.toHumanReadable());
   toHumanReadable() {
     return `[FilterHandler] ` +
-           `search: "${this.search_}", ` +
-           `sortOrder: "${this.sortOrder}", ` +
-           `criteria: "${this.criteria}"`;
+           `search: "${this.#search}", ` +
+           `sortOrder: "${this.#sortOrder}", ` +
+           `criteria: "${this.#criteria}"`;
   }
 
   getSearch() {
-    return this.search_;
+    return this.#search;
   }
 
   getSortOrder() {
-    return this.sortOrder;
+    return this.#sortOrder;
   }
 
   getCriteria() {
-    return this.criteria;
+    return this.#criteria;
   }
 
   handleEvent(event) {
     if (event.target === filterSearchElement) {
       if (event.type === "input") {
-        this.search_ = event.target.value;
-        this.parent.filterThreads();
+        this.#search = event.target.value;
+        this.#parent.filterThreads();
       }
     }
     if (event.target === filterSortOrderElement) {
       if (event.type === "input") {
-        this.sortOrder = event.target.checked;
-        this.parent.sortThreads();
+        this.#sortOrder = event.target.checked;
+        this.#parent.sortThreads();
       }
     }
     if (event.target === filterCriteriaElement) {
       if (event.type === "input") {
-        this.criteria = event.target.value;
-        this.parent.sortThreads();
+        this.#criteria = event.target.value;
+        this.#parent.sortThreads();
       }
     }
   }
@@ -787,64 +805,84 @@ class LoginCredential {
 
 
 class RegisterHandler {
+  // Private instance fields.
+  #parent;
+  #loginCredential;
+  #mainElement;
+  #formElement;
+  #buttonStartElements;
+  #buttonCancelElements;
+
   constructor(parent) {
+    // parent is necessary for this.#parent.register().
     // See implementation of handleEvent(event).
-    this.parent = parent;
-
-    this.loginCredential = new LoginCredential();
-
-    this.div = divRegisterElement;
-    this.form = formRegisterElement;
-    this.buttonStart = [];
+    this.#parent = parent;
+    this.#loginCredential = new LoginCredential();
+    this.#mainElement = divRegisterElement;
+    this.#formElement = formRegisterElement;
+    this.#buttonStartElements = [];
     for (const element of buttonRegisterElements) {
-        this.buttonStart.push(element);
+        this.#buttonStartElements.push(element);
     }
-    this.buttonCancel = [];
+    this.#buttonCancelElements = [];
     for (const element of buttonCancelElements) {
-      if (element.parentElement === this.div) {
-        this.buttonCancel.push(element);
+      if (element.parentElement === this.#mainElement) {
+        this.#buttonCancelElements.push(element);
       }
     }
-
-    this.form.onsubmit = (event) => {return false;};
-    this.form.addEventListener("submit", this);
-    for (const element of this.buttonStart) {
+    this.#formElement.onsubmit = (event) => {return false;};
+    this.#formElement.addEventListener("submit", this);
+    for (const element of this.#buttonStartElements) {
       element.addEventListener("click", this);
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       element.addEventListener("click", this);
     }
   }
 
+  getUsername() {
+    return this.#loginCredential.username;
+  }
+  
+  getPassword() {
+    return this.#loginCredential.password;
+  }
+
   handleEvent(event) {
-    if (event.target === this.form) {
+    if (event.target === this.#formElement) {
       if (event.type === "submit") {
-        const formData = new FormData(this.form);
+        const formData = new FormData(this.#formElement);
         const dataObject = Object.fromEntries(formData);
-        this.loginCredential.username = dataObject["username"];
-        this.loginCredential.password = dataObject["password"];
-        console.log(this.loginCredential.toHumanReadable()); // TODO: Delete.
-        this.parent.register().then((success) => {
-          if (success) {
-            this.div.style.display = "none";
-          } else {
-            // TODO: Message about registration failure.
-            console.log("TODO: Message about registration failure.");
-          }
-        });
+        this.#loginCredential.username = dataObject["username"];
+        this.#loginCredential.password = dataObject["password"];
+        console.log(this.#loginCredential.toHumanReadable()); // TODO: Delete.
+        this.#parent.register()
+          .then((success) => {
+            if (success) {
+              this.#mainElement.style.display = "none";
+            } else {
+              // TODO: Message about registration failure.
+              console.log("TODO: Message about registration failure.");
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+          .finally(() => {
+          });
       }
     }
-    for (const element of this.buttonStart) {
+    for (const element of this.#buttonStartElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "block";
+          this.#mainElement.style.display = "block";
         }
       }
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "none";
+          this.#mainElement.style.display = "none";
         }
       }
     }
@@ -853,64 +891,84 @@ class RegisterHandler {
 
 
 class LoginHandler {
+  // Private instance fields.
+  #parent;
+  #loginCredential;
+  #mainElement;
+  #formElement;
+  #buttonStartElements;
+  #buttonCancelElements;
+
   constructor(parent) {
+    // parent is necessary for this.#parent.login().
     // See implementation of handleEvent(event).
-    this.parent = parent;
-
-    this.loginCredential = new LoginCredential();
-
-    this.div = divLoginElement;
-    this.form = formLoginElement;
-    this.buttonStart = [];
+    this.#parent = parent;
+    this.#loginCredential = new LoginCredential();
+    this.#mainElement = divLoginElement;
+    this.#formElement = formLoginElement;
+    this.#buttonStartElements = [];
     for (const element of buttonLoginElements) {
-        this.buttonStart.push(element);
+        this.#buttonStartElements.push(element);
     }
-    this.buttonCancel = [];
+    this.#buttonCancelElements = [];
     for (const element of buttonCancelElements) {
-      if (element.parentElement === this.div) {
-        this.buttonCancel.push(element);
+      if (element.parentElement === this.#mainElement) {
+        this.#buttonCancelElements.push(element);
       }
     }
-
-    this.form.onsubmit = (event) => {return false;};
-    this.form.addEventListener("submit", this);
-    for (const element of this.buttonStart) {
+    this.#formElement.onsubmit = (event) => {return false;};
+    this.#formElement.addEventListener("submit", this);
+    for (const element of this.#buttonStartElements) {
       element.addEventListener("click", this);
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       element.addEventListener("click", this);
     }
   }
 
+  getUsername() {
+    return this.#loginCredential.username;
+  }
+  
+  getPassword() {
+    return this.#loginCredential.password;
+  }
+
   handleEvent(event) {
-    if (event.target === this.form) {
+    if (event.target === this.#formElement) {
       if (event.type === "submit") {
-        const formData = new FormData(this.form);
+        const formData = new FormData(this.#formElement);
         const dataObject = Object.fromEntries(formData);
-        this.loginCredential.username = dataObject["username"];
-        this.loginCredential.password = dataObject["password"];
-        console.log(this.loginCredential.toHumanReadable()); // TODO: Delete.
-        this.parent.login().then((success) => {
-          if (success) {
-            this.div.style.display = "none";
-          } else {
-            // TODO: Message about login failure.
-            console.log("TODO: Message about login failure.");
-          }
-        });
+        this.#loginCredential.username = dataObject["username"];
+        this.#loginCredential.password = dataObject["password"];
+        console.log(this.#loginCredential.toHumanReadable()); // TODO: Delete.
+        this.#parent.login()
+          .then((success) => {
+            if (success) {
+              this.#mainElement.style.display = "none";
+            } else {
+              // TODO: Message about login failure.
+              console.log("TODO: Message about login failure.");
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+          .finally(() => {
+          });
       }
     }
-    for (const element of this.buttonStart) {
+    for (const element of this.#buttonStartElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "block";
+          this.#mainElement.style.display = "block";
         }
       }
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "none";
+          this.#mainElement.style.display = "none";
         }
       }
     }
@@ -919,57 +977,69 @@ class LoginHandler {
 
 
 class LogoutHandler {
-  constructor(parent) {
-    // See implementation of handleEvent(event).
-    this.parent = parent;
+  // Private instance fields.
+  #parent;
+  #mainElement;
+  #formElement;
+  #buttonStartElements;
+  #buttonCancelElements;
 
-    this.div = divLogoutElement;
-    this.form = formLogoutElement;
-    this.buttonStart = [];
+  constructor(parent) {
+    // parent is necessary for this.#parent.logout().
+    // See implementation of handleEvent(event).
+    this.#parent = parent;
+    this.#mainElement = divLogoutElement;
+    this.#formElement = formLogoutElement;
+    this.#buttonStartElements = [];
     for (const element of buttonLogoutElements) {
-        this.buttonStart.push(element);
+        this.#buttonStartElements.push(element);
     }
-    this.buttonCancel = [];
+    this.#buttonCancelElements = [];
     for (const element of buttonCancelElements) {
-      if (element.parentElement === this.div) {
-        this.buttonCancel.push(element);
+      if (element.parentElement === this.#mainElement) {
+        this.#buttonCancelElements.push(element);
       }
     }
-
-    this.form.onsubmit = (event) => {return false;};
-    this.form.addEventListener("submit", this);
-    for (const element of this.buttonStart) {
+    this.#formElement.onsubmit = (event) => {return false;};
+    this.#formElement.addEventListener("submit", this);
+    for (const element of this.#buttonStartElements) {
       element.addEventListener("click", this);
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       element.addEventListener("click", this);
     }
   }
 
   handleEvent(event) {
-    if (event.target === this.form) {
+    if (event.target === this.#formElement) {
       if (event.type === "submit") {
-        this.parent.logout().then((success) => {
-          if (success) {
-            this.div.style.display = "none";
-          } else {
-            // TODO: Message about logout failure.
-            console.log("TODO: Message about logout failure.");
-          }
-        });
+        this.#parent.logout()
+          .then((success) => {
+            if (success) {
+              this.#mainElement.style.display = "none";
+            } else {
+              // TODO: Message about logout failure.
+              console.log("TODO: Message about logout failure.");
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+          })
+          .finally(() => {
+          });
       }
     }
-    for (const element of this.buttonStart) {
+    for (const element of this.#buttonStartElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "block";
+          this.#mainElement.style.display = "block";
         }
       }
     }
-    for (const element of this.buttonCancel) {
+    for (const element of this.#buttonCancelElements) {
       if (event.target === element) {
         if (event.type === "click") {
-          this.div.style.display = "none";
+          this.#mainElement.style.display = "none";
         }
       }
     }
@@ -978,6 +1048,7 @@ class LogoutHandler {
 
 
 class Imageboard {
+  // Private instance fields.
   #threads;
   #threadsElement;
   #addThreadHandler;
@@ -1046,6 +1117,11 @@ class Imageboard {
           this.#threads.push(newThread);
         }
         this.sortThreads();
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
       });
   }
 
@@ -1059,6 +1135,7 @@ class Imageboard {
     function compareSubject(a, b) {
       return a.threadSubject.localeCompare(b.threadSubject);
     }
+    // TODO(wathne): Fix "a.postText is null" bug and then delete compareText().
     function compareText(a, b) {
       return a.postText.localeCompare(b.postText);
     }
@@ -1073,6 +1150,7 @@ class Imageboard {
         this.#threads.sort(compareSubject);
         break;
       case "text":
+        // TODO(wathne): Delete compareText() and this line.
         this.#threads.sort(compareText);
         break;
       case "image":
@@ -1097,6 +1175,7 @@ class Imageboard {
     this.#showThreads();
   }
 
+  // Private instance method.
   #showThreads() {
     console.log("show threads"); // TODO: Delete.
     while (this.#threadsElement.firstChild) {
@@ -1110,8 +1189,8 @@ class Imageboard {
   }
 
   async register() {
-    const username = this.#registerHandler.loginCredential.username;
-    const password = this.#registerHandler.loginCredential.password;
+    const username = this.#registerHandler.getUsername();
+    const password = this.#registerHandler.getPassword();
     const userId = await sessionRegister(username, password);
     console.log(`register userId: ${userId}`); // TODO: Delete.
     this.reloadThreads();
@@ -1122,8 +1201,8 @@ class Imageboard {
   }
 
   async login() {
-    const username = this.#loginHandler.loginCredential.username;
-    const password = this.#loginHandler.loginCredential.password;
+    const username = this.#loginHandler.getUsername();
+    const password = this.#loginHandler.getPassword();
     const userId = await sessionLogin(username, password);
     console.log(`login userId: ${userId}`); // TODO: Delete.
     this.reloadThreads();
