@@ -118,17 +118,235 @@ function postValidation(formData) {
 }
 
 
-class LoginCredential {
-  constructor() {
-    this.username = null;
-    this.password = null;
+class Post {
+  static createPostFromPostId(postId) {
+    return new Post(postId, null);
+  }
+  static createPostFromPostObject(postObject) {
+    return new Post(null, postObject);
+  }
+  constructor(postId, postObject) {
+    this.mainElement = document.createElement("div");
+    this.mainElement.className = "post";
+    this.thumbnailContainerElement = document.createElement("div");
+    this.thumbnailContainerElement.className = "thumbnail-container";
+    this.thumbnailElement = document.createElement("img");
+    this.thumbnailElement.className = "thumbnail";
+    this.thumbnailContainerElement.appendChild(this.thumbnailElement);
+    this.thumbnailElement.alt = "";
+    this.thumbnailElement.src = pixelPNG; // Placeholder URL.
+    this.postTextElement = document.createElement("div");
+    this.postTextElement.className = "post-text";
+    this.testElement = document.createElement("div"); // TODO: Delete.
+    // Post.createPostFromPostObject(postObject)
+    if (typeof postObject === "object" && postObject !== null) {
+      this.rebuildPostFromPostObject(postObject);
+      return this;
+    }
+    // Post.createPostFromPostId(postId)
+    if (typeof postId === "number") {
+      this.rebuildPostFromPostId(postId);
+      return this;
+    }
+    // Fallback to empty/null instance fields.
+    this.#empty();
   }
 
   // Example: console.log(this.toHumanReadable());
   toHumanReadable() {
-    return `[LoginCredential] ` +
-           `username: "${this.username}", ` +
-           `password: "${this.password}"`;
+    return `[Post] ` +
+           `imageId: "${this.imageId}", ` +
+           `postId: "${this.postId}", ` +
+           `postLastModified: "${this.postLastModified}", ` +
+           `postText: "${this.postText}", ` +
+           `postTimestamp: "${this.postTimestamp}", ` +
+           `threadId: "${this.threadId}", ` +
+           `userId: "${this.userId}"`;
+  }
+
+  #empty() {
+    this.retrievedPost = false;
+    this.retrievedImage = false;
+    this.hidden = true;
+    this.imageId = null;
+    this.postId = null;
+    this.postLastModified = null;
+    this.postText = null;
+    this.postTimestamp = null;
+    this.threadId = null;
+    this.userId = null;
+  }
+
+  #demolish() {
+    while (this.mainElement.firstChild) {
+      this.mainElement.removeChild(this.mainElement.firstChild);
+    }
+    const previousURL = this.thumbnailElement.src;
+    if (previousURL !== pixelPNG) {
+      this.thumbnailElement.src = pixelPNG; // Placeholder URL.
+      URL.revokeObjectURL(previousURL); // Release previous file reference.
+      console.log(`Revoked URL: "${previousURL}"`); // TODO: Delete.
+    }
+    this.postTextElement.textContent = "";
+    this.testElement.textContent = ""; // TODO: Delete.
+  }
+
+  // Calling rebuildPostFromPostId() without a postId argument will by default
+  // attempt to use the existing postId instance field.
+  rebuildPostFromPostId(postId) {
+    const previousPostId = typeof this.postId === "number" ?
+      this.postId :
+      null;
+    this.#empty();
+    this.#demolish();
+    this.postId = typeof postId === "number" ?
+      postId :
+      previousPostId;
+    if (this.postId === null) {
+      return;
+    }
+    retrievePost(this.postId)
+      .then((post) => {
+        if (post === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        this.imageId = post["image_id"];
+        this.postLastModified = post["post_last_modified"];
+        this.postText = post["post_text"];
+        this.postTimestamp = post["post_timestamp"];
+        this.threadId = post["thread_id"];
+        this.userId = post["user_id"];
+        this.retrievedPost = true;
+        this.postTextElement.textContent = this.postText;
+        // Display post text as soon as possible.
+        this.mainElement.appendChild(this.postTextElement);
+        if (this.imageId === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        return retrieveImage(this.imageId);
+      })
+      .then((imageBlob) => {
+        if (imageBlob === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        this.retrievedImage = true;
+        this.thumbnailElement.src = URL.createObjectURL(imageBlob);
+        // Display thumbnail as soon as possible.
+        this.mainElement.appendChild(this.thumbnailContainerElement);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        // TODO(wathne): Delete testElement.
+        this.testElement.textContent = this.toHumanReadable();
+        this.mainElement.appendChild(this.testElement);
+      });
+  }
+
+  // Calling rebuildPostFromPostObject() without a postObject argument will by
+  // default attempt to use the existing postId instance field.
+  rebuildPostFromPostObject(postObject) {
+    const previousPostId = typeof this.postId === "number" ?
+      this.postId :
+      null;
+    this.#empty();
+    this.#demolish();
+    // Note: typeof null is "object". We need to explicitly check if null.
+    if (typeof postObject !== "object" || postObject === null) {
+      this.rebuildPostFromPostId(previousPostId);
+      return;
+    }
+    this.imageId = postObject["image_id"];
+    this.postId = postObject["post_id"];
+    this.postLastModified = postObject["post_last_modified"];
+    this.postText = postObject["post_text"];
+    this.postTimestamp = postObject["post_timestamp"];
+    this.threadId = postObject["thread_id"];
+    this.userId = postObject["user_id"];
+    if (typeof this.postId !== "number") {
+      // Attempt to use the previous value of the postId instance field.
+      this.rebuildPostFromPostId(previousPostId);
+      return;
+    }
+    // this.imageId has to be a number or null.
+    if (typeof this.imageId !== "number" && this.imageId !== null) {
+      this.rebuildPostFromPostId(this.postId);
+      return;
+    }
+    // Unchecked: postLastModified, postText, postTimestamp, threadId, userId.
+    this.retrievedPost = true;
+    this.postTextElement.textContent = this.postText;
+    // Display post text as soon as possible.
+    this.mainElement.appendChild(this.postTextElement);
+    if (this.imageId === null) {
+      return;
+    }
+    retrieveImage(this.imageId)
+      .then((imageBlob) => {
+        if (imageBlob === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        this.retrievedImage = true;
+        this.thumbnailElement.src = URL.createObjectURL(imageBlob);
+        // Display thumbnail as soon as possible.
+        this.mainElement.appendChild(this.thumbnailContainerElement);
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+        // TODO(wathne): Delete testElement.
+        this.testElement.textContent = this.toHumanReadable();
+        this.mainElement.appendChild(this.testElement);
+      });
+  }
+
+  isVisible() {
+    return !this.hidden;
+  }
+
+  getElement() {
+    return this.mainElement;
+  }
+
+  filterCompare(filterSearch, filterCriteria) {
+    if (!this.retrievedPost) {
+      this.hidden = true;
+      return;
+    }
+    if (filterSearch === "" && filterCriteria !== "image") {
+      this.hidden = false;
+      return;
+    }
+    const searchLC = filterSearch.toLowerCase();
+    switch (filterCriteria) {
+      case "image":
+        if (this.retrievedImage) {
+          this.hidden = false;
+          return;
+        }
+        this.hidden = true;
+        return;
+      case "last-modified":
+        this.hidden = false;
+        return;
+      case "subject":
+        this.hidden = false;
+        return;
+      case "text":
+        const textLC = this.postText.toLowerCase();
+        if (textLC.includes(searchLC)) {
+          this.hidden = false;
+          return;
+        }
+        this.hidden = true;
+        return;
+      case "timestamp":
+        this.hidden = false;
+        return;
+    }
+    this.hidden = false;
   }
 }
 
@@ -416,298 +634,6 @@ class Thread {
 }
 
 
-class Post {
-  static createPostFromPostId(postId) {
-    return new Post(postId, null);
-  }
-  static createPostFromPostObject(postObject) {
-    return new Post(null, postObject);
-  }
-  constructor(postId, postObject) {
-    this.mainElement = document.createElement("div");
-    this.mainElement.className = "post";
-    this.thumbnailContainerElement = document.createElement("div");
-    this.thumbnailContainerElement.className = "thumbnail-container";
-    this.thumbnailElement = document.createElement("img");
-    this.thumbnailElement.className = "thumbnail";
-    this.thumbnailContainerElement.appendChild(this.thumbnailElement);
-    this.thumbnailElement.alt = "";
-    this.thumbnailElement.src = pixelPNG; // Placeholder URL.
-    this.postTextElement = document.createElement("div");
-    this.postTextElement.className = "post-text";
-    this.testElement = document.createElement("div"); // TODO: Delete.
-    // Post.createPostFromPostObject(postObject)
-    if (typeof postObject === "object" && postObject !== null) {
-      this.rebuildPostFromPostObject(postObject);
-      return this;
-    }
-    // Post.createPostFromPostId(postId)
-    if (typeof postId === "number") {
-      this.rebuildPostFromPostId(postId);
-      return this;
-    }
-    // Fallback to empty/null instance fields.
-    this.#empty();
-  }
-
-  // Example: console.log(this.toHumanReadable());
-  toHumanReadable() {
-    return `[Post] ` +
-           `imageId: "${this.imageId}", ` +
-           `postId: "${this.postId}", ` +
-           `postLastModified: "${this.postLastModified}", ` +
-           `postText: "${this.postText}", ` +
-           `postTimestamp: "${this.postTimestamp}", ` +
-           `threadId: "${this.threadId}", ` +
-           `userId: "${this.userId}"`;
-  }
-
-  #empty() {
-    this.retrievedPost = false;
-    this.retrievedImage = false;
-    this.hidden = true;
-    this.imageId = null;
-    this.postId = null;
-    this.postLastModified = null;
-    this.postText = null;
-    this.postTimestamp = null;
-    this.threadId = null;
-    this.userId = null;
-  }
-
-  #demolish() {
-    while (this.mainElement.firstChild) {
-      this.mainElement.removeChild(this.mainElement.firstChild);
-    }
-    const previousURL = this.thumbnailElement.src;
-    if (previousURL !== pixelPNG) {
-      this.thumbnailElement.src = pixelPNG; // Placeholder URL.
-      URL.revokeObjectURL(previousURL); // Release previous file reference.
-      console.log(`Revoked URL: "${previousURL}"`); // TODO: Delete.
-    }
-    this.postTextElement.textContent = "";
-    this.testElement.textContent = ""; // TODO: Delete.
-  }
-
-  // Calling rebuildPostFromPostId() without a postId argument will by default
-  // attempt to use the existing postId instance field.
-  rebuildPostFromPostId(postId) {
-    const previousPostId = typeof this.postId === "number" ?
-      this.postId :
-      null;
-    this.#empty();
-    this.#demolish();
-    this.postId = typeof postId === "number" ?
-      postId :
-      previousPostId;
-    if (this.postId === null) {
-      return;
-    }
-    retrievePost(this.postId)
-      .then((post) => {
-        if (post === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        this.imageId = post["image_id"];
-        this.postLastModified = post["post_last_modified"];
-        this.postText = post["post_text"];
-        this.postTimestamp = post["post_timestamp"];
-        this.threadId = post["thread_id"];
-        this.userId = post["user_id"];
-        this.retrievedPost = true;
-        this.postTextElement.textContent = this.postText;
-        // Display post text as soon as possible.
-        this.mainElement.appendChild(this.postTextElement);
-        if (this.imageId === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        return retrieveImage(this.imageId);
-      })
-      .then((imageBlob) => {
-        if (imageBlob === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        this.retrievedImage = true;
-        this.thumbnailElement.src = URL.createObjectURL(imageBlob);
-        // Display thumbnail as soon as possible.
-        this.mainElement.appendChild(this.thumbnailContainerElement);
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .finally(() => {
-        // TODO(wathne): Delete testElement.
-        this.testElement.textContent = this.toHumanReadable();
-        this.mainElement.appendChild(this.testElement);
-      });
-  }
-
-  // Calling rebuildPostFromPostObject() without a postObject argument will by
-  // default attempt to use the existing postId instance field.
-  rebuildPostFromPostObject(postObject) {
-    const previousPostId = typeof this.postId === "number" ?
-      this.postId :
-      null;
-    this.#empty();
-    this.#demolish();
-    // Note: typeof null is "object". We need to explicitly check if null.
-    if (typeof postObject !== "object" || postObject === null) {
-      this.rebuildPostFromPostId(previousPostId);
-      return;
-    }
-    this.imageId = postObject["image_id"];
-    this.postId = postObject["post_id"];
-    this.postLastModified = postObject["post_last_modified"];
-    this.postText = postObject["post_text"];
-    this.postTimestamp = postObject["post_timestamp"];
-    this.threadId = postObject["thread_id"];
-    this.userId = postObject["user_id"];
-    if (typeof this.postId !== "number") {
-      // Attempt to use the previous value of the postId instance field.
-      this.rebuildPostFromPostId(previousPostId);
-      return;
-    }
-    // this.imageId has to be a number or null.
-    if (typeof this.imageId !== "number" && this.imageId !== null) {
-      this.rebuildPostFromPostId(this.postId);
-      return;
-    }
-    // Unchecked: postLastModified, postText, postTimestamp, threadId, userId.
-    this.retrievedPost = true;
-    this.postTextElement.textContent = this.postText;
-    // Display post text as soon as possible.
-    this.mainElement.appendChild(this.postTextElement);
-    if (this.imageId === null) {
-      return;
-    }
-    retrieveImage(this.imageId)
-      .then((imageBlob) => {
-        if (imageBlob === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        this.retrievedImage = true;
-        this.thumbnailElement.src = URL.createObjectURL(imageBlob);
-        // Display thumbnail as soon as possible.
-        this.mainElement.appendChild(this.thumbnailContainerElement);
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .finally(() => {
-        // TODO(wathne): Delete testElement.
-        this.testElement.textContent = this.toHumanReadable();
-        this.mainElement.appendChild(this.testElement);
-      });
-  }
-
-  isVisible() {
-    return !this.hidden;
-  }
-
-  getElement() {
-    return this.mainElement;
-  }
-
-  filterCompare(filterSearch, filterCriteria) {
-    if (!this.retrievedPost) {
-      this.hidden = true;
-      return;
-    }
-    if (filterSearch === "" && filterCriteria !== "image") {
-      this.hidden = false;
-      return;
-    }
-    const searchLC = filterSearch.toLowerCase();
-    switch (filterCriteria) {
-      case "image":
-        if (this.retrievedImage) {
-          this.hidden = false;
-          return;
-        }
-        this.hidden = true;
-        return;
-      case "last-modified":
-        this.hidden = false;
-        return;
-      case "subject":
-        this.hidden = false;
-        return;
-      case "text":
-        const textLC = this.postText.toLowerCase();
-        if (textLC.includes(searchLC)) {
-          this.hidden = false;
-          return;
-        }
-        this.hidden = true;
-        return;
-      case "timestamp":
-        this.hidden = false;
-        return;
-    }
-    this.hidden = false;
-  }
-}
-
-
-class FilterHandler {
-  constructor(parent) {
-    // parent is necessary for this.parent.filterThreads().
-    // parent is necessary for this.parent.sortThreads().
-    // See implementation of handleEvent(event).
-    this.parent = parent;
-
-    this.search_ = filterSearchElement.value;
-    this.sortOrder = filterSortOrderElement.checked;
-    this.criteria = filterCriteriaElement.value;
-
-    filterSearchElement.addEventListener("input", this);
-    filterSortOrderElement.addEventListener("input", this);
-    filterCriteriaElement.addEventListener("input", this);
-  }
-
-  // Example: console.log(this.toHumanReadable());
-  toHumanReadable() {
-    return `[FilterHandler] ` +
-           `search: "${this.search_}", ` +
-           `sortOrder: "${this.sortOrder}", ` +
-           `criteria: "${this.criteria}"`;
-  }
-
-  getSearch() {
-    return this.search_;
-  }
-
-  getSortOrder() {
-    return this.sortOrder;
-  }
-
-  getCriteria() {
-    return this.criteria;
-  }
-
-  handleEvent(event) {
-    if (event.target === filterSearchElement) {
-      if (event.type === "input") {
-        this.search_ = event.target.value;
-        this.parent.filterThreads();
-      }
-    }
-    if (event.target === filterSortOrderElement) {
-      if (event.type === "input") {
-        this.sortOrder = event.target.checked;
-        this.parent.sortThreads();
-      }
-    }
-    if (event.target === filterCriteriaElement) {
-      if (event.type === "input") {
-        this.criteria = event.target.value;
-        this.parent.sortThreads();
-      }
-    }
-  }
-}
-
-
 class AddThreadHandler {
   constructor(parent) {
     // parent is necessary for this.parent.addThread(formData).
@@ -782,6 +708,80 @@ class AddThreadHandler {
         }
       }
     }
+  }
+}
+
+
+class FilterHandler {
+  constructor(parent) {
+    // parent is necessary for this.parent.filterThreads().
+    // parent is necessary for this.parent.sortThreads().
+    // See implementation of handleEvent(event).
+    this.parent = parent;
+
+    this.search_ = filterSearchElement.value;
+    this.sortOrder = filterSortOrderElement.checked;
+    this.criteria = filterCriteriaElement.value;
+
+    filterSearchElement.addEventListener("input", this);
+    filterSortOrderElement.addEventListener("input", this);
+    filterCriteriaElement.addEventListener("input", this);
+  }
+
+  // Example: console.log(this.toHumanReadable());
+  toHumanReadable() {
+    return `[FilterHandler] ` +
+           `search: "${this.search_}", ` +
+           `sortOrder: "${this.sortOrder}", ` +
+           `criteria: "${this.criteria}"`;
+  }
+
+  getSearch() {
+    return this.search_;
+  }
+
+  getSortOrder() {
+    return this.sortOrder;
+  }
+
+  getCriteria() {
+    return this.criteria;
+  }
+
+  handleEvent(event) {
+    if (event.target === filterSearchElement) {
+      if (event.type === "input") {
+        this.search_ = event.target.value;
+        this.parent.filterThreads();
+      }
+    }
+    if (event.target === filterSortOrderElement) {
+      if (event.type === "input") {
+        this.sortOrder = event.target.checked;
+        this.parent.sortThreads();
+      }
+    }
+    if (event.target === filterCriteriaElement) {
+      if (event.type === "input") {
+        this.criteria = event.target.value;
+        this.parent.sortThreads();
+      }
+    }
+  }
+}
+
+
+class LoginCredential {
+  constructor() {
+    this.username = null;
+    this.password = null;
+  }
+
+  // Example: console.log(this.toHumanReadable());
+  toHumanReadable() {
+    return `[LoginCredential] ` +
+           `username: "${this.username}", ` +
+           `password: "${this.password}"`;
   }
 }
 
