@@ -978,30 +978,140 @@ class LogoutHandler {
 
 
 class Imageboard {
+  #threads;
+  #threadsElement;
+  #addThreadHandler;
+  #filterHandler;
+  #registerHandler;
+  #loginHandler;
+  #logoutHandler;
+
   constructor() {
-    this.filterHandler = new FilterHandler(this);
-    this.addThreadHandler = new AddThreadHandler(this);
-    this.registerHandler = new RegisterHandler(this);
-    this.loginHandler = new LoginHandler(this);
-    this.logoutHandler = new LogoutHandler(this);
-
-    this.div = divMainContentElement;
-
-    this.threads = [];
+    this.#threads = [];
+    this.#threadsElement = divMainContentElement; // Threads container element.
+    this.#addThreadHandler = new AddThreadHandler(this);
+    this.#filterHandler = new FilterHandler(this);
+    this.#registerHandler = new RegisterHandler(this);
+    this.#loginHandler = new LoginHandler(this);
+    this.#logoutHandler = new LogoutHandler(this);
   }
 
   // Example: console.log(this.toHumanReadable());
   toHumanReadable() {
     const humanReadableThreads = [];
-    for (const thread of this.threads) {
+    for (const thread of this.#threads) {
       humanReadableThreads.push(thread.toHumanReadable());
     }
     return humanReadableThreads.join("\n");
   }
 
+  addThread(formData) {
+    const dataObject = Object.fromEntries(formData);
+    const threadSubject = dataObject["subject"];
+    const postText = dataObject["text"];
+    const imageFile = dataObject["image"];
+    insertImage(imageFile)
+      .then((imageId) => {
+        if (imageId === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        return insertThread(threadSubject, postText, imageId);
+      })
+      .then((threadId) => {
+        if (threadId === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        this.reloadThreads();
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+      .finally(() => {
+      });
+  }
+
+  reloadThreads() {
+    console.log("reload threads"); // TODO: Delete.
+    while (this.#threads.length) {
+      this.#threads.pop();
+    }
+    retrieveThreads()
+      .then((threads) => {
+        if (threads === null) {
+          return null; // TODO(wathne): Proper reject/error handling.
+        }
+        for (const thread of threads) {
+          const newThread = Thread.createThreadFromThreadObject(thread);
+          console.log(newThread.toHumanReadable()); // TODO: Delete.
+          this.#threads.push(newThread);
+        }
+        this.sortThreads();
+      });
+  }
+
+  sortThreads() {
+    console.log("sort threads"); // TODO: Delete.
+    const filterSortOrder = this.#filterHandler.getSortOrder();
+    const filterCriteria = this.#filterHandler.getCriteria();
+    function compareLastModified(a, b) {
+      return a.threadLastModified - b.threadLastModified;
+    }
+    function compareSubject(a, b) {
+      return a.threadSubject.localeCompare(b.threadSubject);
+    }
+    function compareText(a, b) {
+      return a.postText.localeCompare(b.postText);
+    }
+    function compareTimestamp(a, b) {
+      return a.threadTimestamp - b.threadTimestamp;
+    }
+    switch (filterCriteria) {
+      case "last-modified":
+        this.#threads.sort(compareLastModified);
+        break;
+      case "subject":
+        this.#threads.sort(compareSubject);
+        break;
+      case "text":
+        this.#threads.sort(compareText);
+        break;
+      case "image":
+        break;
+      case "timestamp":
+        this.#threads.sort(compareTimestamp);
+        break;
+    }
+    if (filterSortOrder === false) {
+      this.#threads.reverse();
+    }
+    this.filterThreads();
+  }
+
+  filterThreads() {
+    console.log("filter threads"); // TODO: Delete.
+    const filterSearch = this.#filterHandler.getSearch();
+    const filterCriteria = this.#filterHandler.getCriteria();
+    for (const thread of this.#threads) {
+      thread.filterCompare(filterSearch, filterCriteria);
+    }
+    this.#showThreads();
+  }
+
+  #showThreads() {
+    console.log("show threads"); // TODO: Delete.
+    while (this.#threadsElement.firstChild) {
+      this.#threadsElement.removeChild(this.#threadsElement.firstChild);
+    }
+    for (const thread of this.#threads) {
+      if (thread.isVisible()) {
+        this.#threadsElement.appendChild(thread.getElement());
+      }
+    }
+  }
+
   async register() {
-    const username = this.registerHandler.loginCredential.username;
-    const password = this.registerHandler.loginCredential.password;
+    const username = this.#registerHandler.loginCredential.username;
+    const password = this.#registerHandler.loginCredential.password;
     const userId = await sessionRegister(username, password);
     console.log(`register userId: ${userId}`); // TODO: Delete.
     this.reloadThreads();
@@ -1012,8 +1122,8 @@ class Imageboard {
   }
 
   async login() {
-    const username = this.loginHandler.loginCredential.username;
-    const password = this.loginHandler.loginCredential.password;
+    const username = this.#loginHandler.loginCredential.username;
+    const password = this.#loginHandler.loginCredential.password;
     const userId = await sessionLogin(username, password);
     console.log(`login userId: ${userId}`); // TODO: Delete.
     this.reloadThreads();
@@ -1031,108 +1141,6 @@ class Imageboard {
       return true;
     }
     return false;
-  }
-
-  reloadThreads() {
-    console.log("reload threads"); // TODO: Delete.
-    while (this.threads.length) {
-      this.threads.pop();
-    }
-    retrieveThreads()
-      .then((threads) => {
-        if (threads === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        for (const thread of threads) {
-          //const threadId = thread["thread_id"];
-          //const newThread = Thread.createThreadFromThreadId(threadId);
-          const newThread = Thread.createThreadFromThreadObject(thread);
-          console.log(newThread.toHumanReadable()); // TODO: Delete.
-          this.threads.push(newThread);
-        }
-        this.sortThreads();
-      });
-  }
-
-  addThread(formData) {
-    const dataObject = Object.fromEntries(formData);
-    const threadSubject = dataObject["subject"];
-    const postText = dataObject["text"];
-    const imageFile = dataObject["image"];
-    insertImage(imageFile)
-      .then((imageId) => {
-        if (imageId === null) {
-          return null;
-        }
-        return insertThread(threadSubject, postText, imageId);
-      })
-      .then((threadId) => {
-        if (threadId === null) {
-          return null;
-        }
-        this.reloadThreads();
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-
-  filterThreads() {
-    console.log("filter threads"); // TODO: Delete.
-    const filterSearch = this.filterHandler.getSearch();
-    const filterCriteria = this.filterHandler.getCriteria();
-
-    for (const thread of this.threads) {
-      thread.filterCompare(filterSearch, filterCriteria);
-    }
-    this.showThreads();
-  }
-
-  sortThreads() {
-    console.log("sort threads"); // TODO: Delete.
-    const filterSortOrder = this.filterHandler.getSortOrder();
-    const filterCriteria = this.filterHandler.getCriteria();
-
-    function compareThreadLastModified(a, b) {
-      return a.threadTimestamp - b.threadTimestamp;
-    }
-
-    function compareThreadSubject(a, b) {
-      return a.threadSubject.localeCompare(b.threadSubject);
-    }
-
-    function compareThreadTimestamp(a, b) {
-      return a.threadTimestamp - b.threadTimestamp;
-    }
-
-    switch (filterCriteria) {
-      case "last-modified":
-        this.threads.sort(compareThreadLastModified);
-        break;
-      case "subject":
-        this.threads.sort(compareThreadSubject);
-        break;
-      case "timestamp":
-        this.threads.sort(compareThreadTimestamp);
-        break;
-    }
-    if (filterSortOrder === false) {
-      this.threads.reverse();
-    }
-
-    this.filterThreads();
-  }
-
-  showThreads() {
-    console.log("show threads"); // TODO: Delete.
-    while (this.div.firstChild) {
-      this.div.removeChild(this.div.firstChild);
-    }
-    for (const thread of this.threads) {
-      if (thread.isVisible()) {
-        this.div.appendChild(thread.getElement());
-      }
-    }
   }
 }
 
