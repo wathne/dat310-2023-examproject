@@ -1273,10 +1273,16 @@ class Imageboard {
   async register() {
     const username = this.#registerHandler.getUsername();
     const password = this.#registerHandler.getPassword();
-    const userId = await sessionRegister(username, password);
+    const userId = await sessionRegister(username, password)
+      .catch((error) => {
+        console.error(error);
+      });
     console.log(`register userId: ${userId}`); // TODO: Delete.
-    this.reloadThreads();
-    if (userId !== null) {
+    this.reloadThreads() // Do not await.
+      .catch((error) => {
+        console.error(error);
+      });
+    if (typeof userId === "number") {
       return true;
     }
     return false;
@@ -1285,20 +1291,32 @@ class Imageboard {
   async login() {
     const username = this.#loginHandler.getUsername();
     const password = this.#loginHandler.getPassword();
-    const userId = await sessionLogin(username, password);
+    const userId = await sessionLogin(username, password)
+      .catch((error) => {
+        console.error(error);
+      });
     console.log(`login userId: ${userId}`); // TODO: Delete.
-    this.reloadThreads();
-    if (userId !== null) {
+    this.reloadThreads() // Do not await.
+      .catch((error) => {
+        console.error(error);
+      });
+    if (typeof userId === "number") {
       return true;
     }
     return false;
   }
 
   async logout() {
-    const userId = await sessionLogout();
+    const userId = await sessionLogout()
+      .catch((error) => {
+        console.error(error);
+      });
     console.log(`logout userId: ${userId}`); // TODO: Delete.
-    this.reloadThreads();
-    if (userId !== null) {
+    this.reloadThreads() // Do not await.
+      .catch((error) => {
+        console.error(error);
+      });
+    if (typeof userId === "number") {
       return true;
     }
     return false;
