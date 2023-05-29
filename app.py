@@ -328,6 +328,7 @@ def before_request() -> None:
     endpoint_whitelist: set[str] = {
         "api_login", # api_login() will call load_user().
         "api_users", # api_users() will call load_user().
+        "favicon", # Authentication is not required.
         "imageboard", # Authentication is not required.
         "index", # Authentication is not required.
         #"static", # See path_whitelist below.
@@ -341,6 +342,7 @@ def before_request() -> None:
     # Do not call load_user() if path is whitelisted.
     path_whitelist: set[str] = {
         "/static/api.js", # Authentication is not required.
+        "/static/favicon.ico", # Authentication is not required.
         "/static/imageboard.css", # Authentication is not required.
         "/static/imageboard.html", # Authentication is not required.
         "/static/imageboard.js", # Authentication is not required.
@@ -384,6 +386,19 @@ def imageboard() -> WerkzeugResponse | Response:
         location=url_for(
             endpoint="static",
             filename="imageboard.html",
+        ),
+        code=302,
+    )
+
+
+@app.route(rule="/favicon.ico")
+def favicon() -> WerkzeugResponse | Response:
+    # See before_request(), endpoint_whitelist.
+    # favicon() is whitelisted.
+    return redirect(
+        location=url_for(
+            endpoint="static",
+            filename="favicon.ico",
         ),
         code=302,
     )
