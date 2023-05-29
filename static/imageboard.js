@@ -993,8 +993,12 @@ class ThreadsManager {
       .catch((error) => {
         console.error(error);
       });
+    if (threads === null) {
+      this.#showList();
+      return;
+    }
     // TODO(wathne): Check Array.isArray?
-    if (typeof threads !== "object" || threads === null) {
+    if (typeof threads !== "object") {
       return; // TODO(wathne): Proper reject/error handling.
     }
     // TODO(wathne): Show incomplete threads for a more responsive experience.
