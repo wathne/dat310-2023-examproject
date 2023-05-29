@@ -1,30 +1,66 @@
 "use strict";
 
-const buttonAddThreadElements = document.getElementsByClassName("button-add-thread");
+// CLASS
+const buttonCancelElements = document.getElementsByClassName("button-cancel");
+const buttonClearImageElements = document.getElementsByClassName("button-clear-image");
 const buttonRegisterElements = document.getElementsByClassName("button-register");
 const buttonLoginElements = document.getElementsByClassName("button-login");
 const buttonLogoutElements = document.getElementsByClassName("button-logout");
-const buttonCancelElements = document.getElementsByClassName("button-cancel");
+const buttonAddThreadElements = document.getElementsByClassName("button-add-thread");
+// Extra "button-modify-thread" class buttons created by ModifyThreadHandler.
+// Extra "button-delete-thread" class buttons created by DeleteThreadHandler.
+// Extra "button-show-posts" class buttons created by ShowPostsHandler.
+// Extra "button-add-post" class buttons created by AddPostHandler.
+// Extra "button-modify-post" class buttons created by ModifyPostHandler.
+// Extra "button-delete-post" class buttons created by DeletePostHandler.
 
+// Extra "thumbnail-container" class divs created by Thread and Post.
+// Extra "thumbnail" class divs created by Thread and Post.
+// Extra "post" class divs created by Post.
+// Extra "post-text" class divs created by Post.
+// Extra "thread" class divs created by Thread.
+// Extra "thread-subject" class divs created by Thread.
+// Extra "thread-text" class divs created by Thread.
+
+
+// ID
 const divMainExtraElement = document.getElementById("main-extra");
-const divAddThreadElement = document.getElementById("add-thread");
+const divMainContentElement = document.getElementById("main-content");
+
 const divRegisterElement = document.getElementById("register");
 const divLoginElement = document.getElementById("login");
 const divLogoutElement = document.getElementById("logout");
-const divMainContentElement = document.getElementById("main-content");
+const divAddThreadElement = document.getElementById("add-thread");
+const divModifyThreadElement = document.getElementById("modify-thread");
+const divDeleteThreadElement = document.getElementById("delete-thread");
+const divAddPostElement = document.getElementById("add-post");
+const divModifyPostElement = document.getElementById("modify-post");
+const divDeletePostElement = document.getElementById("delete-post");
 
-const formAddThreadElement = document.getElementById("form-add-thread");
 const formRegisterElement = document.getElementById("form-register");
 const formLoginElement = document.getElementById("form-login");
 const formLogoutElement = document.getElementById("form-logout");
+const formAddThreadElement = document.getElementById("form-add-thread");
+const formModifyThreadElement = document.getElementById("form-modify-thread");
+const formDeleteThreadElement = document.getElementById("form-delete-thread");
+const formAddPostElement = document.getElementById("form-add-post");
+const formModifyPostElement = document.getElementById("form-modify-post");
+const formDeletePostElement = document.getElementById("form-delete-post");
 
 const inputFileAddThreadElement = document.getElementById("input-file-add-thread");
+const inputFileModifyThreadElement = document.getElementById("input-file-modify-thread");
+const inputFileAddPostElement = document.getElementById("input-file-add-post");
+const inputFileModifyPostElement = document.getElementById("input-file-modify-post");
 
 const thumbnailAddThreadElement = document.getElementById("thumbnail-add-thread");
+const thumbnailModifyThreadElement = document.getElementById("thumbnail-modify-thread");
+const thumbnailAddPostElement = document.getElementById("thumbnail-add-post");
+const thumbnailModifyPostElement = document.getElementById("thumbnail-modify-post");
 
 const filterSearchElement = document.getElementById("filter-search");
 const filterSortOrderElement = document.getElementById("filter-sort-order");
 const filterCriteriaElement = document.getElementById("filter-criteria");
+
 
 // Placeholder URL.
 const pixelPNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
@@ -120,6 +156,7 @@ function postValidation(formData) {
 
 class Post {
   // Private instance fields.
+  #parent; // The parent is a PostsManager.
   #retrievedPost;
   #retrievedImage;
   #done;
@@ -137,21 +174,33 @@ class Post {
   #postTextElement;
   #testElement; // TODO(wathne): Delete #testElement.
 
-  static async createPostFromPostId(postId) {
+  static async createPostFromPostId(postId, postsManager) {
     if (typeof postId === "number") {
-      return await new Post().rebuildPostFromPostId(postId);
+      if (postsManager instanceof PostsManager) {
+        return await new Post(postsManager)
+          .rebuildPostFromPostId(postId);
+      }
+      return await new Post(null)
+        .rebuildPostFromPostId(postId);
     }
     return null;
   }
 
-  static async createPostFromPostObject(postObject) {
+  static async createPostFromPostObject(postObject, postsManager) {
     if (typeof postObject === "object" && postObject !== null) {
-      return await new Post().rebuildPostFromPostObject(postObject);
+      if (postsManager instanceof PostsManager) {
+        return await new Post(postsManager)
+          .rebuildPostFromPostObject(postObject);
+      }
+      return await new Post(null)
+        .rebuildPostFromPostObject(postObject);
     }
     return null;
   }
 
-  constructor() {
+  constructor(parent) {
+    // The parent (PostsManager) is not yet necessary.
+    this.#parent = parent;
     this.#mainElement = document.createElement("div");
     this.#mainElement.className = "post";
     this.#thumbnailContainerElement = document.createElement("div");
@@ -380,9 +429,68 @@ class Post {
 }
 
 
+class ShowPostsHandler {
+  constructor(parent) {
+  }
+}
+
+
+class PostsManager {
+  // Private instance fields.
+  #parent; // The parent is a Thread.
+  #posts;
+  //#postsElement; // TODO
+  //#showPostsHandler; // TODO
+  //#addPostHandler; // TODO
+  //#modifyPostHandler; // TODO
+  //#deletePostHandler; // TODO
+  #filterHandler;
+
+  constructor(parent) {
+    // The parent is necessary for TODO.
+    this.#parent = parent;
+    this.#posts = [];
+    //this.#postsElement = TODO; // Posts container element. // TODO
+    //this.#showPostsHandler = new ShowPostsHandler(this); // TODO
+    //this.#addPostHandler = new AddPostHandler(this); // TODO
+    //this.#modifyPostHandler = new ModifyPostHandler(this); // TODO
+    //this.#deletePostHandler = new DeletePostHandler(this); // TODO
+    this.#filterHandler = new FilterHandler(this);
+  }
+
+  async addPost() {
+    // TODO
+  }
+
+  async modifyPost() {
+    // TODO
+  }
+
+  async deletePost() {
+    // TODO
+  }
+
+  async reloadList() {
+    // TODO
+  }
+
+  async sortList() {
+    // TODO
+  }
+
+  async filterList() {
+    // TODO
+  }
+
+  async showList() {
+    // TODO
+  }
+}
+
+
 class Thread {
   // Private instance fields.
-  #posts;
+  #parent; // The parent is a ThreadsManager.
   #retrievedThread;
   #retrievedPost;
   #retrievedImage;
@@ -402,23 +510,35 @@ class Thread {
   #thumbnailElement;
   #postTextElement;
   #testElement; // TODO(wathne): Delete #testElement.
+  #postsManager; // This is a PostsManager.
 
-  static async createThreadFromThreadId(threadId) {
+  static async createThreadFromThreadId(threadId, threadsManager) {
     if (typeof threadId === "number") {
-      return await new Thread().rebuildThreadFromThreadId(threadId);
+      if (threadsManager instanceof ThreadsManager) {
+        return await new Thread(threadsManager)
+          .rebuildThreadFromThreadId(threadId);
+      }
+      return await new Thread(null)
+        .rebuildThreadFromThreadId(threadId);
     }
     return null;
   }
 
-  static async createThreadFromThreadObject(threadObject) {
+  static async createThreadFromThreadObject(threadObject, threadsManager) {
     if (typeof threadObject === "object" && threadObject !== null) {
-      return await new Thread().rebuildThreadFromThreadObject(threadObject);
+      if (threadsManager instanceof ThreadsManager) {
+        return await new Thread(threadsManager)
+          .rebuildThreadFromThreadObject(threadObject);
+      }
+      return await new Thread(null)
+        .rebuildThreadFromThreadObject(threadObject);
     }
     return null;
   }
 
-  constructor() {
-    this.#posts = [];
+  constructor(parent) {
+    // The parent (ThreadsManager) is not yet necessary.
+    this.#parent = parent;
     this.#mainElement = document.createElement("div");
     this.#mainElement.className = "thread";
     this.#threadSubjectElement = document.createElement("div");
@@ -433,6 +553,7 @@ class Thread {
     this.#postTextElement = document.createElement("div");
     this.#postTextElement.className = "thread-text";
     this.#testElement = document.createElement("div"); // TODO: Delete.
+    this.#postsManager = new PostsManager(this);
   }
 
   // Example: console.log(this.toHumanReadable());
@@ -623,12 +744,6 @@ class Thread {
     return this.#finally();
   }
 
-  clearPosts() {
-    while (this.#posts.length) {
-      this.#posts.pop();
-    }
-  }
-
   hasThread() {
     return this.#retrievedThread; // Boolean.
   }
@@ -719,7 +834,7 @@ class Thread {
 
 class AddThreadHandler {
   // Private instance fields.
-  #parent;
+  #parent; // The parent is a ThreadsManager.
   #mainElement;
   #formElement;
   #inputFileElement;
@@ -728,7 +843,7 @@ class AddThreadHandler {
   #buttonCancelElements;
 
   constructor(parent) {
-    // parent is necessary for this.#parent.addThread(formData).
+    // The parent is necessary for this.#parent.addThread(formData).
     // See implementation of handleEvent(event).
     this.#parent = parent;
     this.#mainElement = divAddThreadElement;
@@ -762,9 +877,20 @@ class AddThreadHandler {
         const formData = new FormData(this.#formElement);
         const threadValidationErrors = threadValidation(formData);
         if (threadValidationErrors === null) {
-          // TODO(wathne): Make addThread async and await for success or error.
-          this.#parent.addThread(formData);
-          this.#mainElement.style.display = "none";
+          this.#parent.addThread(formData)
+            .then((success) => {
+              if (success) {
+                this.#mainElement.style.display = "none";
+              } else {
+                // TODO: Message about failing to add thread.
+                console.log("TODO: Message about failing to add thread.");
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+            })
+            .finally(() => {
+            });
         } else {
           for (const error of threadValidationErrors) {
             // TODO: Message about invalid formData.
@@ -805,16 +931,165 @@ class AddThreadHandler {
 }
 
 
-class FilterHandler {
+class ThreadsManager {
   // Private instance fields.
-  #parent;
-  #search;
-  #sortOrder;
-  #criteria;
+  #parent; // The parent is an Imageboard.
+  #threads;
+  #threadsElement;
+  #addThreadHandler;
+  //#modifyThreadHandler; // TODO
+  //#deleteThreadHandler; // TODO
+  #filterHandler;
 
   constructor(parent) {
-    // parent is necessary for this.#parent.filterThreads().
-    // parent is necessary for this.#parent.sortThreads().
+    // The parent (Imageboard) is not yet necessary.
+    this.#parent = parent;
+    this.#threads = [];
+    this.#threadsElement = divMainContentElement; // Threads container element.
+    this.#addThreadHandler = new AddThreadHandler(this);
+    //this.#modifyThreadHandler = new ModifyThreadHandler(this); // TODO
+    //this.#deleteThreadHandler = new DeleteThreadHandler(this); // TODO
+    this.#filterHandler = new FilterHandler(this);
+  }
+
+  // Example: console.log(this.toHumanReadable());
+  toHumanReadable() {
+    const humanReadableThreads = [];
+    for (const thread of this.#threads) {
+      humanReadableThreads.push(thread.toHumanReadable());
+    }
+    return humanReadableThreads.join("\n");
+  }
+
+  async addThread(formData) {
+    const dataObject = Object.fromEntries(formData);
+    const threadSubject = dataObject["subject"];
+    const postText = dataObject["text"];
+    const imageFile = dataObject["image"];
+    const imageId = await insertImage(imageFile)
+      .catch((error) => {
+        console.error(error);
+      });
+    if (typeof imageId !== "number") {
+      return false; // TODO(wathne): Proper reject/error handling.
+    }
+    const threadId = await insertThread(threadSubject, postText, imageId)
+      .catch((error) => {
+        console.error(error);
+      });
+    if (typeof threadId === "number") {
+      this.reloadList(); // Do not await.
+      return true;
+    }
+    return false;
+  }
+
+  async reloadList() {
+    console.log("reload threads"); // TODO: Delete.
+    while (this.#threads.length) {
+      this.#threads.pop();
+    }
+    const threads = await retrieveThreads()
+      .catch((error) => {
+        console.error(error);
+      });
+    // TODO(wathne): Check Array.isArray?
+    if (typeof threads !== "object" || threads === null) {
+      return; // TODO(wathne): Proper reject/error handling.
+    }
+    // TODO(wathne): Show incomplete threads for a more responsive experience.
+    // TODO(wathne): Do not wait for slow promises.
+    const promises = threads
+      .map(async (thread) => {
+        return Thread.createThreadFromThreadObject(thread);
+        //return Thread.createThreadFromThreadObject(thread, this);
+      });
+    const settlements = await Promise.allSettled(promises)
+      .catch((error) => {
+        console.error(error);
+      });
+    for (const settlement of settlements) {
+      if (settlement["status"] === "fulfilled") {
+        const thread = settlement["value"];
+        this.#threads.push(thread);
+        console.log(thread.toHumanReadable());
+      }
+      if (settlement["status"] === "rejected") {
+        console.log(settlement["reason"]);
+      }
+    }
+    this.sortList();
+  }
+
+  sortList() {
+    console.log("sort threads"); // TODO: Delete.
+    const filterSortOrder = this.#filterHandler.getSortOrder();
+    const filterCriteria = this.#filterHandler.getCriteria();
+    function compareLastModified(a, b) {
+      return b.getThreadLastModified() - a.getThreadLastModified();
+    }
+    function compareSubject(a, b) {
+      return a.getThreadSubject().localeCompare(b.getThreadSubject());
+    }
+    function compareTimestamp(a, b) {
+      return b.getThreadTimestamp() - a.getThreadTimestamp();
+    }
+    switch (filterCriteria) {
+      case "last-modified":
+        this.#threads.sort(compareLastModified);
+        break;
+      case "subject":
+        this.#threads.sort(compareSubject);
+        break;
+      case "text":
+        break;
+      case "image":
+        break;
+      case "timestamp":
+        this.#threads.sort(compareTimestamp);
+        break;
+    }
+    if (filterSortOrder === false) {
+      this.#threads.reverse();
+    }
+    this.filterList();
+  }
+
+  filterList() {
+    console.log("filter threads"); // TODO: Delete.
+    const filterSearch = this.#filterHandler.getSearch();
+    const filterCriteria = this.#filterHandler.getCriteria();
+    for (const thread of this.#threads) {
+      thread.filterCompare(filterSearch, filterCriteria);
+    }
+    this.#showList();
+  }
+
+  // Private instance method.
+  #showList() {
+    console.log("show threads"); // TODO: Delete.
+    while (this.#threadsElement.firstChild) {
+      this.#threadsElement.removeChild(this.#threadsElement.firstChild);
+    }
+    for (const thread of this.#threads) {
+      if (thread.isVisible()) {
+        this.#threadsElement.appendChild(thread.getElement());
+      }
+    }
+  }
+}
+
+
+class FilterHandler {
+  // Private instance fields.
+  #parent; // The parent is a ThreadsManager or PostsManager.
+  #search; // This is a string and defaults to "".
+  #sortOrder; // This is true or false and defaults to true.
+  #criteria; // "last-modified", "subject", "text", "image" or "timestamp".
+
+  constructor(parent) {
+    // The parent is necessary for this.#parent.filterList().
+    // The parent is necessary for this.#parent.sortList().
     // See implementation of handleEvent(event).
     this.#parent = parent;
     this.#search = filterSearchElement.value;
@@ -849,19 +1124,19 @@ class FilterHandler {
     if (event.target === filterSearchElement) {
       if (event.type === "input") {
         this.#search = event.target.value;
-        this.#parent.filterThreads();
+        this.#parent.filterList();
       }
     }
     if (event.target === filterSortOrderElement) {
       if (event.type === "input") {
         this.#sortOrder = event.target.checked;
-        this.#parent.sortThreads();
+        this.#parent.sortList();
       }
     }
     if (event.target === filterCriteriaElement) {
       if (event.type === "input") {
         this.#criteria = event.target.value;
-        this.#parent.sortThreads();
+        this.#parent.sortList();
       }
     }
   }
@@ -885,15 +1160,15 @@ class LoginCredential {
 
 class RegisterHandler {
   // Private instance fields.
-  #parent;
-  #loginCredential;
+  #parent; // The parent is a SessionManager.
+  #loginCredential; // This is a LoginCredential.
   #mainElement;
   #formElement;
   #buttonStartElements;
   #buttonCancelElements;
 
   constructor(parent) {
-    // parent is necessary for this.#parent.register().
+    // The parent is necessary for this.#parent.register().
     // See implementation of handleEvent(event).
     this.#parent = parent;
     this.#loginCredential = new LoginCredential();
@@ -971,15 +1246,15 @@ class RegisterHandler {
 
 class LoginHandler {
   // Private instance fields.
-  #parent;
-  #loginCredential;
+  #parent; // The parent is a SessionManager.
+  #loginCredential; // This is a LoginCredential.
   #mainElement;
   #formElement;
   #buttonStartElements;
   #buttonCancelElements;
 
   constructor(parent) {
-    // parent is necessary for this.#parent.login().
+    // The parent is necessary for this.#parent.login().
     // See implementation of handleEvent(event).
     this.#parent = parent;
     this.#loginCredential = new LoginCredential();
@@ -1057,14 +1332,14 @@ class LoginHandler {
 
 class LogoutHandler {
   // Private instance fields.
-  #parent;
+  #parent; // The parent is a SessionManager.
   #mainElement;
   #formElement;
   #buttonStartElements;
   #buttonCancelElements;
 
   constructor(parent) {
-    // parent is necessary for this.#parent.logout().
+    // The parent is necessary for this.#parent.logout().
     // See implementation of handleEvent(event).
     this.#parent = parent;
     this.#mainElement = divLogoutElement;
@@ -1126,148 +1401,19 @@ class LogoutHandler {
 }
 
 
-class Imageboard {
+class SessionManager {
   // Private instance fields.
-  #threads;
-  #threadsElement;
-  #addThreadHandler;
-  #filterHandler;
+  #parent; // The parent is an Imageboard.
   #registerHandler;
   #loginHandler;
   #logoutHandler;
 
-  constructor() {
-    this.#threads = [];
-    this.#threadsElement = divMainContentElement; // Threads container element.
-    this.#addThreadHandler = new AddThreadHandler(this);
-    this.#filterHandler = new FilterHandler(this);
+  constructor(parent) {
+    // The parent is necessary for this.#parent.reload().
+    this.#parent = parent;
     this.#registerHandler = new RegisterHandler(this);
     this.#loginHandler = new LoginHandler(this);
     this.#logoutHandler = new LogoutHandler(this);
-  }
-
-  // Example: console.log(this.toHumanReadable());
-  toHumanReadable() {
-    const humanReadableThreads = [];
-    for (const thread of this.#threads) {
-      humanReadableThreads.push(thread.toHumanReadable());
-    }
-    return humanReadableThreads.join("\n");
-  }
-
-  addThread(formData) {
-    const dataObject = Object.fromEntries(formData);
-    const threadSubject = dataObject["subject"];
-    const postText = dataObject["text"];
-    const imageFile = dataObject["image"];
-    insertImage(imageFile)
-      .then((imageId) => {
-        if (imageId === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        return insertThread(threadSubject, postText, imageId);
-      })
-      .then((threadId) => {
-        if (threadId === null) {
-          return null; // TODO(wathne): Proper reject/error handling.
-        }
-        this.reloadThreads();
-      })
-      .catch((error) => {
-        console.error(error);
-      })
-      .finally(() => {
-      });
-  }
-
-  async reloadThreads() {
-    console.log("reload threads"); // TODO: Delete.
-    while (this.#threads.length) {
-      this.#threads.pop();
-    }
-    const threads = await retrieveThreads()
-      .catch((error) => {
-        console.error(error);
-      });
-    if (threads === null) {
-      return; // TODO(wathne): Proper reject/error handling.
-    }
-    const promises = threads
-      .map(async (thread) => {
-        return Thread.createThreadFromThreadObject(thread);
-      });
-    const settlements = await Promise.allSettled(promises)
-      .catch((error) => {
-        console.error(error);
-      });
-    for (const settlement of settlements) {
-      if (settlement["status"] === "fulfilled") {
-        const thread = settlement["value"];
-        this.#threads.push(thread);
-        console.log(thread.toHumanReadable());
-      }
-      if (settlement["status"] === "rejected") {
-        console.log(settlement["reason"]);
-      }
-    }
-    this.sortThreads();
-  }
-
-  sortThreads() {
-    console.log("sort threads"); // TODO: Delete.
-    const filterSortOrder = this.#filterHandler.getSortOrder();
-    const filterCriteria = this.#filterHandler.getCriteria();
-    function compareLastModified(a, b) {
-      return b.getThreadLastModified() - a.getThreadLastModified();
-    }
-    function compareSubject(a, b) {
-      return a.getThreadSubject().localeCompare(b.getThreadSubject());
-    }
-    function compareTimestamp(a, b) {
-      return b.getThreadTimestamp() - a.getThreadTimestamp();
-    }
-    switch (filterCriteria) {
-      case "last-modified":
-        this.#threads.sort(compareLastModified);
-        break;
-      case "subject":
-        this.#threads.sort(compareSubject);
-        break;
-      case "text":
-        break;
-      case "image":
-        break;
-      case "timestamp":
-        this.#threads.sort(compareTimestamp);
-        break;
-    }
-    if (filterSortOrder === false) {
-      this.#threads.reverse();
-    }
-    this.filterThreads();
-  }
-
-  filterThreads() {
-    console.log("filter threads"); // TODO: Delete.
-    const filterSearch = this.#filterHandler.getSearch();
-    const filterCriteria = this.#filterHandler.getCriteria();
-    for (const thread of this.#threads) {
-      thread.filterCompare(filterSearch, filterCriteria);
-    }
-    this.#showThreads();
-  }
-
-  // Private instance method.
-  #showThreads() {
-    console.log("show threads"); // TODO: Delete.
-    while (this.#threadsElement.firstChild) {
-      this.#threadsElement.removeChild(this.#threadsElement.firstChild);
-    }
-    for (const thread of this.#threads) {
-      if (thread.isVisible()) {
-        this.#threadsElement.appendChild(thread.getElement());
-      }
-    }
   }
 
   async register() {
@@ -1278,10 +1424,7 @@ class Imageboard {
         console.error(error);
       });
     console.log(`register userId: ${userId}`); // TODO: Delete.
-    this.reloadThreads() // Do not await.
-      .catch((error) => {
-        console.error(error);
-      });
+    this.#parent.reload(); // Do not await.
     if (typeof userId === "number") {
       return true;
     }
@@ -1296,10 +1439,7 @@ class Imageboard {
         console.error(error);
       });
     console.log(`login userId: ${userId}`); // TODO: Delete.
-    this.reloadThreads() // Do not await.
-      .catch((error) => {
-        console.error(error);
-      });
+    this.#parent.reload(); // Do not await.
     if (typeof userId === "number") {
       return true;
     }
@@ -1312,10 +1452,7 @@ class Imageboard {
         console.error(error);
       });
     console.log(`logout userId: ${userId}`); // TODO: Delete.
-    this.reloadThreads() // Do not await.
-      .catch((error) => {
-        console.error(error);
-      });
+    this.#parent.reload(); // Do not await.
     if (typeof userId === "number") {
       return true;
     }
@@ -1323,6 +1460,22 @@ class Imageboard {
   }
 }
 
+
+class Imageboard {
+  // Private instance fields.
+  #threadsManager;
+  #sessionManager;
+
+  constructor() {
+    this.#threadsManager = new ThreadsManager(this);
+    this.#sessionManager = new SessionManager(this);
+  }
+
+  async reload() {
+    this.#threadsManager.reloadList(); // Do not await.
+  }
+}
+
 const imageboard = new Imageboard();
-imageboard.reloadThreads();
+imageboard.reload();
 
