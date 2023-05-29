@@ -1143,7 +1143,7 @@ class FilterHandler {
 }
 
 
-class LoginCredential {
+class SessionCredential {
   constructor() {
     this.username = null;
     this.password = null;
@@ -1151,7 +1151,7 @@ class LoginCredential {
 
   // Example: console.log(this.toHumanReadable());
   toHumanReadable() {
-    return `[LoginCredential] ` +
+    return `[SessionCredential] ` +
            `username: "${this.username}", ` +
            `password: "${this.password}"`;
   }
@@ -1161,7 +1161,7 @@ class LoginCredential {
 class RegisterHandler {
   // Private instance fields.
   #parent; // The parent is a SessionManager.
-  #loginCredential; // This is a LoginCredential.
+  #sessionCredential;
   #mainElement;
   #formElement;
   #buttonStartElements;
@@ -1171,7 +1171,7 @@ class RegisterHandler {
     // The parent is necessary for this.#parent.register().
     // See implementation of handleEvent(event).
     this.#parent = parent;
-    this.#loginCredential = new LoginCredential();
+    this.#sessionCredential = new SessionCredential();
     this.#mainElement = divRegisterElement;
     this.#formElement = formRegisterElement;
     this.#buttonStartElements = [];
@@ -1194,36 +1194,36 @@ class RegisterHandler {
     }
   }
 
-  getUsername() {
-    return this.#loginCredential.username;
-  }
-  
-  getPassword() {
-    return this.#loginCredential.password;
-  }
-
   handleEvent(event) {
     if (event.target === this.#formElement) {
       if (event.type === "submit") {
         const formData = new FormData(this.#formElement);
-        const dataObject = Object.fromEntries(formData);
-        this.#loginCredential.username = dataObject["username"];
-        this.#loginCredential.password = dataObject["password"];
-        console.log(this.#loginCredential.toHumanReadable()); // TODO: Delete.
-        this.#parent.register()
-          .then((success) => {
-            if (success) {
-              this.#mainElement.style.display = "none";
-            } else {
-              // TODO: Message about registration failure.
-              console.log("TODO: Message about registration failure.");
-            }
-          })
-          .catch((error) => {
-            console.error(error);
-          })
-          .finally(() => {
-          });
+        const userValidationErrors = userValidation(formData);
+        if (userValidationErrors === null) {
+          const dataObject = Object.fromEntries(formData);
+          this.#sessionCredential.username = dataObject["username"];
+          this.#sessionCredential.password = dataObject["password"];
+          console.log(this.#sessionCredential.toHumanReadable()); // TODO: Delete.
+          this.#parent.register(this.#sessionCredential)
+            .then((success) => {
+              if (success) {
+                this.#mainElement.style.display = "none";
+              } else {
+                // TODO: Message about registration failure.
+                console.log("TODO: Message about registration failure.");
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+            })
+            .finally(() => {
+            });
+        } else {
+          for (const error of userValidationErrors) {
+            // TODO: Message about invalid formData.
+            console.log(error);
+          }
+        }
       }
     }
     for (const element of this.#buttonStartElements) {
@@ -1247,7 +1247,7 @@ class RegisterHandler {
 class LoginHandler {
   // Private instance fields.
   #parent; // The parent is a SessionManager.
-  #loginCredential; // This is a LoginCredential.
+  #sessionCredential;
   #mainElement;
   #formElement;
   #buttonStartElements;
@@ -1257,7 +1257,7 @@ class LoginHandler {
     // The parent is necessary for this.#parent.login().
     // See implementation of handleEvent(event).
     this.#parent = parent;
-    this.#loginCredential = new LoginCredential();
+    this.#sessionCredential = new SessionCredential();
     this.#mainElement = divLoginElement;
     this.#formElement = formLoginElement;
     this.#buttonStartElements = [];
@@ -1280,23 +1280,15 @@ class LoginHandler {
     }
   }
 
-  getUsername() {
-    return this.#loginCredential.username;
-  }
-  
-  getPassword() {
-    return this.#loginCredential.password;
-  }
-
   handleEvent(event) {
     if (event.target === this.#formElement) {
       if (event.type === "submit") {
         const formData = new FormData(this.#formElement);
         const dataObject = Object.fromEntries(formData);
-        this.#loginCredential.username = dataObject["username"];
-        this.#loginCredential.password = dataObject["password"];
-        console.log(this.#loginCredential.toHumanReadable()); // TODO: Delete.
-        this.#parent.login()
+        this.#sessionCredential.username = dataObject["username"];
+        this.#sessionCredential.password = dataObject["password"];
+        console.log(this.#sessionCredential.toHumanReadable()); // TODO: Delete.
+        this.#parent.login(this.#sessionCredential)
           .then((success) => {
             if (success) {
               this.#mainElement.style.display = "none";
@@ -1416,9 +1408,15 @@ class SessionManager {
     this.#logoutHandler = new LogoutHandler(this);
   }
 
-  async register() {
-    const username = this.#registerHandler.getUsername();
-    const password = this.#registerHandler.getPassword();
+  async register(sessionCredential) {
+    if (!(sessionCredential instanceof SessionCredential)) {
+      return false;
+    }
+    const username = sessionCredential.username;
+    const password = sessionCredential.password;
+    if (username === null || password === null) {
+      return false;
+    }
     const userId = await sessionRegister(username, password)
       .catch((error) => {
         console.error(error);
@@ -1431,9 +1429,15 @@ class SessionManager {
     return false;
   }
 
-  async login() {
-    const username = this.#loginHandler.getUsername();
-    const password = this.#loginHandler.getPassword();
+  async login(sessionCredential) {
+    if (!(sessionCredential instanceof SessionCredential)) {
+      return false;
+    }
+    const username = sessionCredential.username;
+    const password = sessionCredential.password;
+    if (username === null || password === null) {
+      return false;
+    }
     const userId = await sessionLogin(username, password)
       .catch((error) => {
         console.error(error);
