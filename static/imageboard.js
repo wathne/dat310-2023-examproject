@@ -966,14 +966,25 @@ class ThreadsManager {
     const threadSubject = dataObject["subject"];
     const postText = dataObject["text"];
     const imageFile = dataObject["image"];
-    const imageId = await insertImage(imageFile)
-      .catch((error) => {
-        console.error(error);
-      });
-    if (typeof imageId !== "number") {
-      return false; // TODO(wathne): Proper reject/error handling.
+    if (imageFile instanceof File && imageFile.size !== 0) {
+      const imageId = await insertImage(imageFile)
+        .catch((error) => {
+          console.error(error);
+        });
+      if (typeof imageId !== "number") {
+        return false; // TODO(wathne): Proper reject/error handling.
+      }
+      const threadId = await insertThread(threadSubject, postText, imageId)
+        .catch((error) => {
+          console.error(error);
+        });
+      if (typeof threadId === "number") {
+        this.reloadList(); // Do not await.
+        return true;
+      }
+      return false;
     }
-    const threadId = await insertThread(threadSubject, postText, imageId)
+    const threadId = await insertThread(threadSubject, postText, null)
       .catch((error) => {
         console.error(error);
       });
