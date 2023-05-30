@@ -1,6 +1,51 @@
+/* Imageboard.
+ * See also "./api.js".
+ * 
+ * To understand the code I would recommend that you study the class
+ * hierarchy listed below. Skip to the bottom of the code to see how it
+ * all begins. The primary purpose of any *Handler class is to
+ * implement handleEvent(). The primary purpose of any *Manager class
+ * is to spawn *Handler classes and wait for calls.
+ * 
+ * 
+ * Load order:
+ *   /static/api.js
+ *   /static/imageboard.js <- YOU ARE HERE
+ * 
+ * 
+ * Class hierarchy:
+ *   Imageboard
+ *     > ThreadsManager
+ *     |   > Thread Array
+ *     |   |   > PostsManager (For each Thread in Thread Array.)
+ *     |   |       > Post Array
+ *     |   |       > ShowPostsHandler
+ *     |   |       > AddPostHandler
+ *     |   |       > ModifyPostHandler
+ *     |   |       > DeletePostHandler
+ *     |   |       > FilterHandler
+ *     |   > AddThreadHandler
+ *     |   > ModifyThreadHandler
+ *     |   > DeleteThreadHandler
+ *     |   > FilterHandler
+ *     > SessionManager
+ *         > RegisterHandler
+ *         |   > SessionCredential
+ *         > LoginHandler
+ *         |   > SessionCredential
+ *         > LogoutHandler
+ * 
+ * 
+ * Function overview:
+ *   userValidation()
+ *   imageValidation()
+ *   threadValidation()
+ *   postValidation()
+ */
+
 "use strict";
 
-// CLASS
+// Elements by class.
 const buttonCancelElements = document.getElementsByClassName("button-cancel");
 const buttonClearImageElements = document.getElementsByClassName("button-clear-image");
 const buttonRegisterElements = document.getElementsByClassName("button-register");
@@ -23,7 +68,7 @@ const buttonAddThreadElements = document.getElementsByClassName("button-add-thre
 // Extra "thread-text" class divs created by Thread.
 
 
-// ID
+// Elements by id.
 const divMainExtraElement = document.getElementById("main-extra");
 const divMainContentElement = document.getElementById("main-content");
 
