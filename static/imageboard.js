@@ -1,5 +1,4 @@
 /* Imageboard.
- * See also "./api.js".
  * 
  * To understand the code I would recommend that you study the class
  * hierarchy listed below. Skip to the bottom of the code to see how it
@@ -9,11 +8,14 @@
  * 
  * 
  * Load order:
+ * -----------
  *   /static/api.js
+ *   /static/form-validation.js
  *   /static/imageboard.js <- YOU ARE HERE
  * 
  * 
  * Class hierarchy:
+ * ----------------
  *   Imageboard
  *     > ThreadsManager
  *     |   > Thread Array
@@ -36,11 +38,32 @@
  *         > LogoutHandler
  * 
  * 
+ * /static/api.js
  * Function overview:
- *   userValidation()
- *   imageValidation()
- *   threadValidation()
- *   postValidation()
+ * ------------------
+ *   sessionRegister(username, password)
+ *   sessionLogin(username, password)
+ *   sessionLogout()
+ *   insertImage(imageFile)
+ *   retrieveImage(imageId)
+ *   retrieveThumbnail(imageId)
+ *   insertThread(threadSubject, postText, imageId)
+ *   retrieveThread(threadId)
+ *   retrieveThreads()
+ *   insertPost(threadId, postText, imageId)
+ *   insertPostV2(threadId, postText, imageId)
+ *   retrievePost(postId)
+ *   retrievePosts(threadId)
+ * 
+ * 
+ * /static/form-validation.js
+ * Function overview:
+ * ------------------
+ *   userValidation(formData)
+ *   threadValidation(formData)
+ *     > imageValidation(imageFile)
+ *   postValidation(formData)
+ *     > imageValidation(imageFile)
  */
 
 "use strict";
@@ -109,94 +132,6 @@ const filterCriteriaElement = document.getElementById("filter-criteria");
 
 // Placeholder URL.
 const pixelPNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-
-
-// This form validation function is a "first line of defence".
-// The server will do a final validation and may also return an error.
-function userValidation(formData) {
-  const dataObject = Object.fromEntries(formData);
-  const username = dataObject["username"];
-  const password = dataObject["password"];
-  const errors = [];
-
-  if (username.length === 0) {
-    errors.push("Your username can not be empty.")
-  }
-
-  if (password.length < 8) {
-    errors.push("Your password must be at least 8 characters long.")
-  }
-
-  if (errors.length) {
-    return errors;
-  }
-  return null;
-}
-
-
-// This form validation function is a "first line of defence".
-// The server will do a final validation and may also return an error.
-function imageValidation(imageFile) {
-  const errors = [];
-
-  // Nothing here yet.
-
-  if (errors.length) {
-    return errors;
-  }
-  return null;
-}
-
-
-// This form validation function is a "first line of defence".
-// The server will do a final validation and may also return an error.
-function threadValidation(formData) {
-  const dataObject = Object.fromEntries(formData);
-  const imageFile = dataObject["image"];
-  const postText = dataObject["text"];
-  const threadSubject = dataObject["subject"];
-  const errors = [];
-
-  const imageErrors = imageValidation(imageFile);
-  if (imageErrors !== null) {
-    for (const imageError of imageErrors) {
-      errors.push(imageError);
-    }
-  }
-
-  if (threadSubject.length === 0) {
-    errors.push("The thread subject can not be empty.")
-  }
-
-  if (errors.length) {
-    return errors;
-  }
-  return null;
-}
-
-
-// This form validation function is a "first line of defence".
-// The server will do a final validation and may also return an error.
-function postValidation(formData) {
-  const dataObject = Object.fromEntries(formData);
-  const imageFile = dataObject["image"];
-  const postText = dataObject["text"];
-  const errors = [];
-
-  const imageErrors = imageValidation(imageFile);
-  if (imageErrors !== null) {
-    for (const imageError of imageErrors) {
-      errors.push(imageError);
-    }
-  }
-
-  // Nothing here yet.
-
-  if (errors.length) {
-    return errors;
-  }
-  return null;
-}
 
 
 class Post {
