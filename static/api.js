@@ -1,6 +1,24 @@
 /* Async functions for REST-API.
  * See also "../app.py".
  * 
+ * 
+ * Function overview:
+ * ------------------
+ *   sessionRegister(username, password)
+ *   sessionLogin(username, password)
+ *   sessionLogout()
+ *   insertImage(imageFile)
+ *   retrieveImage(imageId)
+ *   retrieveThumbnail(imageId)
+ *   insertThread(threadSubject, postText, imageId)
+ *   retrieveThread(threadId)
+ *   retrieveThreads()
+ *   insertPost(threadId, postText, imageId)
+ *   insertPostV2(threadId, postText, imageId)
+ *   retrievePost(postId)
+ *   retrievePosts(threadId)
+ * 
+ * 
  * Load this JavaScript file before other JavaScript files.
  * 
  * <!DOCTYPE html>
