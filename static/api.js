@@ -329,7 +329,7 @@ async function retrievePost(postId) {
 */
 
 
-async function retrievePosts(postId) {
+async function retrievePosts(threadId) {
   const response = await fetch(
     `/api/threads/${threadId}/posts`,
     {
