@@ -462,8 +462,7 @@ def index() -> WerkzeugResponse | Response:
     # index() is whitelisted.
     return redirect(
         location=url_for(
-            endpoint="static",
-            filename="index.html",
+            endpoint="imageboard",
         ),
         code=302,
     )
