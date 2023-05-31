@@ -191,8 +191,18 @@ from pathlib import Path
 from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import Error as AnySqlite3Error
+from typing import Any
 from typing import cast
 from werkzeug.datastructures import FileStorage
+from werkzeug.exceptions import BadRequest # 400
+from werkzeug.exceptions import Unauthorized # 401
+from werkzeug.exceptions import Forbidden # 403
+from werkzeug.exceptions import NotFound # 404
+from werkzeug.exceptions import MethodNotAllowed # 405
+from werkzeug.exceptions import Gone # 410
+from werkzeug.exceptions import RequestEntityTooLarge # 413
+from werkzeug.exceptions import UnsupportedMediaType # 415
+from werkzeug.exceptions import InternalServerError # 500
 from werkzeug.local import LocalProxy as LP
 from werkzeug.security import check_password_hash
 from werkzeug.security import generate_password_hash
@@ -204,8 +214,8 @@ DATABASE_PATH: str = r"./database.db"
 IMAGES_FOLDER: str = r"./images"
 IMAGES_EXTENSIONS: set[str] = {"gif", "jpeg", "jpg", "png"}
 app: Flask = Flask(import_name=__name__)
-# TODO(wathne): Flask will raise a RequestEntityTooLarge exception.
-#app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000
+# Flask will raise a RequestEntityTooLarge exception.
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000 # 16 megabytes.
 app.secret_key = "91d754bc1945369164b3b5d288ee41d3"
 
 
@@ -362,6 +372,87 @@ def before_request() -> None:
 
     load_user()
     return None
+
+
+# Raise if the browser sends something to the application the application or
+# server cannot handle.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.BadRequest
+@app.errorhandler(BadRequest)
+def handle_bad_request(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Bad Request", 400)
+
+
+# Raise if the user is not authorized to access a resource.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Unauthorized
+@app.errorhandler(Unauthorized)
+def handle_unauthorized(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Unauthorized", 401)
+
+
+# Raise if the user doesn’t have the permission for the requested resource but
+# was authenticated.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Forbidden
+@app.errorhandler(Forbidden)
+def handle_forbidden(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Forbidden", 403)
+
+
+# Raise if a resource does not exist and never existed.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.NotFound
+@app.errorhandler(NotFound)
+def handle_not_found(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Not Found", 404)
+
+
+# Raise if the server used a method the resource does not handle. For example
+# POST if the resource is view only. Especially useful for REST.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.MethodNotAllowed
+@app.errorhandler(MethodNotAllowed)
+def handle_method_not_allowed(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Method Not Allowed", 405)
+
+
+# Raise if a resource existed previously and went away without new location.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Gone
+@app.errorhandler(Gone)
+def handle_gone(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Gone", 410)
+
+
+# The status code one should return if the data submitted exceeded a given
+# limit.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.RequestEntityTooLarge
+@app.errorhandler(RequestEntityTooLarge)
+# pylint: disable-next=line-too-long
+def handle_request_entity_too_large(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Request Entity Too Large", 413)
+
+
+# The status code returned if the server is unable to handle the media type the
+# client transmitted.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.UnsupportedMediaType
+@app.errorhandler(UnsupportedMediaType)
+# pylint: disable-next=line-too-long
+def handle_unsupported_media_type(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Unsupported Media Type", 415)
+
+
+# Raise if an internal server error occurred. This is a good fallback if an
+# unknown error occurred in the dispatcher.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.InternalServerError
+@app.errorhandler(InternalServerError)
+# pylint: disable-next=line-too-long
+def handle_internal_server_error(e: Any) -> tuple[str, int]: # type: ignore[misc]
+    print(e)
+    return ("Internal Server Error", 500)
 
 
 @app.route(rule="/")
