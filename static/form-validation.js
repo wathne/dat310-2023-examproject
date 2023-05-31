@@ -1,6 +1,15 @@
 /* Form validation functions.
  * 
  * 
+ * Load order:
+ * -----------
+ *   /static/api.js
+ *   /static/form-validation.js <- YOU ARE HERE
+ *   /static/box.js
+ *   /static/handler.js
+ *   /static/imageboard.js
+ * 
+ * 
  * Function overview:
  * ------------------
  *   userValidation(formData)

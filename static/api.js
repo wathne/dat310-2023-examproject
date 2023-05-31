@@ -1,5 +1,13 @@
-/* Async functions for REST-API.
- * See also "../app.py".
+/* Async REST-API functions. See also "../app.py".
+ * 
+ * 
+ * Load order:
+ * -----------
+ *   /static/api.js <- YOU ARE HERE
+ *   /static/form-validation.js
+ *   /static/box.js
+ *   /static/handler.js
+ *   /static/imageboard.js
  * 
  * 
  * Function overview:
@@ -45,18 +53,18 @@
 
 async function sessionRegister(username, password) {
   const response = await fetch(
-    "/api/users",
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
+      "/api/users",
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "username": username,
+          "password": password,
+        }),
       },
-      body: JSON.stringify({
-        "username": username,
-        "password": password,
-      }),
-    },
   );
   // Returns userId or null.
   return response.json();
@@ -65,18 +73,18 @@ async function sessionRegister(username, password) {
 
 async function sessionLogin(username, password) {
   const response = await fetch(
-    "/api/login",
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
+      "/api/login",
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "username": username,
+          "password": password,
+        }),
       },
-      body: JSON.stringify({
-        "username": username,
-        "password": password,
-      }),
-    },
   );
   // Returns userId or null.
   return response.json();
@@ -85,15 +93,15 @@ async function sessionLogin(username, password) {
 
 async function sessionLogout() {
   const response = await fetch(
-    "/api/logout",
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
+      "/api/logout",
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(null),
       },
-      body: JSON.stringify(null),
-    },
   );
   // Returns userId or null.
   return response.json();
@@ -104,16 +112,16 @@ async function insertImage(imageFile) {
   const formData = new FormData();
   formData.append("file", imageFile)
   const response = await fetch(
-    "/api/images",
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        // The request will fail if we explicitly set the content-type header.
-        //"content-type": "multipart/form-data",
+      "/api/images",
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          // The request will fail if we explicitly set the content-type header.
+          //"content-type": "multipart/form-data",
+        },
+        body: formData,
       },
-      body: formData,
-    },
   );
   // Returns imageId or null.
   return response.json();
@@ -122,13 +130,13 @@ async function insertImage(imageFile) {
 
 async function retrieveImage(imageId) {
   const response = await fetch(
-    `/api/images/${imageId}`,
-    {
-      method: "GET",
-      headers: {
-        "accept": "image/*, application/json",
+      `/api/images/${imageId}`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "image/*, application/json",
+        },
       },
-    },
   );
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.includes("application/json")) {
@@ -152,13 +160,13 @@ async function retrieveImage(imageId) {
 
 async function retrieveThumbnail(imageId) {
   const response = await fetch(
-    `/api/thumbnails/${imageId}`,
-    {
-      method: "GET",
-      headers: {
-        "accept": "image/*, application/json",
+      `/api/thumbnails/${imageId}`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "image/*, application/json",
+        },
       },
-    },
   );
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.includes("application/json")) {
@@ -182,19 +190,19 @@ async function retrieveThumbnail(imageId) {
 
 async function insertThread(threadSubject, postText, imageId) {
   const response = await fetch(
-    "/api/threads",
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
+      "/api/threads",
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "image_id": imageId,
+          "post_text": postText,
+          "thread_subject": threadSubject,
+        }),
       },
-      body: JSON.stringify({
-        "image_id": imageId,
-        "post_text": postText,
-        "thread_subject": threadSubject,
-      }),
-    },
   );
   // Returns threadId or null.
   return response.json();
@@ -203,13 +211,13 @@ async function insertThread(threadSubject, postText, imageId) {
 
 async function retrieveThread(threadId) {
   const response = await fetch(
-    `/api/threads/${threadId}`,
-    {
-      method: "GET",
-      headers: {
-        "accept": "application/json",
+      `/api/threads/${threadId}`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+        },
       },
-    },
   );
   // Returns thread and posts or null.
   return response.json();
@@ -250,13 +258,13 @@ async function retrieveThread(threadId) {
 
 async function retrieveThreads() {
   const response = await fetch(
-    "/api/threads",
-    {
-      method: "GET",
-      headers: {
-        "accept": "application/json",
+      "/api/threads",
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+        },
       },
-    },
   );
   // Returns threads or null.
   return response.json();
@@ -285,18 +293,18 @@ async function retrieveThreads() {
 
 async function insertPost(threadId, postText, imageId) {
   const response = await fetch(
-    `/api/threads/${threadId}/posts`,
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
+      `/api/threads/${threadId}/posts`,
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "image_id": imageId,
+          "post_text": postText,
+        }),
       },
-      body: JSON.stringify({
-        "image_id": imageId,
-        "post_text": postText,
-      }),
-    },
   );
   // Returns postId or null.
   return response.json();
@@ -305,18 +313,18 @@ async function insertPost(threadId, postText, imageId) {
 
 async function insertPostV2(threadId, postText, imageId) {
   const response = await fetch(
-    `/api/threads/${threadId}`,
-    {
-      method: "POST",
-      headers: {
-        "accept": "application/json",
-        "content-type": "application/json",
+      `/api/threads/${threadId}`,
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "image_id": imageId,
+          "post_text": postText,
+        }),
       },
-      body: JSON.stringify({
-        "image_id": imageId,
-        "post_text": postText,
-      }),
-    },
   );
   // Returns postId or null.
   return response.json();
@@ -325,13 +333,13 @@ async function insertPostV2(threadId, postText, imageId) {
 
 async function retrievePost(postId) {
   const response = await fetch(
-    `/api/posts/${postId}`,
-    {
-      method: "GET",
-      headers: {
-        "accept": "application/json",
+      `/api/posts/${postId}`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+        },
       },
-    },
   );
   // Returns post or null.
   return response.json();
@@ -349,13 +357,13 @@ async function retrievePost(postId) {
 
 async function retrievePosts(threadId) {
   const response = await fetch(
-    `/api/threads/${threadId}/posts`,
-    {
-      method: "GET",
-      headers: {
-        "accept": "application/json",
+      `/api/threads/${threadId}/posts`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+        },
       },
-    },
   );
   // Returns posts or null.
   return response.json();

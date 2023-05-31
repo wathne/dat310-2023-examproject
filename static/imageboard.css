@@ -101,8 +101,14 @@
 .thread-text {
 }
 
-.button-add-thread {
-  margin: 0px 3px 0px 3px;
+.post {
+  background-color: orange;
+  border-radius: 8px;
+  margin: 0.25em 0.25em 0.25em 0.25em;
+  padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+.post-text {
 }
 
 .button-register {
@@ -191,18 +197,6 @@ main {
 }
 
 main #main-extra {
-}
-
-main #add-thread {
-}
-
-main #form-add-thread {
-}
-
-main #input-file-add-thread {
-}
-
-main #thumbnail-add-thread {
 }
 
 main #register {
