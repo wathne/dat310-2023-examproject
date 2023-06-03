@@ -500,6 +500,154 @@ def insert_thread(
         db_cur.close()
 
 
+# TODO(wathne): Return -400 if any function arguments are fatally bad.
+# TODO(wathne): Return -403 if user_id does not match.
+# TODO(wathne): Return -404 if thread is not found.
+# TODO(wathne): Delete orphaned images or make a scheduled janitor function.
+def update_thread(
+    db_con: Connection,
+    user_id: int,
+    thread_id: int,
+    thread_subject: str,
+    post_text: str | None = None,
+    image_id: int | None = None,
+) -> int:
+    print("Database: Updating thread ...")
+    if post_text is None:
+        post_text = ""
+        print("Database: post_text set to empty string, as fallback.")
+    timestamp: float = time() # Unix time.
+    thread_timestamp: int = 0
+    try:
+        thread_timestamp = int(timestamp)
+        print(f"Database: thread_timestamp = {thread_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: thread_timestamp = 0, Unix time, as fallback.")
+        pass
+    sql_post_id_select: str = (
+        "SELECT "
+            "post_id"
+        " FROM threads WHERE thread_id = :thread_id;"
+    )
+    sql_post_update: str = (
+        "UPDATE posts SET "
+            "image_id = :image_id, "
+            "post_last_modified = :post_last_modified, "
+            "post_text = :post_text"
+        " WHERE post_id = :post_id;"
+    )
+    sql_thread_update: str = (
+        "UPDATE threads SET "
+            "thread_last_modified = :thread_last_modified, "
+            "thread_subject = :thread_subject"
+        " WHERE thread_id = :thread_id;"
+    )
+    parameters: dict[str, str | int | None] = {
+        "image_id": image_id,
+        "post_id": None,
+        "post_last_modified": thread_timestamp,
+        "post_text": post_text,
+        "thread_id": thread_id,
+        "thread_last_modified": thread_timestamp,
+        "thread_subject": thread_subject,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    post_id: int | None = None
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            # post_id select
+            db_cur.execute(sql_post_id_select, parameters)
+            for db_cur_row in db_cur:
+                post_id = db_cur_row["post_id"]
+                if post_id is None:
+                    break
+                parameters["post_id"] = post_id
+                # post update
+                db_cur.execute(sql_post_update, parameters)
+                break
+            # thread update
+            db_cur.execute(sql_thread_update, parameters)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Thread update failed.")
+        return -500
+    else:
+        if post_id is None:
+            print("Database: post_id is None. Skipping post update.")
+        print("Database: Thread update completed successfully.")
+        return thread_id
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+# TODO(wathne): Return -400 if any function arguments are fatally bad.
+# TODO(wathne): Return -403 if user_id does not match.
+# TODO(wathne): Return -404 if thread is not found.
+# TODO(wathne): Delete orphaned posts or make a scheduled janitor function.
+# TODO(wathne): Delete orphaned images or make a scheduled janitor function.
+def delete_thread(
+    db_con: Connection,
+    user_id: int,
+    thread_id: int,
+) -> int:
+    print("Database: Deleting thread ...")
+    sql_post_id_select: str = (
+        "SELECT "
+            "post_id"
+        " FROM threads WHERE thread_id = :thread_id;"
+    )
+    sql_post_delete: str = (
+        "DELETE"
+        " FROM posts WHERE post_id = :post_id;"
+    )
+    sql_thread_delete: str = (
+        "DELETE"
+        " FROM threads WHERE thread_id = :thread_id;"
+    )
+    parameters: dict[str, int | None] = {
+        "post_id": None,
+        "thread_id": thread_id,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    db_cur_row: Row
+    post_id: int | None = None
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.row_factory = cast(Callable[[Cursor, Row], Row], Row)
+            # post_id select
+            db_cur.execute(sql_post_id_select, parameters)
+            for db_cur_row in db_cur:
+                post_id = db_cur_row["post_id"]
+                if post_id is None:
+                    break
+                parameters["post_id"] = post_id
+                # post delete
+                db_cur.execute(sql_post_delete, parameters)
+                break
+            # thread delete
+            db_cur.execute(sql_thread_delete, parameters)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Thread deletion failed.")
+        return -500
+    else:
+        if post_id is None:
+            print("Database: post_id is None. Skipping post deletion.")
+        print("Database: Thread deletion completed successfully.")
+        return thread_id
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
 def retrieve_thread(
     db_con: Connection,
     thread_id: int,
@@ -732,6 +880,96 @@ def insert_post(
             print("Database: Post creation failed.")
             return -1
         print("Database: Post creation completed successfully.")
+        return post_id
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+# TODO(wathne): Return -400 if any function arguments are fatally bad.
+# TODO(wathne): Return -403 if user_id does not match.
+# TODO(wathne): Return -404 if post is not found.
+# TODO(wathne): Delete orphaned images or make a scheduled janitor function.
+def update_post(
+    db_con: Connection,
+    user_id: int,
+    post_id: int,
+    post_text: str | None = None,
+    image_id: int | None = None,
+) -> int:
+    print("Database: Updating post ...")
+    if post_text is None:
+        post_text = ""
+        print("Database: post_text set to empty string, as fallback.")
+    timestamp: float = time() # Unix time.
+    post_timestamp: int = 0
+    try:
+        post_timestamp = int(timestamp)
+        print(f"Database: post_timestamp = {post_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: post_timestamp = 0, Unix time, as fallback.")
+        pass
+    sql: str = (
+        "UPDATE posts SET "
+            "image_id = :image_id, "
+            "post_last_modified = :post_last_modified, "
+            "post_text = :post_text"
+        " WHERE post_id = :post_id;"
+    )
+    parameters: dict[str, str | int | None] = {
+        "image_id": image_id,
+        "post_id": post_id,
+        "post_last_modified": post_timestamp,
+        "post_text": post_text,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql, parameters)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Post update failed.")
+        return -500
+    else:
+        print("Database: Post update completed successfully.")
+        return post_id
+    finally:
+        # The finally clause is always executed on the way out.
+        db_cur.close()
+
+
+# TODO(wathne): Return -400 if any function arguments are fatally bad.
+# TODO(wathne): Return -403 if user_id does not match.
+# TODO(wathne): Return -404 if post is not found.
+# TODO(wathne): Delete orphaned images or make a scheduled janitor function.
+def delete_post(
+    db_con: Connection,
+    user_id: int,
+    post_id: int,
+) -> int:
+    print("Database: Deleting post ...")
+    sql: str = (
+        "DELETE"
+        " FROM posts WHERE post_id = :post_id;"
+    )
+    parameters: dict[str, int] = {
+        "post_id": post_id,
+        "user_id": user_id,
+    }
+    db_cur: Cursor
+    try:
+        with db_con:
+            db_cur = db_con.cursor()
+            db_cur.execute(sql, parameters)
+    except AnySqlite3Error as err:
+        print(err)
+        print("Database: Post deletion failed.")
+        return -500
+    else:
+        print("Database: Post deletion completed successfully.")
         return post_id
     finally:
         # The finally clause is always executed on the way out.
