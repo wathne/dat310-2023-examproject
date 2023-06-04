@@ -917,11 +917,16 @@ def update_post(
         print(int_error)
         print("Database: post_timestamp = 0, Unix time, as fallback.")
         pass
-    sql: str = (
+    sql_post_update: str = (
         "UPDATE posts SET "
             "image_id = :image_id, "
             "post_last_modified = :post_last_modified, "
             "post_text = :post_text"
+        " WHERE post_id = :post_id;"
+    )
+    sql_thread_update: str = (
+        "UPDATE threads SET "
+            "thread_last_modified = :thread_last_modified"
         " WHERE post_id = :post_id;"
     )
     parameters: dict[str, str | int | None] = {
@@ -929,13 +934,15 @@ def update_post(
         "post_id": post_id,
         "post_last_modified": post_timestamp,
         "post_text": post_text,
+        "thread_last_modified": post_timestamp,
         "user_id": user_id,
     }
     db_cur: Cursor
     try:
         with db_con:
             db_cur = db_con.cursor()
-            db_cur.execute(sql, parameters)
+            db_cur.execute(sql_post_update, parameters)
+            db_cur.execute(sql_thread_update, parameters)
     except AnySqlite3Error as err:
         print(err)
         print("Database: Post update failed.")
@@ -958,19 +965,36 @@ def delete_post(
     post_id: int,
 ) -> int:
     print("Database: Deleting post ...")
-    sql: str = (
+    timestamp: float = time() # Unix time.
+    post_timestamp: int = 0
+    try:
+        post_timestamp = int(timestamp)
+        print(f"Database: post_timestamp = {post_timestamp}, Unix time.")
+    except (TypeError, ValueError) as int_error:
+        print(int_error)
+        print("Database: post_timestamp = 0, Unix time, as fallback.")
+        pass
+    sql_post_delete: str = (
         "DELETE"
         " FROM posts WHERE post_id = :post_id;"
     )
+    sql_thread_update: str = (
+        "UPDATE threads SET "
+            "post_id = null, "
+            "thread_last_modified = :thread_last_modified"
+        " WHERE post_id = :post_id;"
+    )
     parameters: dict[str, int] = {
         "post_id": post_id,
+        "thread_last_modified": post_timestamp,
         "user_id": user_id,
     }
     db_cur: Cursor
     try:
         with db_con:
             db_cur = db_con.cursor()
-            db_cur.execute(sql, parameters)
+            db_cur.execute(sql_post_delete, parameters)
+            db_cur.execute(sql_thread_update, parameters)
     except AnySqlite3Error as err:
         print(err)
         print("Database: Post deletion failed.")
