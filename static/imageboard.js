@@ -1451,7 +1451,34 @@ class Imageboard {
     this.#sessionManager = new SessionManager(this.#threadsManager.reloadList);
   }
 
-  async reload() {
+  async reloadSettings() {
+    console.log("Requesting settings from the secure cookie session ...");
+    const settings = await getSettings();
+    if (settings !== null) {
+      console.log(settings);
+      const filterCriteria = settings["filter-criteria"];
+      const filterSortOrder = settings["filter-sort-order"];
+      if (typeof filterCriteria === "string") {
+        const filterCriteriaSet = new Set([
+          "last-modified",
+          "subject",
+          "text",
+          "image",
+          "timestamp",
+        ]);
+        if (filterCriteriaSet.has(filterCriteria)) {
+          console.log(`settings.filter-criteria = "${filterCriteria}".`);
+          filterCriteriaElement.value = filterCriteria;
+        }
+      }
+      if (typeof filterSortOrder === "boolean") {
+        console.log(`settings.filter-sort-order = ${filterSortOrder}.`);
+        filterSortOrderElement.checked = filterSortOrder;
+      }
+    }
+  }
+
+  async reloadList() {
     this.#threadsManager.reloadList(); // Do not await.
   }
 }
@@ -1461,5 +1488,6 @@ const imageboard = new Imageboard(
     divMainExtraElement,
     divHeaderButtonsElement,
 );
-//imageboard.reload(); // TESTING
+imageboard.reloadSettings();
+//imageboard.reloadList(); // TESTING
 

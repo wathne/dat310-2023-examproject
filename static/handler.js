@@ -534,6 +534,19 @@ class FilterHandler {
            `criteria: "${this.#criteria}"`;
   }
 
+  #setSettings() {
+    const settings = {
+      "filter-criteria": this.#criteria,
+      "filter-sort-order": this.#sortOrder,
+    };
+    setSettings(settings)
+        .catch((error) => {
+          console.error(error);
+        })
+        .finally(() => {
+        });
+  }
+
   getSearch() {
     return this.#search;
   }
@@ -556,12 +569,14 @@ class FilterHandler {
     if (event.target === filterSortOrderElement) {
       if (event.type === "input") {
         this.#sortOrder = event.target.checked;
+        this.#setSettings();
         this.#manager.sortList();
       }
     }
     if (event.target === filterCriteriaElement) {
       if (event.type === "input") {
         this.#criteria = event.target.value;
+        this.#setSettings();
         this.#manager.sortList();
       }
     }
