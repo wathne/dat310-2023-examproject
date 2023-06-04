@@ -50,10 +50,14 @@
  *   retrieveImage(imageId)
  *   retrieveThumbnail(imageId)
  *   insertThread(threadSubject, postText, imageId)
+ *   updateThread(threadId, threadSubject, postText, imageId)
+ *   deleteThread(threadId)
  *   retrieveThread(threadId)
  *   retrieveThreads()
  *   insertPost(threadId, postText, imageId)
  *   insertPostV2(threadId, postText, imageId)
+ *   updatePost(postId, postText, imageId)
+ *   deletePost(postId)
  *   retrievePost(postId)
  *   retrievePosts(threadId)
  * 
@@ -122,15 +126,9 @@
  *   LogoutHandler
  * 
  * 
- * TODO(wathne): Implement ThreadsManager.modifyThread(formData, thread).
- * TODO(wathne): Implement ThreadsManager.deleteThread(thread).
- * TODO(wathne): Implement PostsManager.modifyThread(formData, thread).
- * TODO(wathne): Implement PostsManager.deleteThread(thread).
- * TODO(wathne): Append modify element and button to thread element.
- * TODO(wathne): Append delete element and button to thread element.
- * TODO(wathne): Append modify element and button to post element.
- * TODO(wathne): Append delete element and button to post element.
  * TODO(wathne): Store filter settings in cookie.
+ * TODO(wathne): Fix duplicate display of Threads bug.
+ * TODO(wathne): Make sure that the PostsManager is ok after a Thread rebuild.
  * TODO(wathne): retrieveThread returns thread_and_posts, not thread, fix it?
  * TODO(wathne): Improve reloadList().
  * TODO(wathne): Delete testElement.
@@ -173,6 +171,9 @@ class Thread {
   #thumbnailElement;
   #postTextElement;
   #testElement; // TODO(wathne): Delete testElement.
+  // Box container elements.
+  #buttonsElement;
+  #extraElement;
   // PostsManager elements.
   #postsButtonsElement;
   #postsExtraElement;
@@ -219,6 +220,12 @@ class Thread {
     this.#postTextElement.className = "thread-text";
     // test // TODO(wathne): Delete testElement.
     this.#testElement = document.createElement("div");
+    // buttons
+    this.#buttonsElement = document.createElement("div");
+    this.#buttonsElement.className = "";
+    // extra
+    this.#extraElement = document.createElement("div");
+    this.#extraElement.className = "";
     // postsButtons
     this.#postsButtonsElement = document.createElement("div");
     this.#postsButtonsElement.className = "";
@@ -283,6 +290,11 @@ class Thread {
     this.#mainElement.appendChild(this.#testElement);
   }
 
+  #appendExtra() {
+    this.#mainElement.appendChild(this.#buttonsElement);
+    this.#mainElement.appendChild(this.#extraElement);
+  }
+
   #appendPosts() {
     this.#mainElement.appendChild(this.#postsButtonsElement);
     this.#mainElement.appendChild(this.#postsExtraElement);
@@ -297,9 +309,17 @@ class Thread {
 
   #finally() {
     this.#appendTestElement(); // TODO(wathne): Delete testElement.
+    this.#appendExtra();
     this.#appendPosts();
     this.#done = true;
     return this;
+  }
+
+  appendBox(box) {
+    const button = box.createButton();
+    const element = box.getMainElement();
+    this.#buttonsElement.appendChild(button);
+    this.#extraElement.appendChild(element);
   }
 
   // TODO(wathne): retrieveThread returns thread_and_posts, not thread, fix it?
@@ -450,6 +470,10 @@ class Thread {
     return !this.#hidden; // Boolean
   }
 
+  getThreadId() {
+    return this.#threadId;
+  }
+
   getThreadLastModified() {
     return this.#threadLastModified;
   }
@@ -560,21 +584,11 @@ class ThreadsManager {
   }
 
   #createModifyThreadBox(thread) {
-    const modifyThreadBox = this.#modifyThreadHandler.createBox(thread);
-    const modifyThreadElement = modifyThreadBox.getMainElement();
-    const modifyThreadButton = modifyThreadBox.createButton();
-    // TODO(wathne): Append modify element and button to thread element.
-    // TODO(wathne): Delete the next line.
-    console.log(`createModifyThreadBox: ${thread.toHumanReadable()}`);
+    thread.appendBox(this.#modifyThreadHandler.createBox(thread));
   }
 
   #createDeleteThreadBox(thread) {
-    const deleteThreadBox = this.#deleteThreadHandler.createBox(thread);
-    const deleteThreadElement = deleteThreadBox.getMainElement();
-    const deleteThreadButton = deleteThreadBox.createButton();
-    // TODO(wathne): Append delete element and button to thread element.
-    // TODO(wathne): Delete the next line.
-    console.log(`createDeleteThreadBox: ${thread.toHumanReadable()}`);
+    thread.appendBox(this.#deleteThreadHandler.createBox(thread));
   }
 
   async addThread(formData) {
@@ -611,13 +625,67 @@ class ThreadsManager {
     return false;
   }
 
-  // TODO(wathne): Implement ThreadsManager.modifyThread(formData, thread).
   async modifyThread(formData, thread) {
+    const threadId = thread.getThreadId();
+    if (typeof threadId !== "number") {
+      return false;
+    }
+    const dataObject = Object.fromEntries(formData);
+    const threadSubject = dataObject["subject"];
+    const postText = dataObject["text"];
+    const imageFile = dataObject["image"];
+    if (imageFile instanceof File && imageFile.size !== 0) {
+      const imageId = await insertImage(imageFile)
+          .catch((error) => {
+            console.error(error);
+          });
+      if (typeof imageId !== "number") {
+        return false; // TODO(wathne): Proper reject/error handling.
+      }
+      const responseCode = await updateThread(
+          threadId,
+          threadSubject,
+          postText,
+          imageId,
+      )
+          .catch((error) => {
+            console.error(error);
+          });
+      if (typeof responseCode === "number" && responseCode === threadId) {
+        this.reloadList(); // Do not await.
+        return true;
+      }
+      return false;
+    }
+    const responseCode = await updateThread(
+        threadId,
+        threadSubject,
+        postText,
+        null,
+    )
+        .catch((error) => {
+          console.error(error);
+        });
+    if (typeof responseCode === "number" && responseCode === threadId) {
+      this.reloadList(); // Do not await.
+      return true;
+    }
     return false;
   }
 
-  // TODO(wathne): Implement ThreadsManager.deleteThread(thread).
   async deleteThread(thread) {
+    const threadId = thread.getThreadId();
+    if (typeof threadId !== "number") {
+      return false;
+    }
+    const responseCode = await deleteThread(threadId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (typeof responseCode === "number" && responseCode === threadId) {
+      this.reloadList(); // Do not await.
+      return true;
+    }
     return false;
   }
 
@@ -744,6 +812,9 @@ class Post {
   #thumbnailElement;
   #postTextElement;
   #testElement; // TODO(wathne): Delete testElement.
+  // Box container elements.
+  #buttonsElement;
+  #extraElement;
 
   static async createPostFromPostId(postId) {
     if (typeof postId === "number") {
@@ -780,6 +851,12 @@ class Post {
     this.#postTextElement.className = "post-text";
     // test // TODO(wathne): Delete testElement.
     this.#testElement = document.createElement("div");
+    // buttons
+    this.#buttonsElement = document.createElement("div");
+    this.#buttonsElement.className = "";
+    // extra
+    this.#extraElement = document.createElement("div");
+    this.#extraElement.className = "";
   }
 
   // Example: console.log(this.toHumanReadable());
@@ -831,10 +908,23 @@ class Post {
     this.#mainElement.appendChild(this.#testElement);
   }
 
+  #appendExtra() {
+    this.#mainElement.appendChild(this.#buttonsElement);
+    this.#mainElement.appendChild(this.#extraElement);
+  }
+
   #finally() {
     this.#appendTestElement(); // TODO(wathne): Delete testElement.
+    this.#appendExtra();
     this.#done = true;
     return this;
+  }
+
+  appendBox(box) {
+    const button = box.createButton();
+    const element = box.getMainElement();
+    this.#buttonsElement.appendChild(button);
+    this.#extraElement.appendChild(element);
   }
 
   // Calling rebuildPostFromPostId() without a postId argument will by default
@@ -950,6 +1040,10 @@ class Post {
     return !this.#hidden; // Boolean
   }
 
+  getPostId() {
+    return this.#postId;
+  }
+
   getPostLastModified() {
     return this.#postLastModified;
   }
@@ -1051,21 +1145,11 @@ class PostsManager {
   }
 
   #createModifyPostBox(post) {
-    const modifyPostBox = this.#modifyPostHandler.createBox(post);
-    const modifyPostElement = modifyPostBox.getMainElement();
-    const modifyPostButton = modifyPostBox.createButton();
-    // TODO(wathne): Append modify element and button to post element.
-    // TODO(wathne): Delete the next line.
-    console.log(`createModifyPostBox: ${post.toHumanReadable()}`);
+    post.appendBox(this.#modifyPostHandler.createBox(post));
   }
 
   #createDeletePostBox(post) {
-    const deletePostBox = this.#deletePostHandler.createBox(post);
-    const deletePostElement = deletePostBox.getMainElement();
-    const deletePostButton = deletePostBox.createButton();
-    // TODO(wathne): Append delete element and button to post element.
-    // TODO(wathne): Delete the next line.
-    console.log(`createDeletePostBox: ${post.toHumanReadable()}`);
+    post.appendBox(this.#deletePostHandler.createBox(post));
   }
 
   async addPost(formData) {
@@ -1107,13 +1191,56 @@ class PostsManager {
     return false;
   }
 
-  // TODO(wathne): Implement PostsManager.modifyPost(formData, post).
   async modifyPost(formData, post) {
+    const postId = post.getPostId();
+    if (typeof postId !== "number") {
+      return false;
+    }
+    const dataObject = Object.fromEntries(formData);
+    const postText = dataObject["text"];
+    const imageFile = dataObject["image"];
+    if (imageFile instanceof File && imageFile.size !== 0) {
+      const imageId = await insertImage(imageFile)
+          .catch((error) => {
+            console.error(error);
+          });
+      if (typeof imageId !== "number") {
+        return false; // TODO(wathne): Proper reject/error handling.
+      }
+      const responseCode = await updatePost(postId, postText, imageId)
+          .catch((error) => {
+            console.error(error);
+          });
+      if (typeof responseCode === "number" && responseCode === postId) {
+        this.reloadList(); // Do not await.
+        return true;
+      }
+      return false;
+    }
+    const responseCode = await updatePost(postId, postText, null)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (typeof responseCode === "number" && responseCode === postId) {
+      this.reloadList(); // Do not await.
+      return true;
+    }
     return false;
   }
 
-  // TODO(wathne): Implement PostsManager.deletePost(post).
   async deletePost(post) {
+    const postId = post.getPostId();
+    if (typeof postId !== "number") {
+      return false;
+    }
+    const responseCode = await deletePost(postId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (typeof responseCode === "number" && responseCode === postId) {
+      this.reloadList(); // Do not await.
+      return true;
+    }
     return false;
   }
 
