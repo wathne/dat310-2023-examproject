@@ -129,7 +129,6 @@
  * TODO(wathne): Store filter settings in cookie.
  * TODO(wathne): Fix duplicate display of Threads bug.
  * TODO(wathne): Make sure that the PostsManager is ok after a Thread rebuild.
- * TODO(wathne): retrieveThread returns thread_and_posts, not thread, fix it?
  * TODO(wathne): Improve reloadList().
  * TODO(wathne): Delete testElement.
  * TODO(wathne): Delete "// TESTING".
@@ -181,7 +180,6 @@ class Thread {
   // PostsManager
   #postsManager;
 
-  // TODO(wathne): retrieveThread returns thread_and_posts, not thread, fix it?
   static async createThreadFromThreadId(threadId) {
     if (typeof threadId === "number") {
       return await new Thread()
@@ -322,7 +320,6 @@ class Thread {
     this.#extraElement.appendChild(element);
   }
 
-  // TODO(wathne): retrieveThread returns thread_and_posts, not thread, fix it?
   // Calling rebuildThreadFromThreadId() without a threadId argument will by
   // default attempt to use the existing this.#threadId instance field.
   async rebuildThreadFromThreadId(threadId) {
@@ -337,13 +334,14 @@ class Thread {
     if (this.#threadId === null) {
       return this.#finally();
     }
-    const thread = await retrieveThread(this.#threadId)
+    const thread_and_posts = await retrieveThread(this.#threadId)
         .catch((error) => {
           console.error(error);
         });
-    if (thread === null) {
+    if (thread_and_posts === null) {
       return this.#finally();
     }
+    const thread = thread_and_posts["thread"];
     this.#postId = thread["post_id"];
     this.#threadLastModified = thread["thread_last_modified"];
     this.#threadSubject = thread["thread_subject"];
