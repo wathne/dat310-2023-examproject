@@ -941,6 +941,7 @@ class ModifyPostBox {
     // form
     this.form = document.createElement("form");
     this.form.className = "box-form-modify-post";
+    this.form.onsubmit = (event) => false;
     // part1, part2, part3
     this.part1 = document.createElement("p");
     this.part2 = document.createElement("p");
@@ -1105,6 +1106,7 @@ class DeletePostBox {
     // form
     this.form = document.createElement("form");
     this.form.className = "box-form-delete-post";
+    this.form.onsubmit = (event) => false;
     // part1
     this.part1 = document.createElement("p");
     // formSubmit
