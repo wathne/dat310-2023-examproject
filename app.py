@@ -50,9 +50,9 @@ REST API:
 
     /api/threads/<thread_id>
         [GET]    (Retrieve thread and posts.)
-        [PUT]    (Update thread.)(Not implemented.)
+        [PUT]    (Update thread.)
         [POST]   (Create post.)
-        [DELETE] (Delete thread.)(Not implemented.)
+        [DELETE] (Delete thread.)
 
     /api/threads/<thread_id>/images
         [GET]    (List images.)(Not implemented.)
@@ -69,8 +69,8 @@ REST API:
 
     /api/posts/<post_id>
         [GET]    (Retrieve post.)
-        [PUT]    (Update post.)(Not implemented.)
-        [DELETE] (Delete post.)(Not implemented.)
+        [PUT]    (Update post.)
+        [DELETE] (Delete post.)
 
     /api/users
         [GET]    (List users.)(Not implemented.)
@@ -153,13 +153,13 @@ TODO(wathne):
     /api/images
         [POST]   (Upload image and also create thumbnail.)
 
-    /api/images/<image_id>
-        [GET]    (Retrieve image.)
-
     /api/thumbnails/<image_id>
         [GET]    (Retrieve thumbnail.)
 """
 
+
+from database_handler import delete_post
+from database_handler import delete_thread
 from database_handler import insert_image
 from database_handler import insert_post
 from database_handler import insert_thread
@@ -171,6 +171,8 @@ from database_handler import retrieve_thread
 from database_handler import retrieve_threads
 #from database_handler import retrieve_user_by_id
 from database_handler import retrieve_user_by_name
+from database_handler import update_post
+from database_handler import update_thread
 #from flask import current_app # current_app is a LocalProxy.
 from flask import Flask # current_app real type.
 from flask import g # g is a LocalProxy.
@@ -837,7 +839,7 @@ def api_image(image_id: int | None = None) -> Response:
 
 @app.route(
     rule="/api/threads",
-    methods=["GET","POST"],
+    methods=["GET", "POST"],
 )
 def api_threads() -> Response:
     # pylint: disable=protected-access
@@ -906,7 +908,7 @@ def api_threads() -> Response:
 # TODO(wathne): Combine api_thread() and api_thread_posts(). Check request path.
 @app.route(
     rule="/api/threads/<int:thread_id>",
-    methods=["GET","POST"],
+    methods=["GET", "PUT", "POST", "DELETE"],
 )
 def api_thread(thread_id: int | None = None) -> Response:
     # pylint: disable=protected-access
@@ -923,6 +925,7 @@ def api_thread(thread_id: int | None = None) -> Response:
     request_dict: dict[str, str | int | None] | None = None
     request_dict_image_id: int | None = None
     request_dict_post_text: str | None = None
+    request_dict_thread_subject: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
@@ -931,6 +934,9 @@ def api_thread(thread_id: int | None = None) -> Response:
         )
         request_dict_post_text = cast(str | None,
             request_dict.get("post_text", None),
+        )
+        request_dict_thread_subject = cast(str | None,
+            request_dict.get("thread_subject", None),
         )
 
     if acg.user_id is None:
@@ -946,6 +952,7 @@ def api_thread(thread_id: int | None = None) -> Response:
         dict[str, str | int | None] |
         list[dict[str, str | int | None]]
     ] = {}
+    return_code: int
 
     # Retrieve thread and posts.
     if request_.method == "GET":
@@ -965,6 +972,23 @@ def api_thread(thread_id: int | None = None) -> Response:
         thread_and_posts["posts"] = posts
         return jsonify(thread_and_posts)
 
+    # Update thread.
+    if request_.method == "PUT":
+        if request_dict_thread_subject is None:
+            return jsonify(None)
+        return_code = update_thread(
+            db_con=db_con,
+            user_id=acg.user_id,
+            thread_id=thread_id,
+            thread_subject=request_dict_thread_subject,
+            post_text=request_dict_post_text,
+            image_id=request_dict_image_id,
+        )
+        # TODO(wathne): Return something.
+        if return_code != thread_id:
+            return jsonify(None)
+        return jsonify(thread_id)
+
     # Create post.
     if request_.method == "POST":
         post_id = insert_post(
@@ -980,13 +1004,25 @@ def api_thread(thread_id: int | None = None) -> Response:
             return jsonify(None)
         return jsonify(post_id)
 
+    # Delete thread.
+    if request_.method == "DELETE":
+        return_code = delete_thread(
+            db_con=db_con,
+            user_id=acg.user_id,
+            thread_id=thread_id,
+        )
+        # TODO(wathne): Return something.
+        if return_code != thread_id:
+            return jsonify(None)
+        return jsonify(thread_id)
+
     return jsonify(None)
 
 
 # TODO(wathne): Combine api_thread() and api_thread_posts(). Check request path.
 @app.route(
     rule="/api/threads/<int:thread_id>/posts",
-    methods=["GET","POST"],
+    methods=["GET", "POST"],
 )
 def api_thread_posts(thread_id: int | None = None) -> Response:
     # pylint: disable=protected-access
@@ -1052,7 +1088,7 @@ def api_thread_posts(thread_id: int | None = None) -> Response:
 
 @app.route(
     rule="/api/posts/<int:post_id>",
-    methods=["GET"],
+    methods=["GET", "PUT", "DELETE"],
 )
 def api_post(post_id: int | None = None) -> Response:
     # pylint: disable=protected-access
@@ -1066,21 +1102,65 @@ def api_post(post_id: int | None = None) -> Response:
     if post_id is None:
         return jsonify(None)
 
+    request_dict: dict[str, str | int | None] | None = None
+    request_dict_image_id: int | None = None
+    request_dict_post_text: str | None = None
+    if request_.is_json:
+        request_dict = request_.get_json(force=False, silent=True, cache=False)
+    if isinstance(request_dict, dict):
+        request_dict_image_id = cast(int | None,
+            request_dict.get("image_id", None),
+        )
+        request_dict_post_text = cast(str | None,
+            request_dict.get("post_text", None),
+        )
+
     if acg.user_id is None:
         return jsonify(None)
 
     if db_con is None:
         return jsonify(None)
 
-    # Retrieve post.
     post: dict[str, str | int | None] | None
-    post = retrieve_post(
-        db_con=db_con,
-        post_id=post_id,
-    )
-    if post is None:
-        return jsonify(None)
-    return jsonify(post)
+    return_code: int
+
+    # Retrieve post.
+    if request_.method == "GET":
+        post = retrieve_post(
+            db_con=db_con,
+            post_id=post_id,
+        )
+        if post is None:
+            return jsonify(None)
+        return jsonify(post)
+
+    # Update post.
+    if request_.method == "PUT":
+        return_code = update_post(
+            db_con=db_con,
+            user_id=acg.user_id,
+            post_id=post_id,
+            post_text=request_dict_post_text,
+            image_id=request_dict_image_id,
+        )
+        # TODO(wathne): Return something.
+        if return_code != post_id:
+            return jsonify(None)
+        return jsonify(post_id)
+
+    # Delete post.
+    if request_.method == "DELETE":
+        return_code = delete_post(
+            db_con=db_con,
+            user_id=acg.user_id,
+            post_id=post_id,
+        )
+        # TODO(wathne): Return something.
+        if return_code != post_id:
+            return jsonify(None)
+        return jsonify(post_id)
+
+    return jsonify(None)
 
 
 if __name__ == "__main__":
