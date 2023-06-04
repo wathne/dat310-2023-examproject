@@ -89,21 +89,21 @@ REST API:
         [PUT]    (Update user.)(Not implemented.)
         [DELETE] (Delete user.)(Not implemented.)
 
-    /api/users/<user_id>/images
+    /api/users/<user_id>/images (Not implemented.)
 
-    /api/users/<user_id>/images/<image_id>
+    /api/users/<user_id>/images/<image_id> (Not implemented.)
 
-    /api/users/<user_id>/thumbnails
+    /api/users/<user_id>/thumbnails (Not implemented.)
 
-    /api/users/<user_id>/thumbnails/<image_id>
+    /api/users/<user_id>/thumbnails/<image_id> (Not implemented.)
 
-    /api/users/<user_id>/threads
+    /api/users/<user_id>/threads (Not implemented.)
 
-    /api/users/<user_id>/threads/<thread_id>
+    /api/users/<user_id>/threads/<thread_id> (Not implemented.)
 
-    /api/users/<user_id>/posts
+    /api/users/<user_id>/posts (Not implemented.)
 
-    /api/users/<user_id>/posts/<post_id>
+    /api/users/<user_id>/posts/<post_id> (Not implemented.)
 
 
 Database users table:
@@ -201,7 +201,6 @@ from pathlib import Path
 from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import Error as AnySqlite3Error
-from typing import Any
 from typing import cast
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import BadRequest # 400
@@ -389,81 +388,149 @@ def before_request() -> None:
 # server cannot handle.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.BadRequest
 @app.errorhandler(BadRequest)
-def handle_bad_request(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Bad Request", 400)
+def handle_bad_request(e: BadRequest) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # Raise if the user is not authorized to access a resource.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Unauthorized
 @app.errorhandler(Unauthorized)
-def handle_unauthorized(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Unauthorized", 401)
-
+def handle_unauthorized(e: Unauthorized) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 # Raise if the user doesn’t have the permission for the requested resource but
 # was authenticated.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Forbidden
 @app.errorhandler(Forbidden)
-def handle_forbidden(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Forbidden", 403)
+def handle_forbidden(e: Forbidden) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # Raise if a resource does not exist and never existed.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.NotFound
 @app.errorhandler(NotFound)
-def handle_not_found(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Not Found", 404)
+def handle_not_found(e: NotFound) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # Raise if the server used a method the resource does not handle. For example
 # POST if the resource is view only. Especially useful for REST.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.MethodNotAllowed
 @app.errorhandler(MethodNotAllowed)
-def handle_method_not_allowed(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Method Not Allowed", 405)
+def handle_method_not_allowed(e: MethodNotAllowed) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # Raise if a resource existed previously and went away without new location.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Gone
 @app.errorhandler(Gone)
-def handle_gone(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Gone", 410)
+def handle_gone(e: Gone) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # The status code one should return if the data submitted exceeded a given
 # limit.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.RequestEntityTooLarge
 @app.errorhandler(RequestEntityTooLarge)
-# pylint: disable-next=line-too-long
-def handle_request_entity_too_large(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Request Entity Too Large", 413)
+def handle_request_entity_too_large(e: RequestEntityTooLarge) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # The status code returned if the server is unable to handle the media type the
 # client transmitted.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.UnsupportedMediaType
 @app.errorhandler(UnsupportedMediaType)
-# pylint: disable-next=line-too-long
-def handle_unsupported_media_type(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Unsupported Media Type", 415)
+def handle_unsupported_media_type(e: UnsupportedMediaType) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 # Raise if an internal server error occurred. This is a good fallback if an
 # unknown error occurred in the dispatcher.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.InternalServerError
 @app.errorhandler(InternalServerError)
-# pylint: disable-next=line-too-long
-def handle_internal_server_error(e: Any) -> tuple[str, int]: # type: ignore[misc]
-    print(e)
-    return ("Internal Server Error", 500)
+def handle_internal_server_error(e: InternalServerError) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
 
 
 @app.route(rule="/")
@@ -626,6 +693,7 @@ def _tests_login_deprecated() -> tuple[str, int]:
     ), 200)
 
 
+# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/login",
     methods=["POST"],
@@ -665,6 +733,7 @@ def api_login() -> Response:
     return jsonify(acg.user_id)
 
 
+# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/logout",
     methods=["POST"],
@@ -682,6 +751,7 @@ def api_logout() -> Response:
     return jsonify(acg.user_id)
 
 
+# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/register",
     methods=["POST"],
@@ -744,6 +814,7 @@ def api_users() -> Response:
     return jsonify(acg.user_id)
 
 
+# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/cookie/settings",
     methods=["GET", "POST"],
@@ -786,37 +857,41 @@ def api_images() -> Response:
     )
 
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
 
     if db_con is None:
-        return jsonify(None)
+        raise InternalServerError(description="No database connection.")
 
     # Upload image and also create thumbnail.
     if request_file is None:
-        return jsonify(None)
+        raise BadRequest(description="No image file.")
     if request_file.filename is None:
-        return jsonify(None)
+        raise BadRequest(description="No image filename.")
     request_secure_filename: str = secure_filename(request_file.filename)
     image_file_name: str = Path(request_secure_filename).stem
     image_file_extension: str = Path(request_secure_filename).suffix
-    image_id: int
-    image_id = insert_image(
+    if image_file_extension.casefold() not in IMAGES_EXTENSIONS:
+        raise UnsupportedMediaType(description=(
+            "An image file is allowed to have the following extensions: "
+            f"{', '.join(IMAGES_EXTENSIONS)}."
+        ))
+    # insert_image_status ~ image id
+    insert_image_status: int = insert_image(
         db_con=db_con,
         user_id=acg.user_id,
         image_file_name=image_file_name,
         image_file_extension=image_file_extension,
     )
-    # TODO(wathne): Return something.
-    if image_id == -1:
-        print("image_id is -1, return None.")
-        return jsonify(None)
-    # TODO(wathne): Context manager? Close file?
+    # TODO(wathne): Return and raise proper status codes.
+    if insert_image_status == -1:
+        raise InternalServerError(description="Something went wrong.")
+    # TODO(wathne): Context manager, a "with" statement.
     request_file.save(os_join(
         IMAGES_FOLDER,
-        "".join((str(image_id), image_file_extension)),
+        "".join((str(insert_image_status), image_file_extension)),
     ))
     request_file.close()
-    return jsonify(image_id)
+    return jsonify(insert_image_status)
 
 
 @app.route(
@@ -837,29 +912,36 @@ def api_image(image_id: int | None = None) -> Response:
           f"as user_id: {acg.user_id}")
 
     if image_id is None:
-        return jsonify(None)
+        raise BadRequest(description="No image id.")
 
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
 
     if db_con is None:
-        return jsonify(None)
+        raise InternalServerError(description="No database connection.")
 
     # Retrieve image.
-    image: dict[str, str | int] | None
-    image = retrieve_image(
+    # retrieve_image_status ~ image dict
+    retrieve_image_status: dict[str, str | int] | None
+    retrieve_image_status = retrieve_image(
         db_con=db_con,
         image_id=image_id,
     )
-    if image is None:
-        return jsonify(None)
-    image_file_name: str = cast(str, image["image_file_name"])
-    image_file_extension: str = cast(str, image["image_file_extension"])
+    # TODO(wathne): Return and raise proper status codes.
+    if retrieve_image_status is None:
+        raise InternalServerError(description="Something went wrong.")
+    image_file_name: str = cast(str,
+        retrieve_image_status["image_file_name"])
+    image_file_extension: str = cast(str,
+        retrieve_image_status["image_file_extension"])
     image_path: str = "".join((str(image_id), image_file_extension))
     image_download_name: str = "".join((image_file_name, image_file_extension))
     if not os_isfile(os_join(IMAGES_FOLDER, image_path)):
-        print(f'Image not found: "{image_path}" as "{image_download_name}"')
-        return jsonify(None)
+        print(f'Image is gone: "{image_path}" as "{image_download_name}"')
+        raise Gone(description=(
+            f"{image_path} as {image_download_name} should exist on the server."
+            " The image file is gone."
+        ))
     print(f'Image sent: "{image_path}" as "{image_download_name}"')
     return send_from_directory(
         directory=IMAGES_FOLDER,
@@ -882,59 +964,58 @@ def api_threads() -> Response:
     print(f"/api/threads [{request_.method}] "
           f"as user_id: {acg.user_id}")
 
+    image_id: int | None = None
+    post_text: str | None = None
+    thread_subject: str | None = None
     request_dict: dict[str, str | int | None] | None = None
-    request_dict_image_id: int | None = None
-    request_dict_post_text: str | None = None
-    request_dict_thread_subject: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_image_id = cast(int | None,
-            request_dict.get("image_id", None),
-        )
-        request_dict_post_text = cast(str | None,
-            request_dict.get("post_text", None),
-        )
-        request_dict_thread_subject = cast(str | None,
+        image_id = cast(int | None, request_dict.get("image_id", None))
+        post_text = cast(str | None, request_dict.get("post_text", None))
+        thread_subject = cast(str | None,
             request_dict.get("thread_subject", None),
         )
 
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
 
     if db_con is None:
-        return jsonify(None)
-
-    thread_id: int
-    threads: list[dict[str, str | int | None]] | None
+        raise InternalServerError(description="No database connection.")
 
     # List threads.
     if request_.method == "GET":
-        threads = retrieve_threads(
+        # retrieve_threads_status ~ list of thread dict
+        retrieve_threads_status: list[dict[str, str | int | None]] | None
+        retrieve_threads_status = retrieve_threads(
             db_con=db_con,
         )
-        if threads is None:
-            return jsonify(None)
-        return jsonify(threads)
+        # TODO(wathne): Return and raise proper status codes.
+        if retrieve_threads_status is None:
+            raise InternalServerError(description="Something went wrong.")
+        return jsonify(retrieve_threads_status)
 
     # Create thread and also create top post.
     if request_.method == "POST":
-        if request_dict_thread_subject is None:
-            return jsonify(None)
-        thread_id = insert_thread(
+        if thread_subject is None:
+            raise BadRequest(description="No thread subject.")
+        # insert_thread_status ~ thread id
+        insert_thread_status: int = insert_thread(
             db_con=db_con,
             user_id=acg.user_id,
-            thread_subject=request_dict_thread_subject,
-            post_text=request_dict_post_text,
-            image_id=request_dict_image_id,
+            thread_subject=thread_subject,
+            post_text=post_text,
+            image_id=image_id,
         )
-        # TODO(wathne): Return something.
-        if thread_id == -1:
-            print("thread_id is -1, return None.")
-            return jsonify(None)
-        return jsonify(thread_id)
+        # TODO(wathne): Return and raise proper status codes.
+        if insert_thread_status == -1:
+            raise InternalServerError(description="Something went wrong.")
+        return jsonify(insert_thread_status)
 
-    return jsonify(None)
+    raise MethodNotAllowed(description=(
+        f'Request method "{request_.method}" is not allowed at request path '
+        f'"{request_.path}".'
+    ))
 
 
 # TODO(wathne): Combine api_thread() and api_thread_posts(). Check request path.
@@ -952,103 +1033,125 @@ def api_thread(thread_id: int | None = None) -> Response:
           f"as user_id: {acg.user_id}")
 
     if thread_id is None:
-        return jsonify(None)
+        raise BadRequest(description="No thread id.")
 
+    image_id: int | None = None
+    post_text: str | None = None
+    thread_subject: str | None = None
     request_dict: dict[str, str | int | None] | None = None
-    request_dict_image_id: int | None = None
-    request_dict_post_text: str | None = None
-    request_dict_thread_subject: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_image_id = cast(int | None,
-            request_dict.get("image_id", None),
-        )
-        request_dict_post_text = cast(str | None,
-            request_dict.get("post_text", None),
-        )
-        request_dict_thread_subject = cast(str | None,
+        image_id = cast(int | None, request_dict.get("image_id", None))
+        post_text = cast(str | None, request_dict.get("post_text", None))
+        thread_subject = cast(str | None,
             request_dict.get("thread_subject", None),
         )
 
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
 
     if db_con is None:
-        return jsonify(None)
-
-    post_id: int
-    thread: dict[str, str | int | None] | None
-    posts: list[dict[str, str | int | None]] | None
-    thread_and_posts: dict[str,
-        dict[str, str | int | None] |
-        list[dict[str, str | int | None]]
-    ] = {}
-    return_code: int
+        raise InternalServerError(description="No database connection.")
 
     # Retrieve thread and posts.
     if request_.method == "GET":
-        thread = retrieve_thread(
+        # retrieve_thread_status ~ thread dict
+        retrieve_thread_status: dict[str, str | int | None] | None
+        retrieve_thread_status = retrieve_thread(
             db_con=db_con,
             thread_id=thread_id,
         )
-        if thread is None:
-            return jsonify(None)
-        posts = retrieve_posts(
+        # TODO(wathne): Return and raise proper status codes.
+        if retrieve_thread_status is None:
+            raise InternalServerError(description="Something went wrong.")
+        # retrieve_posts_status ~ list of post dict
+        retrieve_posts_status: list[dict[str, str | int | None]] | None
+        retrieve_posts_status = retrieve_posts(
             db_con=db_con,
             thread_id=thread_id,
         )
-        if posts is None:
-            return jsonify(None)
-        thread_and_posts["thread"] = thread
-        thread_and_posts["posts"] = posts
+        # TODO(wathne): Return and raise proper status codes.
+        if retrieve_posts_status is None:
+            raise InternalServerError(description="Something went wrong.")
+        thread_and_posts: dict[str,
+            dict[str, str | int | None] |
+            list[dict[str, str | int | None]]
+        ] = {}
+        thread_and_posts["thread"] = retrieve_thread_status
+        thread_and_posts["posts"] = retrieve_posts_status
         return jsonify(thread_and_posts)
 
     # Update thread.
     if request_.method == "PUT":
-        if request_dict_thread_subject is None:
-            return jsonify(None)
-        return_code = update_thread(
+        if thread_subject is None:
+            raise BadRequest(description="No thread subject.")
+        # update_thread_status ~ thread id
+        update_thread_status: int = update_thread(
             db_con=db_con,
             user_id=acg.user_id,
             thread_id=thread_id,
-            thread_subject=request_dict_thread_subject,
-            post_text=request_dict_post_text,
-            image_id=request_dict_image_id,
+            thread_subject=thread_subject,
+            post_text=post_text,
+            image_id=image_id,
         )
-        # TODO(wathne): Return something.
-        if return_code != thread_id:
-            return jsonify(None)
-        return jsonify(thread_id)
+        if update_thread_status == thread_id:
+            return jsonify(thread_id)
+        if update_thread_status == -400:
+            raise BadRequest(description="Something is wrong with the request.")
+        if update_thread_status == -403:
+            raise Forbidden(description=(
+                "You do not have permission to update this thread. You may ask "
+                "a moderator for help."
+            ))
+        if update_thread_status == -404:
+            raise NotFound(description="The thread could not be found.")
+        if update_thread_status == -500:
+            raise InternalServerError(description="Database error.")
+        raise InternalServerError(description="Something went wrong.")
 
     # Create post.
     if request_.method == "POST":
-        post_id = insert_post(
+        # insert_post_status ~ post id
+        insert_post_status: int = insert_post(
             db_con=db_con,
             user_id=acg.user_id,
             thread_id=thread_id,
-            post_text=request_dict_post_text,
-            image_id=request_dict_image_id,
+            post_text=post_text,
+            image_id=image_id,
         )
-        # TODO(wathne): Return something.
-        if post_id == -1:
-            print("post_id is -1, return None.")
-            return jsonify(None)
-        return jsonify(post_id)
+        # TODO(wathne): Return and raise proper status codes.
+        if insert_post_status == -1:
+            raise InternalServerError(description="Something went wrong.")
+        return jsonify(insert_post_status)
 
     # Delete thread.
     if request_.method == "DELETE":
-        return_code = delete_thread(
+        # delete_thread_status ~ thread id
+        delete_thread_status: int = delete_thread(
             db_con=db_con,
             user_id=acg.user_id,
             thread_id=thread_id,
         )
-        # TODO(wathne): Return something.
-        if return_code != thread_id:
-            return jsonify(None)
-        return jsonify(thread_id)
+        if delete_thread_status == thread_id:
+            return jsonify(thread_id)
+        if delete_thread_status == -400:
+            raise BadRequest(description="Something is wrong with the request.")
+        if delete_thread_status == -403:
+            raise Forbidden(description=(
+                "You do not have permission to delete this thread. You may ask "
+                "a moderator for help."
+            ))
+        if delete_thread_status == -404:
+            raise NotFound(description="The thread could not be found.")
+        if delete_thread_status == -500:
+            raise InternalServerError(description="Database error.")
+        raise InternalServerError(description="Something went wrong.")
 
-    return jsonify(None)
+    raise MethodNotAllowed(description=(
+        f'Request method "{request_.method}" is not allowed at request path '
+        f'"{request_.path}".'
+    ))
 
 
 # TODO(wathne): Combine api_thread() and api_thread_posts(). Check request path.
@@ -1066,56 +1169,55 @@ def api_thread_posts(thread_id: int | None = None) -> Response:
           f"as user_id: {acg.user_id}")
 
     if thread_id is None:
-        return jsonify(None)
+        raise BadRequest(description="No thread id.")
 
+    image_id: int | None = None
+    post_text: str | None = None
     request_dict: dict[str, str | int | None] | None = None
-    request_dict_image_id: int | None = None
-    request_dict_post_text: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_image_id = cast(int | None,
-            request_dict.get("image_id", None),
-        )
-        request_dict_post_text = cast(str | None,
-            request_dict.get("post_text", None),
-        )
+        image_id = cast(int | None, request_dict.get("image_id", None))
+        post_text = cast(str | None, request_dict.get("post_text", None))
 
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
 
     if db_con is None:
-        return jsonify(None)
-
-    post_id: int
-    posts: list[dict[str, str | int | None]] | None
+        raise InternalServerError(description="No database connection.")
 
     # List posts.
     if request_.method == "GET":
-        posts = retrieve_posts(
+        # retrieve_posts_status ~ list of post dict
+        retrieve_posts_status: list[dict[str, str | int | None]] | None
+        retrieve_posts_status = retrieve_posts(
             db_con=db_con,
             thread_id=thread_id,
         )
-        if posts is None:
-            return jsonify(None)
-        return jsonify(posts)
+        # TODO(wathne): Return and raise proper status codes.
+        if retrieve_posts_status is None:
+            raise InternalServerError(description="Something went wrong.")
+        return jsonify(retrieve_posts_status)
 
     # Create post.
     if request_.method == "POST":
-        post_id = insert_post(
+        # insert_post_status ~ post id
+        insert_post_status: int = insert_post(
             db_con=db_con,
             user_id=acg.user_id,
             thread_id=thread_id,
-            post_text=request_dict_post_text,
-            image_id=request_dict_image_id,
+            post_text=post_text,
+            image_id=image_id,
         )
-        # TODO(wathne): Return something.
-        if post_id == -1:
-            print("post_id is -1, return None.")
-            return jsonify(None)
-        return jsonify(post_id)
+        # TODO(wathne): Return and raise proper status codes.
+        if insert_post_status == -1:
+            raise InternalServerError(description="Something went wrong.")
+        return jsonify(insert_post_status)
 
-    return jsonify(None)
+    raise MethodNotAllowed(description=(
+        f'Request method "{request_.method}" is not allowed at request path '
+        f'"{request_.path}".'
+    ))
 
 
 @app.route(
@@ -1132,67 +1234,88 @@ def api_post(post_id: int | None = None) -> Response:
           f"as user_id: {acg.user_id}")
 
     if post_id is None:
-        return jsonify(None)
+        raise BadRequest(description="No post id.")
 
+    image_id: int | None = None
+    post_text: str | None = None
     request_dict: dict[str, str | int | None] | None = None
-    request_dict_image_id: int | None = None
-    request_dict_post_text: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_image_id = cast(int | None,
-            request_dict.get("image_id", None),
-        )
-        request_dict_post_text = cast(str | None,
-            request_dict.get("post_text", None),
-        )
+        image_id = cast(int | None, request_dict.get("image_id", None))
+        post_text = cast(str | None, request_dict.get("post_text", None))
 
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
 
     if db_con is None:
-        return jsonify(None)
-
-    post: dict[str, str | int | None] | None
-    return_code: int
+        raise InternalServerError(description="No database connection.")
 
     # Retrieve post.
     if request_.method == "GET":
-        post = retrieve_post(
+        # retrieve_post_status ~ post dict
+        retrieve_post_status: dict[str, str | int | None] | None
+        retrieve_post_status = retrieve_post(
             db_con=db_con,
             post_id=post_id,
         )
-        if post is None:
-            return jsonify(None)
-        return jsonify(post)
+        # TODO(wathne): Return and raise proper status codes.
+        if retrieve_post_status is None:
+            raise InternalServerError(description="Something went wrong.")
+        return jsonify(retrieve_post_status)
 
     # Update post.
     if request_.method == "PUT":
-        return_code = update_post(
+        # update_post_status ~ post id
+        update_post_status: int = update_post(
             db_con=db_con,
             user_id=acg.user_id,
             post_id=post_id,
-            post_text=request_dict_post_text,
-            image_id=request_dict_image_id,
+            post_text=post_text,
+            image_id=image_id,
         )
-        # TODO(wathne): Return something.
-        if return_code != post_id:
-            return jsonify(None)
-        return jsonify(post_id)
+        if update_post_status == post_id:
+            return jsonify(post_id)
+        if update_post_status == -400:
+            raise BadRequest(description="Something is wrong with the request.")
+        if update_post_status == -403:
+            raise Forbidden(description=(
+                "You do not have permission to update this post. You may ask a "
+                "moderator for help."
+            ))
+        if update_post_status == -404:
+            raise NotFound(description="The post could not be found.")
+        if update_post_status == -500:
+            raise InternalServerError(description="Database error.")
+        raise InternalServerError(description="Something went wrong.")
 
     # Delete post.
     if request_.method == "DELETE":
-        return_code = delete_post(
+        # delete_post_status ~ post id
+        delete_post_status: int = delete_post(
             db_con=db_con,
             user_id=acg.user_id,
             post_id=post_id,
         )
-        # TODO(wathne): Return something.
-        if return_code != post_id:
-            return jsonify(None)
-        return jsonify(post_id)
+        if delete_post_status == post_id:
+            return jsonify(post_id)
+        if delete_post_status == -400:
+            raise BadRequest(description="Something is wrong with the request.")
+        if delete_post_status == -403:
+            raise Forbidden(description=(
+                "You do not have permission to delete this post. You may ask a "
+                "moderator for help."
+            ))
+        if delete_post_status == -404:
+            raise NotFound(description="The post could not be found.")
+        if delete_post_status == -500:
+            raise InternalServerError(description="Database error.")
+        raise InternalServerError(description="Something went wrong.")
 
-    return jsonify(None)
+    raise MethodNotAllowed(description=(
+        f'Request method "{request_.method}" is not allowed at request path '
+        f'"{request_.path}".'
+    ))
 
 
 if __name__ == "__main__":

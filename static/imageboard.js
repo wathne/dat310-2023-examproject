@@ -128,7 +128,9 @@
  *   LogoutHandler
  * 
  * 
- * TODO(wathne): Store filter settings in cookie.
+ * TODO(wathne): Show dates.
+ * TODO(wathne): Enlarge image on mouseclick or mouseover.
+ * TODO(wathne): Fix duplicate PostsManager buttons bug.
  * TODO(wathne): Fix duplicate display of Threads bug.
  * TODO(wathne): Make sure that the PostsManager is ok after a Thread rebuild.
  * TODO(wathne): Improve reloadList().
@@ -300,7 +302,7 @@ class Thread {
     this.#mainElement.appendChild(this.#postsExtraElement);
     this.#mainElement.appendChild(this.#postsListElement);
     this.#postsManager = new PostsManager(
-        this.#threadId,
+        this,
         this.#postsListElement,
         this.#postsExtraElement,
         this.#postsButtonsElement,
@@ -340,7 +342,7 @@ class Thread {
         .catch((error) => {
           console.error(error);
         });
-    if (thread_and_posts === null) {
+    if (thread_and_posts["code"] !== undefined) {
       return this.#finally();
     }
     const thread = thread_and_posts["thread"];
@@ -360,7 +362,7 @@ class Thread {
         .catch((error) => {
           console.error(error);
         });
-    if (post === null) {
+    if (post["code"] !== undefined) {
       return this.#finally();
     }
     this.#imageId = post["image_id"];
@@ -376,7 +378,7 @@ class Thread {
         .catch((error) => {
           console.error(error);
         });
-    if (imageBlob === null) {
+    if (imageBlob["code"] !== undefined) {
       return this.#finally();
     }
     this.#retrievedImage = true;
@@ -424,7 +426,7 @@ class Thread {
         .catch((error) => {
           console.error(error);
         });
-    if (post === null) {
+    if (post["code"] !== undefined) {
       return this.#finally();
     }
     this.#imageId = post["image_id"];
@@ -440,7 +442,7 @@ class Thread {
         .catch((error) => {
           console.error(error);
         });
-    if (imageBlob === null) {
+    if (imageBlob["code"] !== undefined) {
       return this.#finally();
     }
     this.#retrievedImage = true;
@@ -468,6 +470,10 @@ class Thread {
 
   isVisible() {
     return !this.#hidden; // Boolean
+  }
+
+  getPostId() {
+    return this.#postId;
   }
 
   getThreadId() {
@@ -552,10 +558,14 @@ class ThreadsManager {
   constructor(contentElement, extraElement, buttonsElement) {
     this.#threads = [];
     // *Handler
-    this.#showThreadsHandler = new ShowThreadsHandler(this);
-    this.#addThreadHandler = new AddThreadHandler(this);
-    this.#modifyThreadHandler = new ModifyThreadHandler(this);
-    this.#deleteThreadHandler = new DeleteThreadHandler(this);
+    this.#showThreadsHandler = new ShowThreadsHandler(
+        this.reloadList.bind(this));
+    this.#addThreadHandler = new AddThreadHandler(
+        this.addThread.bind(this));
+    this.#modifyThreadHandler = new ModifyThreadHandler(
+        this.modifyThread.bind(this));
+    this.#deleteThreadHandler = new DeleteThreadHandler(
+        this.deleteThread.bind(this));
     this.#filterHandler = new FilterHandler(this);
     // showThreads*
     const showThreadsBox = this.#showThreadsHandler.createBox();
@@ -597,67 +607,79 @@ class ThreadsManager {
     const postText = dataObject["text"];
     const imageFile = dataObject["image"];
     if (imageFile instanceof File && imageFile.size !== 0) {
-      const imageId = await insertImage(imageFile)
+      const insertImageStatus = await insertImage(imageFile)
           .catch((error) => {
             console.error(error);
           });
-      if (typeof imageId !== "number") {
-        return false; // TODO(wathne): Proper reject/error handling.
+      if (insertImageStatus["code"] !== undefined) {
+        return insertImageStatus;
       }
-      const threadId = await insertThread(threadSubject, postText, imageId)
+      const insertThreadStatus = await insertThread(
+          threadSubject,
+          postText,
+          insertImageStatus,
+      )
           .catch((error) => {
             console.error(error);
           });
-      if (typeof threadId === "number") {
+      if (insertThreadStatus["code"] === undefined) {
         this.reloadList(); // Do not await.
-        return true;
       }
-      return false;
+      return insertThreadStatus;
     }
-    const threadId = await insertThread(threadSubject, postText, null)
+    const insertThreadStatus = await insertThread(
+        threadSubject,
+        postText,
+        null,
+    )
         .catch((error) => {
           console.error(error);
         });
-    if (typeof threadId === "number") {
+    if (insertThreadStatus["code"] === undefined) {
       this.reloadList(); // Do not await.
-      return true;
     }
-    return false;
+    return insertThreadStatus;
   }
 
   async modifyThread(formData, thread) {
     const threadId = thread.getThreadId();
     if (typeof threadId !== "number") {
-      return false;
+      return {
+        code: 1336,
+        description: "We have lost the thread_id, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
     const dataObject = Object.fromEntries(formData);
     const threadSubject = dataObject["subject"];
     const postText = dataObject["text"];
     const imageFile = dataObject["image"];
     if (imageFile instanceof File && imageFile.size !== 0) {
-      const imageId = await insertImage(imageFile)
+      const insertImageStatus = await insertImage(imageFile)
           .catch((error) => {
             console.error(error);
           });
-      if (typeof imageId !== "number") {
-        return false; // TODO(wathne): Proper reject/error handling.
+      if (insertImageStatus["code"] !== undefined) {
+        return insertImageStatus;
       }
-      const responseCode = await updateThread(
+      const updateThreadStatus = await updateThread(
           threadId,
           threadSubject,
           postText,
-          imageId,
+          insertImageStatus,
       )
           .catch((error) => {
             console.error(error);
           });
-      if (typeof responseCode === "number" && responseCode === threadId) {
+      if (
+          updateThreadStatus["code"] === undefined &&
+          updateThreadStatus === threadId
+      ) {
         this.reloadList(); // Do not await.
-        return true;
       }
-      return false;
+      return updateThreadStatus;
     }
-    const responseCode = await updateThread(
+    const updateThreadStatus = await updateThread(
         threadId,
         threadSubject,
         postText,
@@ -666,27 +688,35 @@ class ThreadsManager {
         .catch((error) => {
           console.error(error);
         });
-    if (typeof responseCode === "number" && responseCode === threadId) {
+    if (
+        updateThreadStatus["code"] === undefined &&
+        updateThreadStatus === threadId
+    ) {
       this.reloadList(); // Do not await.
-      return true;
     }
-    return false;
+    return updateThreadStatus;
   }
 
   async deleteThread(thread) {
     const threadId = thread.getThreadId();
     if (typeof threadId !== "number") {
-      return false;
+      return {
+        code: 1336,
+        description: "We have lost the thread_id, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const responseCode = await deleteThread(threadId)
+    const deleteThreadStatus = await deleteThread(threadId)
         .catch((error) => {
           console.error(error);
         });
-    if (typeof responseCode === "number" && responseCode === threadId) {
+    if (
+        deleteThreadStatus["code"] === undefined &&
+        deleteThreadStatus === threadId
+    ) {
       this.reloadList(); // Do not await.
-      return true;
     }
-    return false;
+    return deleteThreadStatus;
   }
 
   async reloadList() {
@@ -694,21 +724,17 @@ class ThreadsManager {
     while (this.#threads.length) {
       this.#threads.pop();
     }
-    const threads = await retrieveThreads()
+    const retrieveThreadsStatus = await retrieveThreads()
         .catch((error) => {
           console.error(error);
         });
-    if (threads === null) {
+    if (retrieveThreadsStatus["code"] !== undefined) {
       this.#showList();
-      return false;
-    }
-    // TODO(wathne): Check Array.isArray?
-    if (typeof threads !== "object") {
-      return false; // TODO(wathne): Proper reject/error handling.
+      return retrieveThreadsStatus;
     }
     // TODO(wathne): Show incomplete threads for a more responsive experience.
     // TODO(wathne): Do not wait for slow promises.
-    const promises = threads
+    const promises = retrieveThreadsStatus
         .map(async (thread) => {
           return Thread.createThreadFromThreadObject(thread);
         });
@@ -726,12 +752,12 @@ class ThreadsManager {
         console.log(settlement["reason"]);
       }
     }
-    for (const thread of this.#threads) { // TESTING, temporary solution.
+    for (const thread of this.#threads) {
       this.#createModifyThreadBox(thread);
       this.#createDeleteThreadBox(thread);
     }
     this.sortList();
-    return true;
+    return {};
   }
 
   sortList() {
@@ -945,7 +971,7 @@ class Post {
         .catch((error) => {
           console.error(error);
         });
-    if (post === null) {
+    if (post["code"] !== undefined) {
       return this.#finally();
     }
     this.#imageId = post["image_id"];
@@ -965,7 +991,7 @@ class Post {
         .catch((error) => {
           console.error(error);
         });
-    if (imageBlob === null) {
+    if (imageBlob["code"] !== undefined) {
       return this.#finally();
     }
     this.#retrievedImage = true;
@@ -1014,7 +1040,7 @@ class Post {
         .catch((error) => {
           console.error(error);
         });
-    if (imageBlob === null) {
+    if (imageBlob["code"] !== undefined) {
       return this.#finally();
     }
     this.#retrievedImage = true;
@@ -1098,7 +1124,7 @@ class Post {
 
 
 class PostsManager {
-  #threadId;
+  #thread;
   #posts;
   // *Handler
   #showPostsHandler;
@@ -1109,14 +1135,18 @@ class PostsManager {
   // List element.
   #postsListElement;
 
-  constructor(threadId, contentElement, extraElement, buttonsElement) {
-    this.#threadId = threadId;
+  constructor(thread, contentElement, extraElement, buttonsElement) {
+    this.#thread = thread;
     this.#posts = [];
     // *Handler
-    this.#showPostsHandler = new ShowPostsHandler(this);
-    this.#addPostHandler = new AddPostHandler(this);
-    this.#modifyPostHandler = new ModifyPostHandler(this);
-    this.#deletePostHandler = new DeletePostHandler(this);
+    this.#showPostsHandler = new ShowPostsHandler(
+        this.reloadList.bind(this));
+    this.#addPostHandler = new AddPostHandler(
+        this.addPost.bind(this));
+    this.#modifyPostHandler = new ModifyPostHandler(
+        this.modifyPost.bind(this));
+    this.#deletePostHandler = new DeletePostHandler(
+        this.deletePost.bind(this));
     this.#filterHandler = new FilterHandler(this);
     // showPosts*
     const showPostsBox = this.#showPostsHandler.createBox();
@@ -1153,95 +1183,132 @@ class PostsManager {
   }
 
   async addPost(formData) {
-    const threadId = this.#threadId;
+    const threadId = this.#thread.getThreadId();
     if (typeof threadId !== "number") {
-      return false;
+      return {
+        code: 1336,
+        description: "We have lost the thread_id, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    console.log(`threadId: ${threadId}`); // TESTING.
     const dataObject = Object.fromEntries(formData);
     const postText = dataObject["text"];
     const imageFile = dataObject["image"];
-    console.log(formData); // TESTING.
     if (imageFile instanceof File && imageFile.size !== 0) {
-      const imageId = await insertImage(imageFile)
+      const insertImageStatus = await insertImage(imageFile)
           .catch((error) => {
             console.error(error);
           });
-      if (typeof imageId !== "number") {
-        return false; // TODO(wathne): Proper reject/error handling.
+      if (insertImageStatus["code"] !== undefined) {
+        return insertImageStatus;
       }
-      const postId = await insertPost(threadId, postText, imageId)
+      const insertPostStatus = await insertPost(
+          threadId,
+          postText,
+          insertImageStatus,
+      )
           .catch((error) => {
             console.error(error);
           });
-      if (typeof postId === "number") {
+      if (insertPostStatus["code"] === undefined) {
+        //await this.#thread.rebuildThreadFromThreadId();
         this.reloadList(); // Do not await.
-        return true;
       }
-      return false;
+      return insertPostStatus;
     }
-    const postId = await insertPost(threadId, postText, null)
+    const insertPostStatus = await insertPost(threadId, postText, null)
         .catch((error) => {
           console.error(error);
         });
-    if (typeof postId === "number") {
+    if (insertPostStatus["code"] === undefined) {
+      //await this.#thread.rebuildThreadFromThreadId();
       this.reloadList(); // Do not await.
-      return true;
     }
-    return false;
+    return insertPostStatus;
   }
 
   async modifyPost(formData, post) {
     const postId = post.getPostId();
     if (typeof postId !== "number") {
-      return false;
+      return {
+        code: 1336,
+        description: "We have lost the post_id, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
     const dataObject = Object.fromEntries(formData);
     const postText = dataObject["text"];
     const imageFile = dataObject["image"];
     if (imageFile instanceof File && imageFile.size !== 0) {
-      const imageId = await insertImage(imageFile)
+      const insertImageStatus = await insertImage(imageFile)
           .catch((error) => {
             console.error(error);
           });
-      if (typeof imageId !== "number") {
-        return false; // TODO(wathne): Proper reject/error handling.
+      if (insertImageStatus["code"] !== undefined) {
+        return insertImageStatus;
       }
-      const responseCode = await updatePost(postId, postText, imageId)
+      const updatePostStatus = await updatePost(
+          postId,
+          postText,
+          insertImageStatus,
+      )
           .catch((error) => {
             console.error(error);
           });
-      if (typeof responseCode === "number" && responseCode === postId) {
+      if (
+          updatePostStatus["code"] === undefined &&
+          updatePostStatus === postId
+      ) {
+        if (postId === this.#thread.getPostId()) {
+          //await this.#thread.rebuildThreadFromThreadId();
+        }
         this.reloadList(); // Do not await.
-        return true;
       }
-      return false;
+      return updatePostStatus;
     }
-    const responseCode = await updatePost(postId, postText, null)
+    const updatePostStatus = await updatePost(
+        postId,
+        postText,
+        null,
+    )
         .catch((error) => {
           console.error(error);
         });
-    if (typeof responseCode === "number" && responseCode === postId) {
+    if (
+        updatePostStatus["code"] === undefined &&
+        updatePostStatus === postId
+    ) {
+      if (postId === this.#thread.getPostId()) {
+        //await this.#thread.rebuildThreadFromThreadId();
+      }
       this.reloadList(); // Do not await.
-      return true;
     }
-    return false;
+    return updatePostStatus;
   }
 
   async deletePost(post) {
     const postId = post.getPostId();
     if (typeof postId !== "number") {
-      return false;
+      return {
+        code: 1336,
+        description: "We have lost the post_id, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const responseCode = await deletePost(postId)
+    const deletePostStatus = await deletePost(postId)
         .catch((error) => {
           console.error(error);
         });
-    if (typeof responseCode === "number" && responseCode === postId) {
+    if (
+        deletePostStatus["code"] === undefined &&
+        deletePostStatus === postId
+    ) {
+      if (postId === this.#thread.getPostId()) {
+        //await this.#thread.rebuildThreadFromThreadId();
+      }
       this.reloadList(); // Do not await.
-      return true;
     }
-    return false;
+    return deletePostStatus;
   }
 
   async reloadList() {
@@ -1249,26 +1316,26 @@ class PostsManager {
     while (this.#posts.length) {
       this.#posts.pop();
     }
-    const threadId = this.#threadId;
+    const threadId = this.#thread.getThreadId();
     if (typeof threadId !== "number") {
       this.#showList();
-      return false;
+      return {
+        code: 1336,
+        description: "We have lost the thread_id, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const posts = await retrievePosts(threadId)
+    const retrievePostsStatus = await retrievePosts(threadId)
         .catch((error) => {
           console.error(error);
         });
-    if (posts === null) {
+    if (retrievePostsStatus["code"] !== undefined) {
       this.#showList();
-      return false;
-    }
-    // TODO(wathne): Check Array.isArray?
-    if (typeof posts !== "object") {
-      return false; // TODO(wathne): Proper reject/error handling.
+      return retrievePostsStatus;
     }
     // TODO(wathne): Show incomplete posts for a more responsive experience.
     // TODO(wathne): Do not wait for slow promises.
-    const promises = posts
+    const promises = retrievePostsStatus
         .map(async (post) => {
           return Post.createPostFromPostObject(post);
         });
@@ -1286,12 +1353,12 @@ class PostsManager {
         console.log(settlement["reason"]);
       }
     }
-    for (const post of this.#posts) { // TESTING, temporary solution.
+    for (const post of this.#posts) {
       this.#createModifyPostBox(post);
       this.#createDeletePostBox(post);
     }
     this.sortList();
-    return true;
+    return {};
   }
 
   sortList() {
@@ -1448,7 +1515,8 @@ class Imageboard {
         extraElement,
         buttonsElement,
     );
-    this.#sessionManager = new SessionManager(this.#threadsManager.reloadList);
+    this.#sessionManager = new SessionManager(
+        this.#threadsManager.reloadList.bind(this.#threadsManager));
   }
 
   async reloadSettings() {

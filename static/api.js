@@ -161,7 +161,7 @@ async function insertImage(imageFile) {
         body: formData,
       },
   );
-  // Returns imageId or null.
+  // Returns imageId or response status.
   return response.json();
 }
 
@@ -178,7 +178,7 @@ async function retrieveImage(imageId) {
   );
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.includes("application/json")) {
-    // Returns null.
+    // Returns response status.
     return response.json();
   }
   // Returns image blob.
@@ -186,8 +186,8 @@ async function retrieveImage(imageId) {
 }
 /* // https://developer.mozilla.org/en-US/docs/Web/API/Response/blob
  * retrieveImage(imageId).then((imageBlob) => {
- *   if (imageBlob === null) {
- *     return null;
+ *   if (!(imageBlob instanceof Blob)) {
+ *     return;
  *   }
  *   const imageURL = URL.createObjectURL(imageBlob);
  *   testImage.src = imageURL;
@@ -208,7 +208,7 @@ async function retrieveThumbnail(imageId) {
   );
   const contentType = response.headers.get("content-type");
   if (contentType && contentType.includes("application/json")) {
-    // Returns null.
+    // Returns response status.
     return response.json();
   }
   // Returns thumbnail blob.
@@ -216,8 +216,8 @@ async function retrieveThumbnail(imageId) {
 }
 /* // https://developer.mozilla.org/en-US/docs/Web/API/Response/blob
  * retrieveThumbnail(imageId).then((thumbnailBlob) => {
- *   if (thumbnailBlob === null) {
- *     return null;
+ *   if (!(thumbnailBlob instanceof Blob)) {
+ *     return;
  *   }
  *   const thumbnailURL = URL.createObjectURL(thumbnailBlob);
  *   testThumbnail.src = thumbnailURL;
@@ -242,7 +242,7 @@ async function insertThread(threadSubject, postText, imageId) {
         }),
       },
   );
-  // Returns threadId or null.
+  // Returns threadId or response status.
   return response.json();
 }
 
@@ -263,7 +263,7 @@ async function updateThread(threadId, threadSubject, postText, imageId) {
         }),
       },
   );
-  // Returns threadId or null.
+  // Returns threadId or response status.
   return response.json();
 }
 
@@ -280,7 +280,7 @@ async function deleteThread(threadId) {
         body: JSON.stringify(null),
       },
   );
-  // Returns threadId or null.
+  // Returns threadId or response status.
   return response.json();
 }
 
@@ -295,7 +295,7 @@ async function retrieveThread(threadId) {
         },
       },
   );
-  // Returns thread and posts or null.
+  // Returns thread and posts or response status.
   return response.json();
 }
 /* thread_and_posts = {
@@ -342,7 +342,7 @@ async function retrieveThreads() {
         },
       },
   );
-  // Returns threads or null.
+  // Returns threads or response status.
   return response.json();
 }
 /* threads = [
@@ -382,7 +382,7 @@ async function insertPost(threadId, postText, imageId) {
         }),
       },
   );
-  // Returns postId or null.
+  // Returns postId or response status.
   return response.json();
 }
 
@@ -402,7 +402,7 @@ async function insertPostV2(threadId, postText, imageId) {
         }),
       },
   );
-  // Returns postId or null.
+  // Returns postId or response status.
   return response.json();
 }
 
@@ -422,7 +422,7 @@ async function updatePost(postId, postText, imageId) {
         }),
       },
   );
-  // Returns postId or null.
+  // Returns postId or response status.
   return response.json();
 }
 
@@ -439,7 +439,7 @@ async function deletePost(postId) {
         body: JSON.stringify(null),
       },
   );
-  // Returns postId or null.
+  // Returns postId or response status.
   return response.json();
 }
 
@@ -454,7 +454,7 @@ async function retrievePost(postId) {
         },
       },
   );
-  // Returns post or null.
+  // Returns post or response status.
   return response.json();
 }
 /* post = {
@@ -478,7 +478,7 @@ async function retrievePosts(threadId) {
         },
       },
   );
-  // Returns posts or null.
+  // Returns posts or response status.
   return response.json();
 }
 /*

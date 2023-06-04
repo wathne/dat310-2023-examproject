@@ -64,8 +64,6 @@
  * </html>
  * 
  * 
- * TODO(wathne): The constructors should take a function instead of a *Manager.
- * TODO(wathne): Catch any 4** and 500 error messages.
  * TODO(wathne): Refactor FilterHandler, implement latest Handler interface.
  * TODO(wathne): Refactor RegisterHandler, implement latest Handler interface.
  * TODO(wathne): Refactor LoginHandler, implement latest Handler interface.
@@ -113,12 +111,10 @@ const formLogoutElement = document.getElementById("form-logout");
 //   - handleButtonCancelClickEvent(box)
 //   - handleFormSubmitEvent(box)
 class ShowThreadsHandler {
-  #threadsManager;
+  #showThreadsFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(threadsManager) {
-    // A ThreadsManager is necessary for this.#threadsManager.reloadList().
-    this.#threadsManager = threadsManager;
+  constructor(showThreadsFunction) {
+    this.#showThreadsFunction = showThreadsFunction;
   }
 
   createBox() {
@@ -128,16 +124,19 @@ class ShowThreadsHandler {
   handleButtonStartClickEvent(box) {
     box.clearError();
     box.showMainElement();
-    this.#threadsManager.reloadList()
-        .then((success) => {
-          if (success) {
+    this.#showThreadsFunction()
+        .then((status) => {
+          if (status["code"] === undefined) {
             // Do nothing.
           } else {
-            // TODO(wathne): Catch any 4** and 500 error messages.
-            box.setError("Error: Failed to load threads.");
+            box.setError(
+                `${status["code"]} ${status["name"]}: ` +
+                `${status["description"]}`
+            );
           }
         })
         .catch((error) => {
+          box.setError(error);
           console.error(error);
         })
         .finally(() => {
@@ -156,12 +155,10 @@ class ShowThreadsHandler {
 //   - handleFormSubmitEvent(box)
 //   - handleFormImageChangeEvent(box)
 class AddThreadHandler {
-  #threadsManager;
+  #addThreadFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(threadsManager) {
-    // A ThreadsManager is necessary for this.#threadsManager.addThread().
-    this.#threadsManager = threadsManager;
+  constructor(addThreadFunction) {
+    this.#addThreadFunction = addThreadFunction;
   }
 
   createBox() {
@@ -181,16 +178,19 @@ class AddThreadHandler {
     const formData = box.getFormData();
     const threadValidationErrors = threadValidation(formData);
     if (threadValidationErrors === null) {
-      this.#threadsManager.addThread(formData)
-          .then((success) => {
-            if (success) {
+      this.#addThreadFunction(formData)
+          .then((status) => {
+            if (status["code"] === undefined) {
               box.hideMainElement();
             } else {
-              // TODO(wathne): Catch any 4** and 500 error messages.
-              box.setError("Error: Failed to add thread.");
+              box.setError(
+                  `${status["code"]} ${status["name"]}: ` +
+                  `${status["description"]}`
+              );
             }
           })
           .catch((error) => {
+            box.setError(error);
             console.error(error);
           })
           .finally(() => {
@@ -212,12 +212,10 @@ class AddThreadHandler {
 //   - handleFormSubmitEvent(box)
 //   - handleFormImageChangeEvent(box)
 class ModifyThreadHandler {
-  #threadsManager;
+  #modifyThreadFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(threadsManager) {
-    // A ThreadsManager is necessary for this.#threadsManager.modifyThread().
-    this.#threadsManager = threadsManager;
+  constructor(modifyThreadFunction) {
+    this.#modifyThreadFunction = modifyThreadFunction;
   }
 
   createBox(target) {
@@ -237,16 +235,19 @@ class ModifyThreadHandler {
     const formData = box.getFormData();
     const threadValidationErrors = threadValidation(formData);
     if (threadValidationErrors === null) {
-      this.#threadsManager.modifyThread(formData, box.getTarget())
-          .then((success) => {
-            if (success) {
+      this.#modifyThreadFunction(formData, box.getTarget())
+          .then((status) => {
+            if (status["code"] === undefined) {
               box.hideMainElement();
             } else {
-              // TODO(wathne): Catch any 4** and 500 error messages.
-              box.setError("Error: Failed to modify thread.");
+              box.setError(
+                  `${status["code"]} ${status["name"]}: ` +
+                  `${status["description"]}`
+              );
             }
           })
           .catch((error) => {
+            box.setError(error);
             console.error(error);
           })
           .finally(() => {
@@ -267,12 +268,10 @@ class ModifyThreadHandler {
 //   - handleButtonCancelClickEvent(box)
 //   - handleFormSubmitEvent(box)
 class DeleteThreadHandler {
-  #threadsManager;
+  #deleteThreadFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(threadsManager) {
-    // A ThreadsManager is necessary for this.#threadsManager.deleteThread().
-    this.#threadsManager = threadsManager;
+  constructor(deleteThreadFunction) {
+    this.#deleteThreadFunction = deleteThreadFunction;
   }
 
   createBox(target) {
@@ -289,16 +288,19 @@ class DeleteThreadHandler {
 
   handleFormSubmitEvent(box) {
     box.clearError();
-    this.#threadsManager.deleteThread(box.getTarget())
-        .then((success) => {
-          if (success) {
+    this.#deleteThreadFunction(box.getTarget())
+        .then((status) => {
+          if (status["code"] === undefined) {
             box.hideMainElement();
           } else {
-            // TODO(wathne): Catch any 4** and 500 error messages.
-            box.setError("Error: Failed to delete thread.");
+            box.setError(
+                `${status["code"]} ${status["name"]}: ` +
+                `${status["description"]}`
+            );
           }
         })
         .catch((error) => {
+          box.setError(error);
           console.error(error);
         })
         .finally(() => {
@@ -311,12 +313,10 @@ class DeleteThreadHandler {
 //   - handleButtonStartClickEvent(box)
 //   - handleButtonCancelClickEvent(box)
 class ShowPostsHandler {
-  #postsManager;
+  #showPostsFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(postsManager) {
-    // A PostsManager is necessary for this.#postsManager.reloadList().
-    this.#postsManager = postsManager;
+  constructor(showPostsFunction) {
+    this.#showPostsFunction = showPostsFunction;
   }
 
   createBox() {
@@ -326,16 +326,19 @@ class ShowPostsHandler {
   handleButtonStartClickEvent(box) {
     box.clearError();
     box.showMainElement();
-    this.#postsManager.reloadList()
-        .then((success) => {
-          if (success) {
+    this.#showPostsFunction()
+        .then((status) => {
+          if (status["code"] === undefined) {
             // Do nothing.
           } else {
-            // TODO(wathne): Catch any 4** and 500 error messages.
-            box.setError("Error: Failed to load posts.");
+            box.setError(
+                `${status["code"]} ${status["name"]}: ` +
+                `${status["description"]}`
+            );
           }
         })
         .catch((error) => {
+          box.setError(error);
           console.error(error);
         })
         .finally(() => {
@@ -354,12 +357,10 @@ class ShowPostsHandler {
 //   - handleFormSubmitEvent(box)
 //   - handleFormImageChangeEvent(box)
 class AddPostHandler {
-  #postsManager;
+  #addPostFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(postsManager) {
-    // A PostsManager is necessary for this.#postsManager.addPost().
-    this.#postsManager = postsManager;
+  constructor(addPostFunction) {
+    this.#addPostFunction = addPostFunction;
   }
 
   createBox() {
@@ -379,16 +380,19 @@ class AddPostHandler {
     const formData = box.getFormData();
     const postValidationErrors = postValidation(formData);
     if (postValidationErrors === null) {
-      this.#postsManager.addPost(formData)
-          .then((success) => {
-            if (success) {
+      this.#addPostFunction(formData)
+          .then((status) => {
+            if (status["code"] === undefined) {
               box.hideMainElement();
             } else {
-              // TODO(wathne): Catch any 4** and 500 error messages.
-              box.setError("Error: Failed to add post.");
+              box.setError(
+                  `${status["code"]} ${status["name"]}: ` +
+                  `${status["description"]}`
+              );
             }
           })
           .catch((error) => {
+            box.setError(error);
             console.error(error);
           })
           .finally(() => {
@@ -410,12 +414,10 @@ class AddPostHandler {
 //   - handleFormSubmitEvent(box)
 //   - handleFormImageChangeEvent(box)
 class ModifyPostHandler {
-  #postsManager;
+  #modifyPostFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(postsManager) {
-    // A PostsManager is necessary for this.#postsManager.modifyPost().
-    this.#postsManager = postsManager;
+  constructor(modifyPostFunction) {
+    this.#modifyPostFunction = modifyPostFunction;
   }
 
   createBox(target) {
@@ -435,16 +437,19 @@ class ModifyPostHandler {
     const formData = box.getFormData();
     const postValidationErrors = postValidation(formData);
     if (postValidationErrors === null) {
-      this.#postsManager.modifyPost(formData, box.getTarget())
-          .then((success) => {
-            if (success) {
+      this.#modifyPostFunction(formData, box.getTarget())
+          .then((status) => {
+            if (status["code"] === undefined) {
               box.hideMainElement();
             } else {
-              // TODO(wathne): Catch any 4** and 500 error messages.
-              box.setError("Error: Failed to modify post.");
+              box.setError(
+                  `${status["code"]} ${status["name"]}: ` +
+                  `${status["description"]}`
+              );
             }
           })
           .catch((error) => {
+            box.setError(error);
             console.error(error);
           })
           .finally(() => {
@@ -465,12 +470,10 @@ class ModifyPostHandler {
 //   - handleButtonCancelClickEvent(box)
 //   - handleFormSubmitEvent(box)
 class DeletePostHandler {
-  #postsManager;
+  #deletePostFunction;
 
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(postsManager) {
-    // A PostsManager is necessary for this.#postsManager.deletePost().
-    this.#postsManager = postsManager;
+  constructor(deletePostFunction) {
+    this.#deletePostFunction = deletePostFunction;
   }
 
   createBox(target) {
@@ -487,16 +490,19 @@ class DeletePostHandler {
 
   handleFormSubmitEvent(box) {
     box.clearError();
-    this.#postsManager.deletePost(box.getTarget())
-        .then((success) => {
-          if (success) {
+    this.#deletePostFunction(box.getTarget())
+        .then((status) => {
+          if (status["code"] === undefined) {
             box.hideMainElement();
           } else {
-            // TODO(wathne): Catch any 4** and 500 error messages.
-            box.setError("Error: Failed to delete post.");
+            box.setError(
+                `${status["code"]} ${status["name"]}: ` +
+                `${status["description"]}`
+            );
           }
         })
         .catch((error) => {
+          box.setError(error);
           console.error(error);
         })
         .finally(() => {
