@@ -838,7 +838,7 @@ def insert_post(
         print(int_error)
         print("Database: post_timestamp = 0, Unix time, as fallback.")
         pass
-    sql: str = (
+    sql_post_insert: str = (
         "INSERT INTO posts ("
             "image_id, "
             "post_last_modified, "
@@ -855,12 +855,18 @@ def insert_post(
             ":user_id"
         ");"
     )
+    sql_thread_update: str = (
+        "UPDATE threads SET "
+            "thread_last_modified = :thread_last_modified"
+        " WHERE thread_id = :thread_id;"
+    )
     parameters: dict[str, str | int | None] = {
         "image_id": image_id,
         "post_last_modified": post_timestamp,
         "post_text": post_text,
         "post_timestamp": post_timestamp,
         "thread_id": thread_id,
+        "thread_last_modified": post_timestamp,
         "user_id": user_id,
     }
     db_cur: Cursor
@@ -868,7 +874,8 @@ def insert_post(
     try:
         with db_con:
             db_cur = db_con.cursor()
-            db_cur.execute(sql, parameters)
+            db_cur.execute(sql_post_insert, parameters)
+            db_cur.execute(sql_thread_update, parameters)
             post_id = db_cur.lastrowid
     except AnySqlite3Error as err:
         print(err)
