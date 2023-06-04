@@ -19,10 +19,14 @@
  *   retrieveImage(imageId)
  *   retrieveThumbnail(imageId)
  *   insertThread(threadSubject, postText, imageId)
+ *   updateThread(threadId, threadSubject, postText, imageId)
+ *   deleteThread(threadId)
  *   retrieveThread(threadId)
  *   retrieveThreads()
  *   insertPost(threadId, postText, imageId)
  *   insertPostV2(threadId, postText, imageId)
+ *   updatePost(postId, postText, imageId)
+ *   deletePost(postId)
  *   retrievePost(postId)
  *   retrievePosts(threadId)
  * 
@@ -209,6 +213,44 @@ async function insertThread(threadSubject, postText, imageId) {
 }
 
 
+async function updateThread(threadId, threadSubject, postText, imageId) {
+  const response = await fetch(
+      `/api/threads/${threadId}`,
+      {
+        method: "PUT",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "image_id": imageId,
+          "post_text": postText,
+          "thread_subject": threadSubject,
+        }),
+      },
+  );
+  // Returns threadId or null.
+  return response.json();
+}
+
+
+async function deleteThread(threadId) {
+  const response = await fetch(
+      `/api/threads/${threadId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(null),
+      },
+  );
+  // Returns threadId or null.
+  return response.json();
+}
+
+
 async function retrieveThread(threadId) {
   const response = await fetch(
       `/api/threads/${threadId}`,
@@ -324,6 +366,43 @@ async function insertPostV2(threadId, postText, imageId) {
           "image_id": imageId,
           "post_text": postText,
         }),
+      },
+  );
+  // Returns postId or null.
+  return response.json();
+}
+
+
+async function updatePost(postId, postText, imageId) {
+  const response = await fetch(
+      `/api/posts/${postId}`,
+      {
+        method: "PUT",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          "image_id": imageId,
+          "post_text": postText,
+        }),
+      },
+  );
+  // Returns postId or null.
+  return response.json();
+}
+
+
+async function deletePost(postId) {
+  const response = await fetch(
+      `/api/posts/${postId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(null),
       },
   );
   // Returns postId or null.
