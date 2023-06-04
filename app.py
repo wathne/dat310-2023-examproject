@@ -28,6 +28,14 @@ Session API:
             body:     json[dict[str, str]]
             response: json[int] | json[None]
 
+    /api/cookie/settings
+        [GET]    (Get SecureCookieSession["settings"] as json.)
+            body:     N/A
+            response: json[Any] | json[None]
+        [POST]   (Set SecureCookieSession["settings"] as json.)
+            body:     json[Any]
+            response: json[Any] | json[None]
+
 
 REST API:
     /api/images
@@ -338,6 +346,7 @@ def before_request() -> None:
 
     # Do not call load_user() if endpoint is whitelisted.
     endpoint_whitelist: set[str] = {
+        "api_cookie_settings", # Authentication is not required.
         "api_login", # api_login() will call load_user().
         "api_users", # api_users() will call load_user().
         "favicon", # Authentication is not required.
@@ -733,6 +742,29 @@ def api_users() -> Response:
     if acg.user_id is None:
         return jsonify(None)
     return jsonify(acg.user_id)
+
+
+@app.route(
+    rule="/api/cookie/settings",
+    methods=["GET", "POST"],
+)
+def api_cookie_settings() -> Response:
+    # pylint: disable=protected-access
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    scs: SCS = cast(LP[SCS], session)._get_current_object()
+
+    # See before_request(), endpoint_whitelist.
+    # api_cookie_settings() is whitelisted.
+
+    if request_.method == "POST":
+        if request_.is_json:
+            scs["settings"] = request_.get_json(
+                force=False,
+                silent=True,
+                cache=False,
+            )
+
+    return jsonify(scs.get(key="settings", default=None))
 
 
 @app.route(

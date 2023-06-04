@@ -15,6 +15,8 @@
  *   sessionRegister(username, password)
  *   sessionLogin(username, password)
  *   sessionLogout()
+ *   setSettings(settings)
+ *   getSettings()
  *   insertImage(imageFile)
  *   retrieveImage(imageId)
  *   retrieveThumbnail(imageId)
@@ -108,6 +110,38 @@ async function sessionLogout() {
       },
   );
   // Returns userId or null.
+  return response.json();
+}
+
+
+async function setSettings(settings) {
+  const response = await fetch(
+      "/api/cookie/settings",
+      {
+        method: "POST",
+        headers: {
+          "accept": "application/json",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(settings),
+      },
+  );
+  // Returns settings or null.
+  return response.json();
+}
+
+
+async function getSettings() {
+  const response = await fetch(
+      "/api/cookie/settings",
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+        },
+      },
+  );
+  // Returns settings or null.
   return response.json();
 }
 

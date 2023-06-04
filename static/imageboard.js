@@ -46,6 +46,8 @@
  *   sessionRegister(username, password)
  *   sessionLogin(username, password)
  *   sessionLogout()
+ *   setSettings(settings)
+ *   getSettings()
  *   insertImage(imageFile)
  *   retrieveImage(imageId)
  *   retrieveThumbnail(imageId)
