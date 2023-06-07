@@ -4,50 +4,16 @@
 
 
 /* Flexbox classes */
-.flex-body {
-  min-width: 310px;
-  margin: 0;
-}
-
-.flex-header {
+.flex-left-aligned {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
-  background-color: #A4D0A4;
-}
-
-.flex-main {
-}
-
-.flex-main-extra {
-}
-
-.flex-main-content {
-  display: flex;
-  flex-direction: column;
   justify-content: flex-start;
 }
 
-.flex-footer {
-}
-
-.flex-left-aligned {
-  padding-bottom: .5em;
-  width: 300px;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-}
-
 .flex-right-aligned {
-  padding-bottom: .5em;
-  width: 300px;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
 }
 
 .flex-centered {
@@ -64,9 +30,8 @@
 }
 
 .framed {
-  background-color: #ccf6cc;
   border-style: solid;
-  border-color: #617A55;
+  border-color: #000000;
   border-width: 4px 4px 4px 4px;
   border-radius: 8px;
   margin: 6px 3px 0px 3px;
@@ -90,9 +55,6 @@
 
 .thread {
   background-color: lightgrey;
-  border-radius: 8px;
-  margin: 0.25em 0.25em 0.25em 0.25em;
-  padding: 0.5em 0.5em 0.5em 0.5em;
 }
 
 .thread-subject {
@@ -103,12 +65,12 @@
 
 .post {
   background-color: orange;
-  border-radius: 8px;
-  margin: 0.25em 0.25em 0.25em 0.25em;
-  padding: 0.5em 0.5em 0.5em 0.5em;
 }
 
 .post-text {
+}
+
+.button-cancel {
 }
 
 .button-register {
@@ -123,9 +85,6 @@
   margin: 0px 3px 0px 3px;
 }
 
-.button-cancel {
-}
-
 
 /* Body */
 body {
@@ -134,94 +93,184 @@ body {
 
 /* Header */
 header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
   padding: 0px 9px 0px 9px;
 }
 
-header #filter-search {
-  width: 7em;
+#filter-search {
   margin: 0px 3px 0px 3px;
 }
 
-header #filter-sort-order {
+#filter-sort-order {
   display: none;
 }
 
-header #filter-sort-order + label {
+#filter-sort-order + label {
   display: inline-block;
   height: 24px;
   width: 24px;
 }
 
-header #filter-sort-order:checked + label {
+#filter-sort-order:checked + label {
   display: inline-block;
   height: 24px;
   width: 24px;
 }
 
-header #filter-criteria {
+#filter-criteria {
   margin: 0px 3px 0px 3px;
+}
+
+#header-buttons {
 }
 
 
 /* Main */
-
-#logo {
-  margin: 0;
-  font-size: 2em;
-  text-align: center;
-}
-
-h3 {
-  color: #617A55;
-
-}
-
-.no {
-  width: 36.95px;
-}
-
-.yes {
-  margin-bottom: 1em;
-}
-
-.butt-width {
-  width: 86.33px;
-}
-
-.tests {
-  color: #000000;
-  text-decoration: none;
-}
-
 main {
 }
 
-main #main-extra {
+#main-extra {
 }
 
-main #register {
+#register {
 }
 
-main #form-register {
+#form-register {
 }
 
-main #login {
+#login {
 }
 
-main #form-login {
+#form-login {
 }
 
-main #logout {
+#logout {
 }
 
-main #form-logout {
+#form-logout {
 }
 
-main #main-content {
+#main-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 
 /* Footer */
 footer {
 }
+
+
+/* Thread Box classes, see "/static/box.js". */
+/* These are very specific. Consider replacing with classes of a wider scope. */
+/*
+.box-main-show-threads {}
+.box-main-add-thread {}
+.box-main-modify-thread {}
+.box-main-delete-thread {}
+
+.box-heading-add-thread {}
+.box-heading-modify-thread {}
+.box-heading-delete-thread {}
+
+.box-form-container-add-thread {}
+.box-form-container-modify-thread {}
+.box-form-container-delete-thread {}
+
+.box-form-add-thread {}
+.box-form-modify-thread {}
+.box-form-delete-thread {}
+
+.box-form-subject-add-thread {}
+.box-form-subject-modify-thread {}
+
+.box-form-text-add-thread {}
+.box-form-text-modify-thread {}
+
+.box-form-image-add-thread {}
+.box-form-image-modify-thread {}
+
+.box-form-submit-add-thread {}
+.box-form-submit-modify-thread {}
+.box-form-submit-delete-thread {}
+
+.box-error-container-show-threads {}
+.box-error-container-add-thread {}
+.box-error-container-modify-thread {}
+.box-error-container-delete-thread {}
+
+.box-error-show-threads {}
+.box-error-add-thread {}
+.box-error-modify-thread {}
+.box-error-delete-thread {}
+
+.box-button-cancel-show-threads {}
+.box-button-cancel-add-thread {}
+.box-button-cancel-modify-thread {}
+.box-button-cancel-delete-thread {}
+
+.box-list-show-threads {}
+
+.box-button-start-show-threads {}
+.box-button-start-add-thread {}
+.box-button-start-modify-thread {}
+.box-button-start-delete-thread {}
+*/
+
+
+/* Post Box classes, see "/static/box.js". */
+/* These are very specific. Consider replacing with classes of a wider scope. */
+/*
+.box-main-show-posts {}
+.box-main-add-post {}
+.box-main-modify-post {}
+.box-main-delete-post {}
+
+.box-heading-add-post {}
+.box-heading-modify-post {}
+.box-heading-delete-post {}
+
+.box-form-container-add-post {}
+.box-form-container-modify-post {}
+.box-form-container-delete-post {}
+
+.box-form-add-post {}
+.box-form-modify-post {}
+.box-form-delete-post {}
+
+.box-form-text-add-post {}
+.box-form-text-modify-post {}
+
+.box-form-image-add-post {}
+.box-form-image-modify-post {}
+
+.box-form-submit-add-post {}
+.box-form-submit-modify-post {}
+.box-form-submit-delete-post {}
+
+.box-error-container-show-posts {}
+.box-error-container-add-post {}
+.box-error-container-modify-post {}
+.box-error-container-delete-post {}
+
+.box-error-show-posts {}
+.box-error-add-post {}
+.box-error-modify-post {}
+.box-error-delete-post {}
+
+.box-button-cancel-show-posts {}
+.box-button-cancel-add-post {}
+.box-button-cancel-modify-post {}
+.box-button-cancel-delete-post {}
+
+.box-list-show-posts {}
+
+.box-button-start-show-posts {}
+.box-button-start-add-post {}
+.box-button-start-modify-post {}
+.box-button-start-delete-post {}
+*/
 
