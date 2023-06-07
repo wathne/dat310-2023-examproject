@@ -1211,7 +1211,7 @@ class PostsManager {
             console.error(error);
           });
       if (insertPostStatus["code"] === undefined) {
-        //await this.#thread.rebuildThreadFromThreadId();
+        await this.#thread.rebuildThreadFromThreadId();
         this.reloadList(); // Do not await.
       }
       return insertPostStatus;
@@ -1221,7 +1221,7 @@ class PostsManager {
           console.error(error);
         });
     if (insertPostStatus["code"] === undefined) {
-      //await this.#thread.rebuildThreadFromThreadId();
+      await this.#thread.rebuildThreadFromThreadId();
       this.reloadList(); // Do not await.
     }
     return insertPostStatus;
@@ -1260,7 +1260,7 @@ class PostsManager {
           updatePostStatus === postId
       ) {
         if (postId === this.#thread.getPostId()) {
-          //await this.#thread.rebuildThreadFromThreadId();
+          await this.#thread.rebuildThreadFromThreadId();
         }
         this.reloadList(); // Do not await.
       }
@@ -1279,7 +1279,7 @@ class PostsManager {
         updatePostStatus === postId
     ) {
       if (postId === this.#thread.getPostId()) {
-        //await this.#thread.rebuildThreadFromThreadId();
+        await this.#thread.rebuildThreadFromThreadId();
       }
       this.reloadList(); // Do not await.
     }
@@ -1304,7 +1304,7 @@ class PostsManager {
         deletePostStatus === postId
     ) {
       if (postId === this.#thread.getPostId()) {
-        //await this.#thread.rebuildThreadFromThreadId();
+        await this.#thread.rebuildThreadFromThreadId();
       }
       this.reloadList(); // Do not await.
     }
