@@ -363,13 +363,13 @@ def before_request() -> None:
     # Do not call load_user() if path is whitelisted.
     path_whitelist: set[str] = {
         "/static/api.js", # Authentication is not required.
+        "/static/box.js", # Authentication is not required.
         "/static/favicon.ico", # Authentication is not required.
+        "/static/form-validation.js", # Authentication is not required.
+        "/static/handler.js", # Authentication is not required.
         "/static/imageboard.css", # Authentication is not required.
         "/static/imageboard.html", # Authentication is not required.
         "/static/imageboard.js", # Authentication is not required.
-        "/static/index.html", # Authentication is not required.
-        "/static/script.js", # Authentication is not required.
-        "/static/style.css", # Authentication is not required.
         "/static/tests/api.html", # Authentication is not required.
         "/static/tests/script.js", # Authentication is not required.
         "/static/tests/style.css", # Authentication is not required.
