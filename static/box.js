@@ -85,10 +85,10 @@ class ShowThreadsBox {
     // main
     this.main = document.createElement("div");
     this.main.className =
-        "box-main-show-threads default-hidden rounded box-threads";
+        "box-main-show-threads default-hidden rounded";
     // errorContainer
     this.errorContainer = document.createElement("div");
-    this.errorContainer.className = "box-error-container-show-threads";
+    this.errorContainer.className = "box-error-container-show-threads rounded";
     // error
     this.error = document.createElement("p");
     this.error.className = "box-error-show-threads";
@@ -158,6 +158,7 @@ class AddThreadBox {
   /* CSS overview:
    * -------------
    *   box-main-add-thread
+   *     box-thread
    *   box-heading-add-thread
    *   box-form-container-add-thread
    *   box-form-add-thread
@@ -339,6 +340,7 @@ class ModifyThreadBox {
   /* CSS overview:
    * -------------
    *   box-main-modify-thread
+   *     box-thread
    *   box-heading-modify-thread
    *   box-form-container-modify-thread
    *   box-form-modify-thread
@@ -525,6 +527,7 @@ class DeleteThreadBox {
   /* CSS overview:
    * -------------
    *   box-main-delete-thread
+   *     box-thread
    *   box-heading-delete-thread
    *   box-form-container-delete-thread
    *   box-form-delete-thread
@@ -661,10 +664,10 @@ class ShowPostsBox {
     // main
     this.main = document.createElement("div");
     this.main.className =
-        "box-main-show-posts default-hidden rounded box-posts";
+        "box-main-show-posts default-hidden rounded";
     // errorContainer
     this.errorContainer = document.createElement("div");
-    this.errorContainer.className = "box-error-container-show-posts";
+    this.errorContainer.className = "box-error-container-show-posts rounded";
     // error
     this.error = document.createElement("p");
     this.error.className = "box-error-show-posts";
@@ -734,6 +737,7 @@ class AddPostBox {
   /* CSS overview:
    * -------------
    *   box-main-add-post
+   *     box-post
    *   box-heading-add-post
    *   box-form-container-add-post
    *   box-form-add-post
@@ -906,6 +910,7 @@ class ModifyPostBox {
   /* CSS overview:
    * -------------
    *   box-main-modify-post
+   *     box-post
    *   box-heading-modify-post
    *   box-form-container-modify-post
    *   box-form-modify-post
@@ -1083,6 +1088,7 @@ class DeletePostBox {
   /* CSS overview:
    * -------------
    *   box-main-delete-post
+   *     box-post
    *   box-heading-delete-post
    *   box-form-container-delete-post
    *   box-form-delete-post
@@ -1204,6 +1210,7 @@ class RegisterBox {
   /* CSS overview:
    * -------------
    *   box-main-register
+   *     box-session
    *   box-heading-register
    *   box-form-container-register
    *   box-form-register
@@ -1346,6 +1353,7 @@ class LoginBox {
   /* CSS overview:
    * -------------
    *   box-main-login
+   *     box-session
    *   box-heading-login
    *   box-form-container-login
    *   box-form-login
@@ -1510,6 +1518,7 @@ class LogoutBox {
   /* CSS overview:
    * -------------
    *   box-main-logout
+   *     box-session
    *   box-heading-logout
    *   box-form-container-logout
    *   box-form-logout

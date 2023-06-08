@@ -120,9 +120,17 @@
 .post-extra {
 }
 
-.box-threads {
+.box-main-show-threads {
   background-color: #212821; /* dark shade */
   margin: 6px 18px 0px 18px;
+}
+
+.box-error-container-show-threads {
+  background-color: #fff9b1; /* light shade */
+  width: fit-content;
+}
+.box-error-show-threads {
+  padding: 3px 6px 3px 6px;
 }
 
 .box-thread {
@@ -131,10 +139,19 @@
   padding: 0px 18px 18px 18px;
 }
 
-.box-posts {
+.box-main-show-posts {
   background-color: #212821; /* dark shade */
   margin: 6px 6px 0px 6px;
   padding: 9px 9px 3px 9px;
+}
+
+.box-error-container-show-posts {
+  background-color: #fff9b1; /* light shade */
+  width: fit-content;
+}
+
+.box-error-show-posts {
+  padding: 3px 6px 3px 6px;
 }
 
 .box-post {
