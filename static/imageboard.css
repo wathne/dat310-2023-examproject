@@ -66,6 +66,12 @@
 .thread-text {
 }
 
+.thread-last-modified {
+}
+
+.thread-timestamp {
+}
+
 .thread-buttons {
 }
 
@@ -73,11 +79,20 @@
   margin: 3px 6px 3px 0px;
 }
 
+.thread-extra {
+}
+
 .thread-posts-buttons {
 }
 
 .thread-posts-buttons > * {
   margin: 3px 6px 3px 0px;
+}
+
+.thread-posts-extra {
+}
+
+.thread-posts-list {
 }
 
 .post {
@@ -89,11 +104,20 @@
 .post-text {
 }
 
+.post-last-modified {
+}
+
+.post-timestamp {
+}
+
 .post-buttons {
 }
 
 .post-buttons > * {
   margin: 3px 6px 3px 0px;
+}
+
+.post-extra {
 }
 
 .box-threads {

@@ -121,11 +121,11 @@
  *   FilterHandler
  * 
  * 
- * TODO(wathne): Show dates.
+ * TODO(wathne): Display username.
+ * TODO(wathne): Display post id.
  * TODO(wathne): Enlarge image on mouseclick or mouseover.
- * TODO(wathne): Fix duplicate PostsManager buttons bug.
+ * TODO(wathne): Do not show top post in posts list.
  * TODO(wathne): Fix duplicate display of Threads bug.
- * TODO(wathne): Make sure that the PostsManager is ok after a Thread rebuild.
  * TODO(wathne): Improve reloadList().
  * TODO(wathne): Delete testElement.
  * TODO(wathne): Delete a few console.log() lines.
@@ -162,6 +162,7 @@ class Thread {
   // Thread elements.
   #mainElement;
   #threadSubjectElement;
+  #flexLeftAligned;
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
@@ -201,6 +202,9 @@ class Thread {
     // threadSubject
     this.#threadSubjectElement = document.createElement("div");
     this.#threadSubjectElement.className = "thread-subject";
+    // flexLeftAligned
+    this.#flexLeftAligned = document.createElement("div");
+    this.#flexLeftAligned.className = "flex-left-aligned";
     // thumbnailContainer
     this.#thumbnailContainerElement = document.createElement("div");
     this.#thumbnailContainerElement.className =
@@ -210,7 +214,6 @@ class Thread {
     this.#thumbnailElement.className = "thumbnail";
     this.#thumbnailElement.alt = "";
     this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
-    this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
     // postText
     this.#postTextElement = document.createElement("div");
     this.#postTextElement.className = "thread-text";
@@ -227,16 +230,38 @@ class Thread {
     this.#buttonsElement.className = "thread-buttons";
     // extra
     this.#extraElement = document.createElement("div");
-    this.#extraElement.className = "";
+    this.#extraElement.className = "thread-extra";
     // postsButtons
     this.#postsButtonsElement = document.createElement("div");
     this.#postsButtonsElement.className = "thread-posts-buttons";
     // postsExtra
     this.#postsExtraElement = document.createElement("div");
-    this.#postsExtraElement.className = "";
+    this.#postsExtraElement.className = "thread-posts-extra";
     // postsList
     this.#postsListElement = document.createElement("div");
-    this.#postsListElement.className = "";
+    this.#postsListElement.className = "thread-posts-list";
+    // Element structure.
+    this.#mainElement.appendChild(this.#threadSubjectElement);
+    this.#mainElement.appendChild(this.#flexLeftAligned);
+    this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
+    this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
+    this.#flexLeftAligned.appendChild(this.#postTextElement);
+    this.#mainElement.appendChild(this.#threadLastModifiedElement);
+    this.#mainElement.appendChild(this.#threadTimestampElement);
+    // TODO(wathne): Delete testElement.
+    this.#mainElement.appendChild(this.#testElement);
+    this.#mainElement.appendChild(this.#buttonsElement);
+    this.#mainElement.appendChild(this.#extraElement);
+    this.#mainElement.appendChild(this.#postsButtonsElement);
+    this.#mainElement.appendChild(this.#postsExtraElement);
+    this.#mainElement.appendChild(this.#postsListElement);
+    // PostsManager
+    this.#postsManager = new PostsManager(
+        this,
+        this.#postsListElement,
+        this.#postsExtraElement,
+        this.#postsButtonsElement,
+    );
   }
 
   // Example: console.log(this.toHumanReadable());
@@ -271,9 +296,13 @@ class Thread {
   }
 
   #demolish() {
-    while (this.#mainElement.firstChild) {
-      this.#mainElement.removeChild(this.#mainElement.firstChild);
+    for (const child of this.#mainElement.children) {
+      child.style.display = "none";
     }
+    for (const child of this.#flexLeftAligned.children) {
+      child.style.display = "none";
+    }
+    this.#flexLeftAligned.style.display = "block";
     this.#threadSubjectElement.textContent = "";
     const previousURL = this.#thumbnailElement.src;
     if (previousURL !== pixelPNG && previousURL !== "") {
@@ -289,32 +318,26 @@ class Thread {
   }
 
   // TODO(wathne): Delete testElement.
-  #appendTestElement() {
+  #displayTestElement() {
     this.#testElement.textContent = this.toHumanReadable();
-    this.#mainElement.appendChild(this.#testElement);
+    this.#testElement.style.display = "block";
   }
 
-  #appendExtra() {
-    this.#mainElement.appendChild(this.#buttonsElement);
-    this.#mainElement.appendChild(this.#extraElement);
+  #displayExtra() {
+    this.#buttonsElement.style.display = "block";
+    this.#extraElement.style.display = "block";
   }
 
-  #appendPosts() {
-    this.#mainElement.appendChild(this.#postsButtonsElement);
-    this.#mainElement.appendChild(this.#postsExtraElement);
-    this.#mainElement.appendChild(this.#postsListElement);
-    this.#postsManager = new PostsManager(
-        this,
-        this.#postsListElement,
-        this.#postsExtraElement,
-        this.#postsButtonsElement,
-    );
+  #displayPosts() {
+    this.#postsButtonsElement.style.display = "block";
+    this.#postsExtraElement.style.display = "block";
+    this.#postsListElement.style.display = "block";
   }
 
   #finally() {
-    this.#appendTestElement(); // TODO(wathne): Delete testElement.
-    this.#appendExtra();
-    this.#appendPosts();
+    this.#displayTestElement(); // TODO(wathne): Delete testElement.
+    this.#displayExtra();
+    this.#displayPosts();
     this.#done = true;
     return this;
   }
@@ -347,6 +370,8 @@ class Thread {
     if (thread_and_posts["code"] !== undefined) {
       return this.#finally();
     }
+    // TODO(wathne): Use the included list of posts to quickly rebuild posts.
+    //const posts = thread_and_posts["posts"];
     const thread = thread_and_posts["thread"];
     this.#postId = thread["post_id"];
     this.#threadLastModified = thread["thread_last_modified"];
@@ -356,15 +381,12 @@ class Thread {
     this.#retrievedThread = true;
     this.#threadLastModifiedElement.textContent =
         `Thread updated: ${new Date(this.#threadLastModified * 1000)}`;
-    // Display thread last modified as soon as possible.
-    this.#mainElement.appendChild(this.#threadLastModifiedElement);
+    this.#threadLastModifiedElement.style.display = "block";
+    this.#threadSubjectElement.textContent = this.#threadSubject;
+    this.#threadSubjectElement.style.display = "block";
     this.#threadTimestampElement.textContent =
         `Thread created: ${new Date(this.#threadTimestamp * 1000)}`;
-    // Display thread timestamp as soon as possible.
-    this.#mainElement.appendChild(this.#threadTimestampElement);
-    this.#threadSubjectElement.textContent = this.#threadSubject;
-    // Display thread subject as soon as possible.
-    this.#mainElement.appendChild(this.#threadSubjectElement);
+    this.#threadTimestampElement.style.display = "block";
     if (this.#postId === null) {
       return this.#finally();
     }
@@ -379,8 +401,7 @@ class Thread {
     this.#postText = post["post_text"];
     this.#retrievedPost = true;
     this.#postTextElement.textContent = this.#postText;
-    // Display post text as soon as possible.
-    this.#mainElement.appendChild(this.#postTextElement);
+    this.#postTextElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -393,8 +414,7 @@ class Thread {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
-    // Display thumbnail as soon as possible.
-    this.#mainElement.appendChild(this.#thumbnailContainerElement);
+    this.#thumbnailContainerElement.style.display = "block";
     return this.#finally();
   }
 
@@ -428,15 +448,12 @@ class Thread {
     this.#retrievedThread = true;
     this.#threadLastModifiedElement.textContent =
         `Thread updated: ${new Date(this.#threadLastModified * 1000)}`;
-    // Display thread last modified as soon as possible.
-    this.#mainElement.appendChild(this.#threadLastModifiedElement);
+    this.#threadLastModifiedElement.style.display = "block";
+    this.#threadSubjectElement.textContent = this.#threadSubject;
+    this.#threadSubjectElement.style.display = "block";
     this.#threadTimestampElement.textContent =
         `Thread created: ${new Date(this.#threadTimestamp * 1000)}`;
-    // Display thread timestamp as soon as possible.
-    this.#mainElement.appendChild(this.#threadTimestampElement);
-    this.#threadSubjectElement.textContent = this.#threadSubject;
-    // Display thread subject as soon as possible.
-    this.#mainElement.appendChild(this.#threadSubjectElement);
+    this.#threadTimestampElement.style.display = "block";
     if (this.#postId === null) {
       return this.#finally();
     }
@@ -451,8 +468,7 @@ class Thread {
     this.#postText = post["post_text"];
     this.#retrievedPost = true;
     this.#postTextElement.textContent = this.#postText;
-    // Display post text as soon as possible.
-    this.#mainElement.appendChild(this.#postTextElement);
+    this.#postTextElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -465,8 +481,7 @@ class Thread {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
-    // Display thumbnail as soon as possible.
-    this.#mainElement.appendChild(this.#thumbnailContainerElement);
+    this.#thumbnailContainerElement.style.display = "block";
     return this.#finally();
   }
 
@@ -762,6 +777,7 @@ class ThreadsManager {
     }
     // TODO(wathne): Show incomplete threads for a more responsive experience.
     // TODO(wathne): Do not wait for slow promises.
+    // TODO(wathne): Timer and Promise.race()?
     const promises = retrieveThreadsStatus
         .map(async (thread) => {
           return Thread.createThreadFromThreadObject(thread);
@@ -862,6 +878,7 @@ class Post {
   #userId;
   // Post elements.
   #mainElement;
+  #flexLeftAligned;
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
@@ -892,6 +909,9 @@ class Post {
     // main
     this.#mainElement = document.createElement("div");
     this.#mainElement.className = "post rounded";
+    // flexLeftAligned
+    this.#flexLeftAligned = document.createElement("div");
+    this.#flexLeftAligned.className = "flex-left-aligned";
     // thumbnailContainer
     this.#thumbnailContainerElement = document.createElement("div");
     this.#thumbnailContainerElement.className =
@@ -901,7 +921,6 @@ class Post {
     this.#thumbnailElement.className = "thumbnail";
     this.#thumbnailElement.alt = "";
     this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
-    this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
     // postText
     this.#postTextElement = document.createElement("div");
     this.#postTextElement.className = "post-text";
@@ -918,7 +937,18 @@ class Post {
     this.#buttonsElement.className = "post-buttons";
     // extra
     this.#extraElement = document.createElement("div");
-    this.#extraElement.className = "";
+    this.#extraElement.className = "post-extra";
+    // Element structure.
+    this.#mainElement.appendChild(this.#flexLeftAligned);
+    this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
+    this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
+    this.#flexLeftAligned.appendChild(this.#postTextElement);
+    this.#mainElement.appendChild(this.#postLastModifiedElement);
+    this.#mainElement.appendChild(this.#postTimestampElement);
+    // TODO(wathne): Delete testElement.
+    this.#mainElement.appendChild(this.#testElement);
+    this.#mainElement.appendChild(this.#buttonsElement);
+    this.#mainElement.appendChild(this.#extraElement);
   }
 
   // Example: console.log(this.toHumanReadable());
@@ -950,9 +980,13 @@ class Post {
   }
 
   #demolish() {
-    while (this.#mainElement.firstChild) {
-      this.#mainElement.removeChild(this.#mainElement.firstChild);
+    for (const child of this.#mainElement.children) {
+      child.style.display = "none";
     }
+    for (const child of this.#flexLeftAligned.children) {
+      child.style.display = "none";
+    }
+    this.#flexLeftAligned.style.display = "block";
     const previousURL = this.#thumbnailElement.src;
     if (previousURL !== pixelPNG && previousURL !== "") {
       this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
@@ -967,19 +1001,19 @@ class Post {
   }
 
   // TODO(wathne): Delete testElement.
-  #appendTestElement() {
+  #displayTestElement() {
     this.#testElement.textContent = this.toHumanReadable();
-    this.#mainElement.appendChild(this.#testElement);
+    this.#testElement.style.display = "block";
   }
 
-  #appendExtra() {
-    this.#mainElement.appendChild(this.#buttonsElement);
-    this.#mainElement.appendChild(this.#extraElement);
+  #displayExtra() {
+    this.#buttonsElement.style.display = "block";
+    this.#extraElement.style.display = "block";
   }
 
   #finally() {
-    this.#appendTestElement(); // TODO(wathne): Delete testElement.
-    this.#appendExtra();
+    this.#displayTestElement(); // TODO(wathne): Delete testElement.
+    this.#displayExtra();
     this.#done = true;
     return this;
   }
@@ -1021,15 +1055,12 @@ class Post {
     this.#retrievedPost = true;
     this.#postLastModifiedElement.textContent =
         `Post updated: ${new Date(this.#postLastModified * 1000)}`;
-    // Display post last modified as soon as possible.
-    this.#mainElement.appendChild(this.#postLastModifiedElement);
+    this.#postLastModifiedElement.style.display = "block";
+    this.#postTextElement.textContent = this.#postText;
+    this.#postTextElement.style.display = "block";
     this.#postTimestampElement.textContent =
         `Post created: ${new Date(this.#postTimestamp * 1000)}`;
-    // Display post timestamp as soon as possible.
-    this.#mainElement.appendChild(this.#postTimestampElement);
-    this.#postTextElement.textContent = this.#postText;
-    // Display post text as soon as possible.
-    this.#mainElement.appendChild(this.#postTextElement);
+    this.#postTimestampElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -1042,8 +1073,7 @@ class Post {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
-    // Display thumbnail as soon as possible.
-    this.#mainElement.appendChild(this.#thumbnailContainerElement);
+    this.#thumbnailContainerElement.style.display = "block";
     return this.#finally();
   }
 
@@ -1078,15 +1108,12 @@ class Post {
     this.#retrievedPost = true;
     this.#postLastModifiedElement.textContent =
         `Post updated: ${new Date(this.#postLastModified * 1000)}`;
-    // Display post last modified as soon as possible.
-    this.#mainElement.appendChild(this.#postLastModifiedElement);
+    this.#postLastModifiedElement.style.display = "block";
+    this.#postTextElement.textContent = this.#postText;
+    this.#postTextElement.style.display = "block";
     this.#postTimestampElement.textContent =
         `Post created: ${new Date(this.#postTimestamp * 1000)}`;
-    // Display post timestamp as soon as possible.
-    this.#mainElement.appendChild(this.#postTimestampElement);
-    this.#postTextElement.textContent = this.#postText;
-    // Display post text as soon as possible.
-    this.#mainElement.appendChild(this.#postTextElement);
+    this.#postTimestampElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -1099,8 +1126,7 @@ class Post {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
-    // Display thumbnail as soon as possible.
-    this.#mainElement.appendChild(this.#thumbnailContainerElement);
+    this.#thumbnailContainerElement.style.display = "block";
     return this.#finally();
   }
 
@@ -1389,6 +1415,7 @@ class PostsManager {
     }
     // TODO(wathne): Show incomplete posts for a more responsive experience.
     // TODO(wathne): Do not wait for slow promises.
+    // TODO(wathne): Timer and Promise.race()?
     const promises = retrievePostsStatus
         .map(async (post) => {
           return Post.createPostFromPostObject(post);
