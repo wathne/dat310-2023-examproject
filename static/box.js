@@ -25,6 +25,9 @@
  *   AddPostBox
  *   ModifyPostBox
  *   DeletePostBox
+ *   RegisterBox
+ *   LoginBox
+ *   LogoutBox
  * 
  * 
  * Load this JavaScript file before other JavaScript files.
@@ -1161,6 +1164,425 @@ class DeletePostBox {
 
   getTarget() {
     return this.#target;
+  }
+
+  getMainElement() {
+    return this.main;
+  }
+
+  showMainElement() {
+    this.main.style.display = "block";
+  }
+
+  hideMainElement() {
+    this.main.style.display = "none";
+  }
+
+  setError(error) {
+    this.error.textContent = error;
+    this.errorContainer.style.display = "block";
+  }
+
+  clearError() {
+    this.errorContainer.style.display = "none";
+    this.error.textContent = "";
+  }
+}
+
+
+class RegisterBox {
+  #registerHandler;
+
+  /* CSS overview:
+   * -------------
+   *   box-main-register
+   *   box-heading-register
+   *   box-form-container-register
+   *   box-form-register
+   *   box-form-username-register
+   *   box-form-password-register
+   *   box-form-submit-register
+   *   box-error-container-register
+   *   box-error-register
+   *   box-button-cancel-register
+   *   box-button-start-register
+   */
+  constructor(registerHandler) {
+    // A RegisterHandler is necessary for the event handling of this Box.
+    // A RegisterHandler must implement the following functions:
+    //   - handleButtonStartClickEvent(box)
+    //   - handleButtonCancelClickEvent(box)
+    //   - handleFormSubmitEvent(box)
+    this.#registerHandler = registerHandler;
+    // main
+    this.main = document.createElement("div");
+    this.main.className = "box-main-register default-hidden framed";
+    // heading
+    this.heading = document.createElement("h3");
+    this.heading.className = "box-heading-register";
+    this.heading.textContent = "Register";
+    // flexLeftAligned
+    this.flexLeftAligned = document.createElement("div");
+    this.flexLeftAligned.className = "flex-left-aligned";
+    // formContainer
+    this.formContainer = document.createElement("div");
+    this.formContainer.className = "box-form-container-register";
+    // form
+    this.form = document.createElement("form");
+    this.form.className = "box-form-register";
+    this.form.onsubmit = (event) => false;
+    // part1, part2, part3
+    this.part1 = document.createElement("p");
+    this.part2 = document.createElement("p");
+    this.part3 = document.createElement("p");
+    // formUsername
+    this.formUsername = document.createElement("input");
+    this.formUsername.className = "box-form-username-register";
+    this.formUsername.name = "username";
+    this.formUsername.type = "text";
+    this.formUsername.placeholder = "enter username";
+    this.formUsername.required = true;
+    // formPassword
+    this.formPassword = document.createElement("input");
+    this.formPassword.className = "box-form-password-register";
+    this.formPassword.name = "password";
+    this.formPassword.type = "password";
+    this.formPassword.placeholder = "enter password";
+    this.formPassword.required = true;
+    // formSubmit
+    this.formSubmit = document.createElement("input");
+    this.formSubmit.className = "box-form-submit-register";
+    this.formSubmit.type = "submit";
+    this.formSubmit.value = "Register";
+    // errorContainer
+    this.errorContainer = document.createElement("div");
+    this.errorContainer.className = "box-error-container-register";
+    // error
+    this.error = document.createElement("p");
+    this.error.className = "box-error-register";
+    // buttonCancel
+    this.buttonCancel = document.createElement("button");
+    this.buttonCancel.className = "box-button-cancel-register";
+    this.buttonCancel.textContent = "Cancel";
+    // Element structure.
+    this.main.appendChild(this.heading);
+    this.main.appendChild(this.flexLeftAligned);
+    this.flexLeftAligned.appendChild(this.formContainer);
+    this.formContainer.appendChild(this.form);
+    this.form.appendChild(this.part1);
+    this.form.appendChild(this.part2);
+    this.form.appendChild(this.part3);
+    this.part1.appendChild(this.formUsername);
+    this.part2.appendChild(this.formPassword);
+    this.part3.appendChild(this.formSubmit);
+    this.main.appendChild(this.errorContainer);
+    this.errorContainer.appendChild(this.error);
+    this.main.appendChild(this.buttonCancel);
+    // Subscribe this.#registerHandler to events.
+    this.form.addEventListener(
+        "submit",
+        this.#registerHandler.handleFormSubmitEvent
+            .bind(this.#registerHandler, this),
+    );
+    this.buttonCancel.addEventListener(
+        "click",
+        this.#registerHandler.handleButtonCancelClickEvent
+            .bind(this.#registerHandler, this),
+    );
+  }
+
+  createButton() {
+    const button = document.createElement("button");
+    button.className = "box-button-start-register";
+    button.textContent = "Register";
+    button.addEventListener(
+        "click",
+        this.#registerHandler.handleButtonStartClickEvent
+            .bind(this.#registerHandler, this),
+    );
+    return button;
+  }
+
+  getMainElement() {
+    return this.main;
+  }
+
+  showMainElement() {
+    this.main.style.display = "block";
+  }
+
+  hideMainElement() {
+    this.main.style.display = "none";
+  }
+
+  getFormData() {
+    return new FormData(this.form);
+  }
+
+  setError(error) {
+    this.error.textContent = error;
+    this.errorContainer.style.display = "block";
+  }
+
+  clearError() {
+    this.errorContainer.style.display = "none";
+    this.error.textContent = "";
+  }
+}
+
+
+class LoginBox {
+  #loginHandler;
+
+  /* CSS overview:
+   * -------------
+   *   box-main-login
+   *   box-heading-login
+   *   box-form-container-login
+   *   box-form-login
+   *   box-form-username-login
+   *   box-form-password-login
+   *   box-form-submit-login
+   *   box-error-container-login
+   *   box-error-login
+   *   box-button-cancel-login
+   *   box-button-start-login
+   */
+  constructor(loginHandler) {
+    // A LoginHandler is necessary for the event handling of this Box.
+    // A LoginHandler must implement the following functions:
+    //   - handleButtonStartClickEvent(box)
+    //   - handleButtonCancelClickEvent(box)
+    //   - handleFormSubmitEvent(box)
+    this.#loginHandler = loginHandler;
+    // main
+    this.main = document.createElement("div");
+    this.main.className = "box-main-login default-hidden framed";
+    // heading
+    this.heading = document.createElement("h3");
+    this.heading.className = "box-heading-login";
+    this.heading.textContent = "Login";
+    // flexLeftAligned
+    this.flexLeftAligned = document.createElement("div");
+    this.flexLeftAligned.className = "flex-left-aligned";
+    // formContainer
+    this.formContainer = document.createElement("div");
+    this.formContainer.className = "box-form-container-login";
+    // form
+    this.form = document.createElement("form");
+    this.form.className = "box-form-login";
+    this.form.onsubmit = (event) => false;
+    // part1, part2, part3
+    this.part1 = document.createElement("p");
+    this.part2 = document.createElement("p");
+    this.part3 = document.createElement("p");
+    // formUsername
+    this.formUsername = document.createElement("input");
+    this.formUsername.className = "box-form-username-login";
+    this.formUsername.name = "username";
+    this.formUsername.type = "text";
+    this.formUsername.placeholder = "enter username";
+    this.formUsername.required = true;
+    // formPassword
+    this.formPassword = document.createElement("input");
+    this.formPassword.className = "box-form-password-login";
+    this.formPassword.name = "password";
+    this.formPassword.type = "password";
+    this.formPassword.placeholder = "enter password";
+    this.formPassword.required = true;
+    // formSubmit
+    this.formSubmit = document.createElement("input");
+    this.formSubmit.className = "box-form-submit-login";
+    this.formSubmit.type = "submit";
+    this.formSubmit.value = "Login";
+    // errorContainer
+    this.errorContainer = document.createElement("div");
+    this.errorContainer.className = "box-error-container-login";
+    // error
+    this.error = document.createElement("p");
+    this.error.className = "box-error-login";
+    // extraContainer
+    this.extraContainer = document.createElement("div");
+    // extraHeading
+    this.extraHeading = document.createElement("h4");
+    this.extraHeading.textContent = "Sample login credentials:";
+    // extraParagraph1
+    this.extraParagraph1 = document.createElement("p");
+    this.extraParagraph1.textContent =
+        "username: test1 | password: asdf1234 | group: 0";
+    // extraParagraph2
+    this.extraParagraph2 = document.createElement("p");
+    this.extraParagraph2.textContent =
+        "username: test2 | password: asdf1234 | group: 0";
+    // extraParagraph3
+    this.extraParagraph3 = document.createElement("p");
+    this.extraParagraph3.textContent =
+        "username: moderator1 | password: zxcv5678 | group: 5";
+    // buttonCancel
+    this.buttonCancel = document.createElement("button");
+    this.buttonCancel.className = "box-button-cancel-login";
+    this.buttonCancel.textContent = "Cancel";
+    // Element structure.
+    this.main.appendChild(this.heading);
+    this.main.appendChild(this.flexLeftAligned);
+    this.flexLeftAligned.appendChild(this.formContainer);
+    this.formContainer.appendChild(this.form);
+    this.form.appendChild(this.part1);
+    this.form.appendChild(this.part2);
+    this.form.appendChild(this.part3);
+    this.part1.appendChild(this.formUsername);
+    this.part2.appendChild(this.formPassword);
+    this.part3.appendChild(this.formSubmit);
+    this.main.appendChild(this.errorContainer);
+    this.errorContainer.appendChild(this.error);
+    this.main.appendChild(this.extraContainer);
+    this.extraContainer.appendChild(this.extraHeading);
+    this.extraContainer.appendChild(this.extraParagraph1);
+    this.extraContainer.appendChild(this.extraParagraph2);
+    this.extraContainer.appendChild(this.extraParagraph3);
+    this.main.appendChild(this.buttonCancel);
+    // Subscribe this.#loginHandler to events.
+    this.form.addEventListener(
+        "submit",
+        this.#loginHandler.handleFormSubmitEvent
+            .bind(this.#loginHandler, this),
+    );
+    this.buttonCancel.addEventListener(
+        "click",
+        this.#loginHandler.handleButtonCancelClickEvent
+            .bind(this.#loginHandler, this),
+    );
+  }
+
+  createButton() {
+    const button = document.createElement("button");
+    button.className = "box-button-start-login";
+    button.textContent = "Login";
+    button.addEventListener(
+        "click",
+        this.#loginHandler.handleButtonStartClickEvent
+            .bind(this.#loginHandler, this),
+    );
+    return button;
+  }
+
+  getMainElement() {
+    return this.main;
+  }
+
+  showMainElement() {
+    this.main.style.display = "block";
+  }
+
+  hideMainElement() {
+    this.main.style.display = "none";
+  }
+
+  getFormData() {
+    return new FormData(this.form);
+  }
+
+  setError(error) {
+    this.error.textContent = error;
+    this.errorContainer.style.display = "block";
+  }
+
+  clearError() {
+    this.errorContainer.style.display = "none";
+    this.error.textContent = "";
+  }
+}
+
+
+class LogoutBox {
+  #logoutHandler;
+
+  /* CSS overview:
+   * -------------
+   *   box-main-logout
+   *   box-heading-logout
+   *   box-form-container-logout
+   *   box-form-logout
+   *   box-form-submit-logout
+   *   box-error-container-logout
+   *   box-error-logout
+   *   box-button-cancel-logout
+   *   box-button-start-logout
+   */
+  constructor(logoutHandler) {
+    // A LogoutHandler is necessary for the event handling of this Box.
+    // A LogoutHandler must implement the following functions:
+    //   - handleButtonStartClickEvent(box)
+    //   - handleButtonCancelClickEvent(box)
+    //   - handleFormSubmitEvent(box)
+    this.#logoutHandler = logoutHandler;
+    // main
+    this.main = document.createElement("div");
+    this.main.className = "box-main-logout default-hidden framed";
+    // heading
+    this.heading = document.createElement("h3");
+    this.heading.className = "box-heading-logout";
+    this.heading.textContent = "Do you want to logout?";
+    // flexLeftAligned
+    this.flexLeftAligned = document.createElement("div");
+    this.flexLeftAligned.className = "flex-left-aligned";
+    // formContainer
+    this.formContainer = document.createElement("div");
+    this.formContainer.className = "box-form-container-logout";
+    // form
+    this.form = document.createElement("form");
+    this.form.className = "box-form-logout";
+    this.form.onsubmit = (event) => false;
+    // part1
+    this.part1 = document.createElement("p");
+    // formSubmit
+    this.formSubmit = document.createElement("input");
+    this.formSubmit.className = "box-form-submit-logout";
+    this.formSubmit.type = "submit";
+    this.formSubmit.value = "Yes";
+    // errorContainer
+    this.errorContainer = document.createElement("div");
+    this.errorContainer.className = "box-error-container-logout";
+    // error
+    this.error = document.createElement("p");
+    this.error.className = "box-error-logout";
+    // buttonCancel
+    this.buttonCancel = document.createElement("button");
+    this.buttonCancel.className = "box-button-cancel-logout";
+    this.buttonCancel.textContent = "No";
+    // Element structure.
+    this.main.appendChild(this.heading);
+    this.main.appendChild(this.flexLeftAligned);
+    this.flexLeftAligned.appendChild(this.formContainer);
+    this.formContainer.appendChild(this.form);
+    this.form.appendChild(this.part1);
+    this.part1.appendChild(this.formSubmit);
+    this.main.appendChild(this.errorContainer);
+    this.errorContainer.appendChild(this.error);
+    this.main.appendChild(this.buttonCancel);
+    // Subscribe this.#logoutHandler to events.
+    this.form.addEventListener(
+        "submit",
+        this.#logoutHandler.handleFormSubmitEvent
+            .bind(this.#logoutHandler, this),
+    );
+    this.buttonCancel.addEventListener(
+        "click",
+        this.#logoutHandler.handleButtonCancelClickEvent
+            .bind(this.#logoutHandler, this),
+    );
+  }
+
+  createButton() {
+    const button = document.createElement("button");
+    button.className = "box-button-start-logout";
+    button.textContent = "Logout";
+    button.addEventListener(
+        "click",
+        this.#logoutHandler.handleButtonStartClickEvent
+            .bind(this.#logoutHandler, this),
+    );
+    return button;
   }
 
   getMainElement() {

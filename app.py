@@ -208,6 +208,7 @@ from werkzeug.exceptions import Unauthorized # 401
 from werkzeug.exceptions import Forbidden # 403
 from werkzeug.exceptions import NotFound # 404
 from werkzeug.exceptions import MethodNotAllowed # 405
+from werkzeug.exceptions import Conflict # 409
 from werkzeug.exceptions import Gone # 410
 from werkzeug.exceptions import RequestEntityTooLarge # 413
 from werkzeug.exceptions import UnsupportedMediaType # 415
@@ -466,6 +467,23 @@ def handle_method_not_allowed(e: MethodNotAllowed) -> Response:
     return response
 
 
+# Raise to signal that a request cannot be completed because it conflicts with
+# the current state on the server.
+# https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Conflict
+@app.errorhandler(Conflict)
+def handle_conflict(e: Conflict) -> Response:
+    code: int = e.code
+    name: str = e.name
+    description: str = e.description
+    response: Response = jsonify({
+        "code": code,
+        "name": name,
+        "description": description,
+    })
+    response.status_code = code
+    return response
+
+
 # Raise if a resource existed previously and went away without new location.
 # https://werkzeug.palletsprojects.com/en/2.3.x/exceptions/#werkzeug.exceptions.Gone
 @app.errorhandler(Gone)
@@ -693,7 +711,6 @@ def _tests_login_deprecated() -> tuple[str, int]:
     ), 200)
 
 
-# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/login",
     methods=["POST"],
@@ -705,35 +722,34 @@ def api_login() -> Response:
     scs: SCS = cast(LP[SCS], session)._get_current_object()
     db_con: Connection | None = get_database_connection()
 
+    username: str | None = None
+    password: str | None = None
     request_dict: dict[str, str | None] | None = None
-    request_dict_username: str | None = None
-    request_dict_password: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_username = request_dict.get("username", None)
-        request_dict_password = request_dict.get("password", None)
-    if request_dict_username is None:
-        return jsonify(None)
-    if request_dict_password is None:
-        return jsonify(None)
+        username = request_dict.get("username", None)
+        password = request_dict.get("password", None)
+    if username is None:
+        raise BadRequest(description="No username.")
+    if password is None:
+        raise BadRequest(description="No password.")
 
-    scs["username"] = request_dict_username
-    scs["password"] = request_dict_password
+    scs["username"] = username
+    scs["password"] = password
 
     if db_con is None:
-        return jsonify(None)
+        raise InternalServerError(description="No database connection.")
 
     # See before_request(), endpoint_whitelist.
     # api_login() is whitelisted. We need to call load_user().
     load_user()
     print(f"Login as user_id: {acg.user_id}.")
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
     return jsonify(acg.user_id)
 
 
-# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/logout",
     methods=["POST"],
@@ -747,11 +763,10 @@ def api_logout() -> Response:
 
     print(f"Logout as user_id: {acg.user_id}.")
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
     return jsonify(acg.user_id)
 
 
-# TODO(wathne): Return and raise proper status codes.
 @app.route(
     rule="/api/register",
     methods=["POST"],
@@ -767,50 +782,44 @@ def api_users() -> Response:
     scs: SCS = cast(LP[SCS], session)._get_current_object()
     db_con: Connection | None = get_database_connection()
 
+    username: str | None = None
+    password: str | None = None
     request_dict: dict[str, str | None] | None = None
-    request_dict_username: str | None = None
-    request_dict_password: str | None = None
     if request_.is_json:
         request_dict = request_.get_json(force=False, silent=True, cache=False)
     if isinstance(request_dict, dict):
-        request_dict_username = request_dict.get("username", None)
-        request_dict_password = request_dict.get("password", None)
-    if request_dict_username is None:
-        return jsonify(None)
-    if request_dict_password is None:
-        return jsonify(None)
+        username = request_dict.get("username", None)
+        password = request_dict.get("password", None)
+    if username is None:
+        raise BadRequest(description="No username.")
+    if password is None:
+        raise BadRequest(description="No password.")
 
     if db_con is None:
-        return jsonify(None)
+        raise InternalServerError(description="No database connection.")
 
     # Create user.
-    user_id: int
-    user_id = insert_user(
+    insert_user_status: int = insert_user(
         db_con=db_con,
-        user_name=request_dict_username,
-        user_password_hash=generate_password_hash(
-            password=request_dict_password,
-        ),
+        user_name=username,
+        user_password_hash=generate_password_hash(password=password),
         user_group=None,
     )
-    # TODO(wathne): Return something.
-    if user_id == -1:
-        print("user_id is -1, return None.")
-        return jsonify(None)
-    # user_name already exists.
-    if user_id == -2:
-        print("user_id is -2, return None.")
-        return jsonify(None)
+    # TODO(wathne): Return and raise proper status codes.
+    if insert_user_status == -1:
+        raise InternalServerError(description="Something went wrong.")
+    if insert_user_status == -2:
+        raise Conflict(description=f'The username "{username}" already exists.')
 
-    scs["username"] = request_dict_username
-    scs["password"] = request_dict_password
+    scs["username"] = username
+    scs["password"] = password
 
     # See before_request(), endpoint_whitelist.
     # api_users() is whitelisted. We need to call load_user().
     load_user()
     print(f"Login as user_id: {acg.user_id}.")
     if acg.user_id is None:
-        return jsonify(None)
+        raise Unauthorized(description="Not logged in.")
     return jsonify(acg.user_id)
 
 

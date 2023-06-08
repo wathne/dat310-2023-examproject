@@ -72,7 +72,7 @@ async function sessionRegister(username, password) {
         }),
       },
   );
-  // Returns userId or null.
+  // Returns userId or response status.
   return response.json();
 }
 
@@ -92,7 +92,7 @@ async function sessionLogin(username, password) {
         }),
       },
   );
-  // Returns userId or null.
+  // Returns userId or response status.
   return response.json();
 }
 
@@ -109,7 +109,7 @@ async function sessionLogout() {
         body: JSON.stringify(null),
       },
   );
-  // Returns userId or null.
+  // Returns userId or response status.
   return response.json();
 }
 

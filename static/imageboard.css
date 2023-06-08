@@ -70,21 +70,6 @@
 .post-text {
 }
 
-.button-cancel {
-}
-
-.button-register {
-  margin: 0px 3px 0px 3px;
-}
-
-.button-login {
-  margin: 0px 3px 0px 3px;
-}
-
-.button-logout {
-  margin: 0px 3px 0px 3px;
-}
-
 
 /* Body */
 body {
@@ -132,24 +117,6 @@ main {
 }
 
 #main-extra {
-}
-
-#register {
-}
-
-#form-register {
-}
-
-#login {
-}
-
-#form-login {
-}
-
-#logout {
-}
-
-#form-logout {
 }
 
 #main-content {
@@ -272,5 +239,52 @@ footer {
 .box-button-start-add-post {}
 .box-button-start-modify-post {}
 .box-button-start-delete-post {}
+*/
+
+
+/* Session Box classes, see "/static/box.js". */
+/* These are very specific. Consider replacing with classes of a wider scope. */
+/*
+.box-main-register {}
+.box-main-login {}
+.box-main-logout {}
+
+.box-heading-register {}
+.box-heading-login {}
+.box-heading-logout {}
+
+.box-form-container-register {}
+.box-form-container-login {}
+.box-form-container-logout {}
+
+.box-form-register {}
+.box-form-login {}
+.box-form-logout {}
+
+.box-form-username-register {}
+.box-form-username-login {}
+
+.box-form-password-register {}
+.box-form-password-login {}
+
+.box-form-submit-register {}
+.box-form-submit-login {}
+.box-form-submit-logout {}
+
+.box-error-container-register {}
+.box-error-container-login {}
+.box-error-container-logout {}
+
+.box-error-register {}
+.box-error-login {}
+.box-error-logout {}
+
+.box-button-cancel-register {}
+.box-button-cancel-login {}
+.box-button-cancel-logout {}
+
+.box-button-start-register {}
+.box-button-start-login {}
+.box-button-start-logout {}
 */
 

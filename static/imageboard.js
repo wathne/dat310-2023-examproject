@@ -91,24 +91,17 @@
  *   AddPostBox
  *   ModifyPostBox
  *   DeletePostBox
+ *   RegisterBox
+ *   LoginBox
+ *   LogoutBox
  * 
  * 
  * /static/handler.js
  * Constant overview:
  * ------------------
- *   buttonCancelElements
- *   buttonRegisterElements
- *   buttonLoginElements
- *   buttonLogoutElements
  *   filterSearchElement
  *   filterSortOrderElement
  *   filterCriteriaElement
- *   divRegisterElement
- *   divLoginElement
- *   divLogoutElement
- *   formRegisterElement
- *   formLoginElement
- *   formLogoutElement
  * 
  * 
  * /static/handler.js
@@ -122,10 +115,10 @@
  *   AddPostHandler
  *   ModifyPostHandler
  *   DeletePostHandler
- *   FilterHandler
  *   RegisterHandler
  *   LoginHandler
  *   LogoutHandler
+ *   FilterHandler
  * 
  * 
  * TODO(wathne): Show dates.
@@ -135,7 +128,6 @@
  * TODO(wathne): Make sure that the PostsManager is ok after a Thread rebuild.
  * TODO(wathne): Improve reloadList().
  * TODO(wathne): Delete testElement.
- * TODO(wathne): Delete "// TESTING".
  * TODO(wathne): Delete a few console.log() lines.
  */
 
@@ -554,6 +546,8 @@ class ThreadsManager {
   #filterHandler;
   // List element.
   #threadsListElement;
+  // This will allow a SessionManager to trigger the showThreadsBox on login.
+  #showThreadsTriggerFunction;
 
   constructor(contentElement, extraElement, buttonsElement) {
     this.#threads = [];
@@ -582,6 +576,9 @@ class ThreadsManager {
     buttonsElement.appendChild(addThreadButton);
     // List element.
     this.#threadsListElement = showThreadsBox.getListElement();
+    // This will allow a SessionManager to trigger the showThreadsBox on login.
+    this.#showThreadsTriggerFunction = showThreadsButton.dispatchEvent
+        .bind(showThreadsButton, new Event("click"));
   }
 
   // Example: console.log(this.toHumanReadable());
@@ -599,6 +596,11 @@ class ThreadsManager {
 
   #createDeleteThreadBox(thread) {
     thread.appendBox(this.#deleteThreadHandler.createBox(thread));
+  }
+
+  // This will allow a SessionManager to trigger the showThreadsBox on login.
+  getShowThreadsTriggerFunction() {
+    return this.#showThreadsTriggerFunction;
   }
 
   async addThread(formData) {
@@ -1415,94 +1417,112 @@ class PostsManager {
 }
 
 
-class SessionCredential {
-  constructor() {
-    this.username = null;
-    this.password = null;
-  }
-
-  // Example: console.log(this.toHumanReadable());
-  toHumanReadable() {
-    return `[SessionCredential] ` +
-           `username: "${this.username}", ` +
-           `password: "${this.password}"`;
-  }
-}
-
-
 class SessionManager {
-  #reloadFunction;
+  #triggerFunction;
+  // *Handler
   #registerHandler;
   #loginHandler;
   #logoutHandler;
 
-  constructor(reloadFunction) {
-    this.#reloadFunction = reloadFunction;
-    this.#registerHandler = new RegisterHandler(this);
-    this.#loginHandler = new LoginHandler(this);
-    this.#logoutHandler = new LogoutHandler(this);
+  constructor(extraElement, buttonsElement, triggerFunction) {
+    this.#triggerFunction = triggerFunction;
+    // *Handler
+    this.#registerHandler = new RegisterHandler(this.register.bind(this));
+    this.#loginHandler = new LoginHandler(this.login.bind(this));
+    this.#logoutHandler = new LogoutHandler(this.logout.bind(this));
+    // register*
+    const registerBox = this.#registerHandler.createBox();
+    const registerMainElement = registerBox.getMainElement();
+    const registerButton = registerBox.createButton();
+    // login*
+    const loginBox = this.#loginHandler.createBox();
+    const loginMainElement = loginBox.getMainElement();
+    const loginButton = loginBox.createButton();
+    // logout*
+    const logoutBox = this.#logoutHandler.createBox();
+    const logoutMainElement = logoutBox.getMainElement();
+    const logoutButton = logoutBox.createButton();
+    // Append elements.
+    extraElement.appendChild(registerMainElement);
+    extraElement.appendChild(loginMainElement);
+    extraElement.appendChild(logoutMainElement);
+    buttonsElement.appendChild(registerButton);
+    buttonsElement.appendChild(loginButton);
+    buttonsElement.appendChild(logoutButton);
   }
 
-  async register(sessionCredential) {
-    if (!(sessionCredential instanceof SessionCredential)) {
-      return false;
+  async register(formData) {
+    const dataObject = Object.fromEntries(formData);
+    const username = dataObject["username"];
+    const password = dataObject["password"];
+    if (typeof username !== "string") {
+      return {
+        code: 1336,
+        description: "We have lost the username, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const username = sessionCredential.username;
-    const password = sessionCredential.password;
-    if (username === null || password === null) {
-      return false;
+    if (typeof password !== "string") {
+      return {
+        code: 1336,
+        description: "We have lost the password, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const userId = await sessionRegister(username, password)
+    const sessionRegisterStatus = await sessionRegister(username, password)
         .catch((error) => {
           console.error(error);
         });
-    // TODO(wathne): Delete the next line.
-    console.log(`register userId: ${userId}`);
-    this.#reloadFunction(); // Do not await.
-    if (typeof userId === "number") {
-      return true;
+    if (sessionRegisterStatus["code"] === undefined) {
+      this.#triggerFunction();
     }
-    return false;
+    return sessionRegisterStatus;
   }
 
-  async login(sessionCredential) {
-    if (!(sessionCredential instanceof SessionCredential)) {
-      return false;
+  async login(formData) {
+    const dataObject = Object.fromEntries(formData);
+    const username = dataObject["username"];
+    const password = dataObject["password"];
+    if (typeof username !== "string") {
+      return {
+        code: 1336,
+        description: "We have lost the username, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const username = sessionCredential.username;
-    const password = sessionCredential.password;
-    if (username === null || password === null) {
-      return false;
+    if (typeof password !== "string") {
+      return {
+        code: 1336,
+        description: "We have lost the password, please reload and try again.",
+        name: "BadJavascript",
+      };
     }
-    const userId = await sessionLogin(username, password)
+    const sessionLoginStatus = await sessionLogin(username, password)
         .catch((error) => {
           console.error(error);
         });
-    console.log(`login userId: ${userId}`); // TODO(wathne): Delete this line.
-    this.#reloadFunction(); // Do not await.
-    if (typeof userId === "number") {
-      return true;
+    if (sessionLoginStatus["code"] === undefined) {
+      this.#triggerFunction();
     }
-    return false;
+    return sessionLoginStatus;
   }
 
   async logout() {
-    const userId = await sessionLogout()
+    const sessionLogoutStatus = await sessionLogout()
         .catch((error) => {
           console.error(error);
         });
-    console.log(`logout userId: ${userId}`); // TODO(wathne): Delete this line.
-    this.#reloadFunction(); // Do not await.
-    if (typeof userId === "number") {
-      return true;
+    if (sessionLogoutStatus["code"] === undefined) {
+      this.#triggerFunction();
     }
-    return false;
+    return sessionLogoutStatus;
   }
 }
 
 
 class Imageboard {
   #threadsManager;
+  #showThreadsTriggerFunction;
   #sessionManager;
 
   constructor(
@@ -1515,11 +1535,16 @@ class Imageboard {
         extraElement,
         buttonsElement,
     );
+    this.#showThreadsTriggerFunction =
+        this.#threadsManager.getShowThreadsTriggerFunction();
     this.#sessionManager = new SessionManager(
-        this.#threadsManager.reloadList.bind(this.#threadsManager));
+        extraElement,
+        buttonsElement,
+        this.#showThreadsTriggerFunction,
+    );
   }
 
-  async reloadSettings() {
+  async loadSettings() {
     console.log("Requesting settings from the secure cookie session ...");
     const settings = await getSettings();
     if (settings !== null) {
@@ -1546,8 +1571,8 @@ class Imageboard {
     }
   }
 
-  async reloadList() {
-    this.#threadsManager.reloadList(); // Do not await.
+  showThreads() {
+    this.#showThreadsTriggerFunction();
   }
 }
 
@@ -1556,6 +1581,6 @@ const imageboard = new Imageboard(
     divMainExtraElement,
     divHeaderButtonsElement,
 );
-imageboard.reloadSettings();
-//imageboard.reloadList(); // TESTING
+imageboard.loadSettings();
+imageboard.showThreads();
 

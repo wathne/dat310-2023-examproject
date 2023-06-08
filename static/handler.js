@@ -12,19 +12,9 @@
  * 
  * Constant overview:
  * ------------------
- *   buttonCancelElements
- *   buttonRegisterElements
- *   buttonLoginElements
- *   buttonLogoutElements
  *   filterSearchElement
  *   filterSortOrderElement
  *   filterCriteriaElement
- *   divRegisterElement
- *   divLoginElement
- *   divLogoutElement
- *   formRegisterElement
- *   formLoginElement
- *   formLogoutElement
  * 
  * 
  * Class overview:
@@ -37,10 +27,10 @@
  *   AddPostHandler
  *   ModifyPostHandler
  *   DeletePostHandler
- *   FilterHandler
  *   RegisterHandler
  *   LoginHandler
  *   LogoutHandler
+ *   FilterHandler
  * 
  * 
  * Load this JavaScript file before other JavaScript files.
@@ -64,25 +54,11 @@
  * </html>
  * 
  * 
- * TODO(wathne): Refactor FilterHandler, implement latest Handler interface.
- * TODO(wathne): Refactor RegisterHandler, implement latest Handler interface.
- * TODO(wathne): Refactor LoginHandler, implement latest Handler interface.
- * TODO(wathne): Refactor LogoutHandler, implement latest Handler interface.
+ * TODO(wathne): Refactor FilterHandler.
  * TODO(wathne): Delete a few console.log() lines.
  */
 
 "use strict";
-
-
-// Elements by class.
-// @RegisterHandler, @LoginHandler, @LogoutHandler.
-const buttonCancelElements = document.getElementsByClassName("button-cancel");
-// @RegisterHandler.
-const buttonRegisterElements = document.getElementsByClassName("button-register");
-// @LoginHandler.
-const buttonLoginElements = document.getElementsByClassName("button-login");
-// @LogoutHandler.
-const buttonLogoutElements = document.getElementsByClassName("button-logout");
 
 
 // Elements by id.
@@ -92,18 +68,6 @@ const filterSearchElement = document.getElementById("filter-search");
 const filterSortOrderElement = document.getElementById("filter-sort-order");
 // @FilterHandler.
 const filterCriteriaElement = document.getElementById("filter-criteria");
-// @RegisterHandler.
-const divRegisterElement = document.getElementById("register");
-// @LoginHandler.
-const divLoginElement = document.getElementById("login");
-// @LogoutHandler.
-const divLogoutElement = document.getElementById("logout");
-// @RegisterHandler.
-const formRegisterElement = document.getElementById("form-register");
-// @LoginHandler.
-const formLoginElement = document.getElementById("form-login");
-// @LogoutHandler.
-const formLogoutElement = document.getElementById("form-logout");
 
 
 // A ShowThreadsHandler must implement the following functions:
@@ -511,7 +475,157 @@ class DeletePostHandler {
 }
 
 
-// TODO(wathne): Refactor and implement the latest Handler interface.
+// A RegisterHandler must implement the following functions:
+//   - handleButtonStartClickEvent(box)
+//   - handleButtonCancelClickEvent(box)
+//   - handleFormSubmitEvent(box)
+class RegisterHandler {
+  #registerFunction;
+
+  constructor(registerFunction) {
+    this.#registerFunction = registerFunction;
+  }
+
+  createBox() {
+    return new RegisterBox(this);
+  }
+
+  handleButtonStartClickEvent(box) {
+    box.showMainElement();
+  }
+
+  handleButtonCancelClickEvent(box) {
+    box.hideMainElement();
+  }
+
+  handleFormSubmitEvent(box) {
+    box.clearError();
+    const formData = box.getFormData();
+    const userValidationErrors = userValidation(formData);
+    if (userValidationErrors === null) {
+      this.#registerFunction(formData)
+          .then((status) => {
+            if (status["code"] === undefined) {
+              box.hideMainElement();
+            } else {
+              box.setError(
+                  `${status["code"]} ${status["name"]}: ` +
+                  `${status["description"]}`
+              );
+            }
+          })
+          .catch((error) => {
+            box.setError(error);
+            console.error(error);
+          })
+          .finally(() => {
+          });
+    } else {
+      box.setError(userValidationErrors.join("\n"));
+    }
+  }
+}
+
+
+// A LoginHandler must implement the following functions:
+//   - handleButtonStartClickEvent(box)
+//   - handleButtonCancelClickEvent(box)
+//   - handleFormSubmitEvent(box)
+class LoginHandler {
+  #loginFunction;
+
+  constructor(loginFunction) {
+    this.#loginFunction = loginFunction;
+  }
+
+  createBox() {
+    return new LoginBox(this);
+  }
+
+  handleButtonStartClickEvent(box) {
+    box.showMainElement();
+  }
+
+  handleButtonCancelClickEvent(box) {
+    box.hideMainElement();
+  }
+
+  handleFormSubmitEvent(box) {
+    box.clearError();
+    const formData = box.getFormData();
+    const userValidationErrors = userValidation(formData);
+    if (userValidationErrors === null) {
+      this.#loginFunction(formData)
+          .then((status) => {
+            if (status["code"] === undefined) {
+              box.hideMainElement();
+            } else {
+              box.setError(
+                  `${status["code"]} ${status["name"]}: ` +
+                  `${status["description"]}`
+              );
+            }
+          })
+          .catch((error) => {
+            box.setError(error);
+            console.error(error);
+          })
+          .finally(() => {
+          });
+    } else {
+      box.setError(userValidationErrors.join("\n"));
+    }
+  }
+}
+
+
+// A LogoutHandler must implement the following functions:
+//   - handleButtonStartClickEvent(box)
+//   - handleButtonCancelClickEvent(box)
+//   - handleFormSubmitEvent(box)
+class LogoutHandler {
+  #logoutFunction;
+
+  constructor(logoutFunction) {
+    this.#logoutFunction = logoutFunction;
+  }
+
+  createBox() {
+    return new LogoutBox(this);
+  }
+
+  handleButtonStartClickEvent(box) {
+    box.showMainElement();
+  }
+
+  handleButtonCancelClickEvent(box) {
+    box.hideMainElement();
+  }
+
+  handleFormSubmitEvent(box) {
+    box.clearError();
+    this.#logoutFunction()
+        .then((status) => {
+          if (status["code"] === undefined) {
+            box.hideMainElement();
+          } else {
+            box.setError(
+                `${status["code"]} ${status["name"]}: ` +
+                `${status["description"]}`
+            );
+          }
+        })
+        .catch((error) => {
+          box.setError(error);
+          console.error(error);
+        })
+        .finally(() => {
+        });
+  }
+}
+
+
+// TODO(wathne): Refactor.
 class FilterHandler {
   #manager; // #manager is a ThreadsManager or PostsManager.
   #search; // #search is a string and defaults to "".
@@ -584,249 +698,6 @@ class FilterHandler {
         this.#criteria = event.target.value;
         this.#setSettings();
         this.#manager.sortList();
-      }
-    }
-  }
-}
-
-
-// TODO(wathne): Refactor and implement the latest Handler interface.
-class RegisterHandler {
-  #sessionManager;
-  #sessionCredential;
-  #mainElement;
-  #formElement;
-  #buttonStartElements;
-  #buttonCancelElements;
-
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(sessionManager) {
-    // A SessionManager is necessary for this.#sessionManager.register().
-    // See implementation of handleEvent(event).
-    this.#sessionManager = sessionManager;
-    this.#sessionCredential = new SessionCredential();
-    this.#mainElement = divRegisterElement;
-    this.#formElement = formRegisterElement;
-    this.#buttonStartElements = [];
-    for (const element of buttonRegisterElements) {
-      this.#buttonStartElements.push(element);
-    }
-    this.#buttonCancelElements = [];
-    for (const element of buttonCancelElements) {
-      if (element.parentElement === this.#mainElement) {
-        this.#buttonCancelElements.push(element);
-      }
-    }
-    this.#formElement.onsubmit = (event) => {return false;};
-    this.#formElement.addEventListener("submit", this);
-    for (const element of this.#buttonStartElements) {
-      element.addEventListener("click", this);
-    }
-    for (const element of this.#buttonCancelElements) {
-      element.addEventListener("click", this);
-    }
-  }
-
-  handleEvent(event) {
-    if (event.target === this.#formElement) {
-      if (event.type === "submit") {
-        const formData = new FormData(this.#formElement);
-        const userValidationErrors = userValidation(formData);
-        if (userValidationErrors === null) {
-          const dataObject = Object.fromEntries(formData);
-          this.#sessionCredential.username = dataObject["username"];
-          this.#sessionCredential.password = dataObject["password"];
-          // TODO(wathne): Delete the next line.
-          console.log(this.#sessionCredential.toHumanReadable());
-          this.#sessionManager.register(this.#sessionCredential)
-              .then((success) => {
-                if (success) {
-                  this.#mainElement.style.display = "none";
-                } else {
-                  // TODO(wathne): Message about registration failure.
-                  // TODO(wathne): Delete the next line.
-                  console.log("TODO: Message about registration failure.");
-                }
-              })
-              .catch((error) => {
-                console.error(error);
-              })
-              .finally(() => {
-              });
-        } else {
-          for (const error of userValidationErrors) {
-            // TODO(wathne): Message about invalid formData.
-            console.log(error); // TODO(wathne): Delete this line.
-          }
-        }
-      }
-    }
-    for (const element of this.#buttonStartElements) {
-      if (event.target === element) {
-        if (event.type === "click") {
-          this.#mainElement.style.display = "block";
-        }
-      }
-    }
-    for (const element of this.#buttonCancelElements) {
-      if (event.target === element) {
-        if (event.type === "click") {
-          this.#mainElement.style.display = "none";
-        }
-      }
-    }
-  }
-}
-
-
-// TODO(wathne): Refactor and implement the latest Handler interface.
-class LoginHandler {
-  #sessionManager;
-  #sessionCredential;
-  #mainElement;
-  #formElement;
-  #buttonStartElements;
-  #buttonCancelElements;
-
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(sessionManager) {
-    // A SessionManager is necessary for this.#sessionManager.login().
-    // See implementation of handleEvent(event).
-    this.#sessionManager = sessionManager;
-    this.#sessionCredential = new SessionCredential();
-    this.#mainElement = divLoginElement;
-    this.#formElement = formLoginElement;
-    this.#buttonStartElements = [];
-    for (const element of buttonLoginElements) {
-      this.#buttonStartElements.push(element);
-    }
-    this.#buttonCancelElements = [];
-    for (const element of buttonCancelElements) {
-      if (element.parentElement === this.#mainElement) {
-        this.#buttonCancelElements.push(element);
-      }
-    }
-    this.#formElement.onsubmit = (event) => {return false;};
-    this.#formElement.addEventListener("submit", this);
-    for (const element of this.#buttonStartElements) {
-      element.addEventListener("click", this);
-    }
-    for (const element of this.#buttonCancelElements) {
-      element.addEventListener("click", this);
-    }
-  }
-
-  handleEvent(event) {
-    if (event.target === this.#formElement) {
-      if (event.type === "submit") {
-        const formData = new FormData(this.#formElement);
-        const dataObject = Object.fromEntries(formData);
-        this.#sessionCredential.username = dataObject["username"];
-        this.#sessionCredential.password = dataObject["password"];
-        // TODO(wathne): Delete the next line.
-        console.log(this.#sessionCredential.toHumanReadable());
-        this.#sessionManager.login(this.#sessionCredential)
-            .then((success) => {
-              if (success) {
-                this.#mainElement.style.display = "none";
-              } else {
-                // TODO(wathne): Message about login failure.
-                // TODO(wathne): Delete the next line.
-                console.log("TODO: Message about login failure.");
-              }
-            })
-            .catch((error) => {
-              console.error(error);
-            })
-            .finally(() => {
-            });
-      }
-    }
-    for (const element of this.#buttonStartElements) {
-      if (event.target === element) {
-        if (event.type === "click") {
-          this.#mainElement.style.display = "block";
-        }
-      }
-    }
-    for (const element of this.#buttonCancelElements) {
-      if (event.target === element) {
-        if (event.type === "click") {
-          this.#mainElement.style.display = "none";
-        }
-      }
-    }
-  }
-}
-
-
-// TODO(wathne): Refactor and implement the latest Handler interface.
-class LogoutHandler {
-  #sessionManager;
-  #mainElement;
-  #formElement;
-  #buttonStartElements;
-  #buttonCancelElements;
-
-  // TODO(wathne): The constructor should take a function instead of a *Manager.
-  constructor(sessionManager) {
-    // A SessionManager is necessary for this.#sessionManager.logout().
-    // See implementation of handleEvent(event).
-    this.#sessionManager = sessionManager;
-    this.#mainElement = divLogoutElement;
-    this.#formElement = formLogoutElement;
-    this.#buttonStartElements = [];
-    for (const element of buttonLogoutElements) {
-      this.#buttonStartElements.push(element);
-    }
-    this.#buttonCancelElements = [];
-    for (const element of buttonCancelElements) {
-      if (element.parentElement === this.#mainElement) {
-        this.#buttonCancelElements.push(element);
-      }
-    }
-    this.#formElement.onsubmit = (event) => {return false;};
-    this.#formElement.addEventListener("submit", this);
-    for (const element of this.#buttonStartElements) {
-      element.addEventListener("click", this);
-    }
-    for (const element of this.#buttonCancelElements) {
-      element.addEventListener("click", this);
-    }
-  }
-
-  handleEvent(event) {
-    if (event.target === this.#formElement) {
-      if (event.type === "submit") {
-        this.#sessionManager.logout()
-            .then((success) => {
-              if (success) {
-                this.#mainElement.style.display = "none";
-              } else {
-                // TODO(wathne): Message about logout failure.
-                // TODO(wathne): Delete the next line.
-                console.log("TODO: Message about logout failure.");
-              }
-            })
-            .catch((error) => {
-              console.error(error);
-            })
-            .finally(() => {
-            });
-      }
-    }
-    for (const element of this.#buttonStartElements) {
-      if (event.target === element) {
-        if (event.type === "click") {
-          this.#mainElement.style.display = "block";
-        }
-      }
-    }
-    for (const element of this.#buttonCancelElements) {
-      if (event.target === element) {
-        if (event.type === "click") {
-          this.#mainElement.style.display = "none";
-        }
       }
     }
   }
