@@ -165,6 +165,8 @@ class Thread {
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
+  #threadLastModifiedElement;
+  #threadTimestampElement;
   #testElement; // TODO(wathne): Delete testElement.
   // Box container elements.
   #buttonsElement;
@@ -212,6 +214,12 @@ class Thread {
     // postText
     this.#postTextElement = document.createElement("div");
     this.#postTextElement.className = "thread-text";
+    // threadLastModified
+    this.#threadLastModifiedElement = document.createElement("div");
+    this.#threadLastModifiedElement.className = "thread-last-modified";
+    // threadTimestamp
+    this.#threadTimestampElement = document.createElement("div");
+    this.#threadTimestampElement.className = "thread-timestamp";
     // test // TODO(wathne): Delete testElement.
     this.#testElement = document.createElement("div");
     // buttons
@@ -275,6 +283,8 @@ class Thread {
       console.log(`Revoked URL: "${previousURL}"`);
     }
     this.#postTextElement.textContent = "";
+    this.#threadLastModifiedElement.textContent = "";
+    this.#threadTimestampElement.textContent = "";
     this.#testElement.textContent = ""; // TODO(wathne): Delete testElement.
   }
 
@@ -344,6 +354,14 @@ class Thread {
     this.#threadTimestamp = thread["thread_timestamp"];
     this.#userId = thread["user_id"];
     this.#retrievedThread = true;
+    this.#threadLastModifiedElement.textContent =
+        `Thread updated: ${new Date(this.#threadLastModified * 1000)}`;
+    // Display thread last modified as soon as possible.
+    this.#mainElement.appendChild(this.#threadLastModifiedElement);
+    this.#threadTimestampElement.textContent =
+        `Thread created: ${new Date(this.#threadTimestamp * 1000)}`;
+    // Display thread timestamp as soon as possible.
+    this.#mainElement.appendChild(this.#threadTimestampElement);
     this.#threadSubjectElement.textContent = this.#threadSubject;
     // Display thread subject as soon as possible.
     this.#mainElement.appendChild(this.#threadSubjectElement);
@@ -408,6 +426,14 @@ class Thread {
     }
     // Unchecked: threadLastModified, threadSubject, threadTimestamp, userId.
     this.#retrievedThread = true;
+    this.#threadLastModifiedElement.textContent =
+        `Thread updated: ${new Date(this.#threadLastModified * 1000)}`;
+    // Display thread last modified as soon as possible.
+    this.#mainElement.appendChild(this.#threadLastModifiedElement);
+    this.#threadTimestampElement.textContent =
+        `Thread created: ${new Date(this.#threadTimestamp * 1000)}`;
+    // Display thread timestamp as soon as possible.
+    this.#mainElement.appendChild(this.#threadTimestampElement);
     this.#threadSubjectElement.textContent = this.#threadSubject;
     // Display thread subject as soon as possible.
     this.#mainElement.appendChild(this.#threadSubjectElement);
@@ -839,6 +865,8 @@ class Post {
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
+  #postLastModifiedElement;
+  #postTimestampElement;
   #testElement; // TODO(wathne): Delete testElement.
   // Box container elements.
   #buttonsElement;
@@ -877,6 +905,12 @@ class Post {
     // postText
     this.#postTextElement = document.createElement("div");
     this.#postTextElement.className = "post-text";
+    // postLastModified
+    this.#postLastModifiedElement = document.createElement("div");
+    this.#postLastModifiedElement.className = "post-last-modified";
+    // postTimestamp
+    this.#postTimestampElement = document.createElement("div");
+    this.#postTimestampElement.className = "post-timestamp";
     // test // TODO(wathne): Delete testElement.
     this.#testElement = document.createElement("div");
     // buttons
@@ -927,6 +961,8 @@ class Post {
       console.log(`Revoked URL: "${previousURL}"`);
     }
     this.#postTextElement.textContent = "";
+    this.#postLastModifiedElement.textContent = "";
+    this.#postTimestampElement.textContent = "";
     this.#testElement.textContent = ""; // TODO(wathne): Delete testElement.
   }
 
@@ -983,6 +1019,14 @@ class Post {
     this.#threadId = post["thread_id"];
     this.#userId = post["user_id"];
     this.#retrievedPost = true;
+    this.#postLastModifiedElement.textContent =
+        `Post updated: ${new Date(this.#postLastModified * 1000)}`;
+    // Display post last modified as soon as possible.
+    this.#mainElement.appendChild(this.#postLastModifiedElement);
+    this.#postTimestampElement.textContent =
+        `Post created: ${new Date(this.#postTimestamp * 1000)}`;
+    // Display post timestamp as soon as possible.
+    this.#mainElement.appendChild(this.#postTimestampElement);
     this.#postTextElement.textContent = this.#postText;
     // Display post text as soon as possible.
     this.#mainElement.appendChild(this.#postTextElement);
@@ -1032,6 +1076,14 @@ class Post {
     }
     // Unchecked: postLastModified, postText, postTimestamp, threadId, userId.
     this.#retrievedPost = true;
+    this.#postLastModifiedElement.textContent =
+        `Post updated: ${new Date(this.#postLastModified * 1000)}`;
+    // Display post last modified as soon as possible.
+    this.#mainElement.appendChild(this.#postLastModifiedElement);
+    this.#postTimestampElement.textContent =
+        `Post created: ${new Date(this.#postTimestamp * 1000)}`;
+    // Display post timestamp as soon as possible.
+    this.#mainElement.appendChild(this.#postTimestampElement);
     this.#postTextElement.textContent = this.#postText;
     // Display post text as soon as possible.
     this.#mainElement.appendChild(this.#postTextElement);
