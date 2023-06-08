@@ -222,7 +222,7 @@ from werkzeug.wrappers.response import Response as WerkzeugResponse
 
 DATABASE_PATH: str = r"./database.db"
 IMAGES_FOLDER: str = r"./images"
-IMAGES_EXTENSIONS: set[str] = {"gif", "jpeg", "jpg", "png"}
+IMAGES_EXTENSIONS: set[str] = {".gif", ".jpeg", ".jpg", ".png"}
 app: Flask = Flask(import_name=__name__)
 # Flask will raise a RequestEntityTooLarge exception.
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1000 * 1000 # 16 megabytes.
