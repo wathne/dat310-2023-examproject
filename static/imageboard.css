@@ -1,4 +1,6 @@
 /* Imports */
+/* https://fonts.google.com/noto/specimen/Noto+Sans */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
 /* https://fonts.google.com/icons?icon.set=Material+Symbols */
 @import url(https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@48,700,1,-25);
 
@@ -76,6 +78,7 @@ body {
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
+  font-family: 'Noto Sans', sans-serif;
   justify-content: flex-start;
   margin: 0px 0px 0px 0px;
   min-height: 100vh;
