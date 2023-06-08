@@ -61,15 +61,18 @@
 }
 
 .thread-subject {
+  font-size: 1.2em;
 }
 
 .thread-text {
 }
 
 .thread-last-modified {
+  font-size: 0.8em;
 }
 
 .thread-timestamp {
+  font-size: 0.8em;
 }
 
 .thread-buttons {
@@ -105,9 +108,11 @@
 }
 
 .post-last-modified {
+  font-size: 0.8em;
 }
 
 .post-timestamp {
+  font-size: 0.8em;
 }
 
 .post-buttons {
