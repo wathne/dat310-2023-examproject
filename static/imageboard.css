@@ -10,7 +10,7 @@
  *   #?????? light accent
  *   #?????? main brand color
  *   #?????? dark accent
- *   #212821 dark shades
+ *   #2c353b dark shades
  */
 
 
@@ -121,7 +121,7 @@
 }
 
 .box-main-show-threads {
-  background-color: #212821; /* dark shade */
+  background-color: #2c353b; /* dark shade */
   margin: 6px 18px 0px 18px;
 }
 
@@ -140,7 +140,7 @@
 }
 
 .box-main-show-posts {
-  background-color: #212821; /* dark shade */
+  background-color: #2c353b; /* dark shade */
   margin: 6px 6px 0px 6px;
   padding: 9px 9px 3px 9px;
 }
@@ -185,7 +185,7 @@
 
 /* Body */
 body {
-  background-color: #212821; /* dark shade */
+  background-color: #2c353b; /* dark shade */
   display: flex;
   flex-direction: column;
   font-family: 'Noto Sans', sans-serif;
