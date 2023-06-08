@@ -5,6 +5,15 @@
 @import url(https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@48,700,1,-25);
 
 
+/* Palette
+ *   #fff9b1 light shades
+ *   #?????? light accent
+ *   #?????? main brand color
+ *   #?????? dark accent
+ *   #212821 dark shades
+ */
+
+
 /* Flexbox classes */
 .flex-left-aligned {
   display: flex;
@@ -36,16 +45,93 @@
   border-color: #000000;
   border-width: 4px 4px 4px 4px;
   border-radius: 8px;
-  margin: 6px 3px 0px 3px;
-  padding: 0.5em 0.5em 0.5em 0.5em;
+}
+
+.rounded {
+  border-style: solid;
+  border-color: #000000;
+  border-width: 0px 0px 0px 0px;
+  border-radius: 8px;
+}
+
+.thread {
+  background-color: #fff9b1; /* light shade */
+  margin: 6px 0px 6px 0px;
+  padding: 6px 12px 6px 12px;
+}
+
+.thread-subject {
+}
+
+.thread-text {
+}
+
+.thread-buttons {
+}
+
+.thread-buttons > * {
+  margin: 3px 6px 3px 0px;
+}
+
+.thread-posts-buttons {
+}
+
+.thread-posts-buttons > * {
+  margin: 3px 6px 3px 0px;
+}
+
+.post {
+  background-color: #fff9b1; /* light shade */
+  margin: 6px 0px 6px 0px;
+  padding: 6px 12px 6px 12px;
+}
+
+.post-text {
+}
+
+.post-buttons {
+}
+
+.post-buttons > * {
+  margin: 3px 6px 3px 0px;
+}
+
+.box-threads {
+  background-color: #212821; /* dark shade */
+  margin: 6px 18px 0px 18px;
+}
+
+.box-thread {
+  background-color: #fff9b1; /* light shade */
+  margin: 6px 18px 6px 18px;
+  padding: 0px 18px 18px 18px;
+}
+
+.box-posts {
+  background-color: #212821; /* dark shade */
+  margin: 6px 6px 0px 6px;
+  padding: 9px 9px 3px 9px;
+}
+
+.box-post {
+  background-color: #fff9b1; /* light shade */
+  margin: 6px 18px 6px 18px;
+  padding: 0px 18px 18px 18px;
+}
+
+.box-session {
+  background-color: #fff9b1; /* light shade */
+  margin: 6px 18px 6px 18px;
+  padding: 0px 18px 18px 18px;
 }
 
 .thumbnail-container {
+  background-color: #ffffff;
   border-style: solid;
   border-color: #000000;
   border-width: 1px 1px 1px 1px;
   height: 100px;
-  margin: 0.25em 0.25em 0.25em 0.25em;
+  margin: 6px 12px 6px 0px;
   width: 100px;
 }
 
@@ -55,27 +141,10 @@
   width: 100px;
 }
 
-.thread {
-  background-color: lightgrey;
-}
-
-.thread-subject {
-}
-
-.thread-text {
-}
-
-.post {
-  background-color: orange;
-}
-
-.post-text {
-}
-
 
 /* Body */
 body {
-  background-color: #ffffff;
+  background-color: #212821; /* dark shade */
   display: flex;
   flex-direction: column;
   font-family: 'Noto Sans', sans-serif;
@@ -88,10 +157,12 @@ body {
 
 /* Header */
 header {
+  background-color: #fff9b1; /* light shade */
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 0px 9px 0px 9px;
+  margin: 0px 0px 6px 0px;
+  padding: 6px 6px 6px 6px;
 }
 
 #filter-search {
@@ -121,6 +192,9 @@ header {
 #header-buttons {
 }
 
+#header-buttons > * {
+  margin: 0px 3px 0px 3px;
+}
 
 /* Main */
 main {
@@ -143,13 +217,11 @@ main {
 
 /* Footer */
 footer {
-  background-color: #fff9b1;
-  border-style: solid;
-  border-color: #000000;
-  border-width: 4px 0px 0px 0px;
+  background-color: #fff9b1; /* light shade */
   flex-grow: 0;
   flex-shrink: 0;
   height: 50px;
+  margin: 6px 0px 0px 0px;
 }
 
 

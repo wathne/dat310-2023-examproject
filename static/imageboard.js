@@ -195,7 +195,7 @@ class Thread {
   constructor() {
     // main
     this.#mainElement = document.createElement("div");
-    this.#mainElement.className = "thread framed";
+    this.#mainElement.className = "thread rounded";
     // threadSubject
     this.#threadSubjectElement = document.createElement("div");
     this.#threadSubjectElement.className = "thread-subject";
@@ -216,13 +216,13 @@ class Thread {
     this.#testElement = document.createElement("div");
     // buttons
     this.#buttonsElement = document.createElement("div");
-    this.#buttonsElement.className = "";
+    this.#buttonsElement.className = "thread-buttons";
     // extra
     this.#extraElement = document.createElement("div");
     this.#extraElement.className = "";
     // postsButtons
     this.#postsButtonsElement = document.createElement("div");
-    this.#postsButtonsElement.className = "";
+    this.#postsButtonsElement.className = "thread-posts-buttons";
     // postsExtra
     this.#postsExtraElement = document.createElement("div");
     this.#postsExtraElement.className = "";
@@ -863,7 +863,7 @@ class Post {
   constructor() {
     // main
     this.#mainElement = document.createElement("div");
-    this.#mainElement.className = "post framed";
+    this.#mainElement.className = "post rounded";
     // thumbnailContainer
     this.#thumbnailContainerElement = document.createElement("div");
     this.#thumbnailContainerElement.className =
@@ -881,7 +881,7 @@ class Post {
     this.#testElement = document.createElement("div");
     // buttons
     this.#buttonsElement = document.createElement("div");
-    this.#buttonsElement.className = "";
+    this.#buttonsElement.className = "post-buttons";
     // extra
     this.#extraElement = document.createElement("div");
     this.#extraElement.className = "";

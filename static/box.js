@@ -84,7 +84,8 @@ class ShowThreadsBox {
     this.#showThreadsHandler = showThreadsHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-show-threads default-hidden framed";
+    this.main.className =
+        "box-main-show-threads default-hidden rounded box-threads";
     // errorContainer
     this.errorContainer = document.createElement("div");
     this.errorContainer.className = "box-error-container-show-threads";
@@ -179,7 +180,8 @@ class AddThreadBox {
     this.#addThreadHandler = addThreadHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-add-thread default-hidden framed";
+    this.main.className =
+        "box-main-add-thread default-hidden rounded box-thread";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-add-thread";
@@ -360,7 +362,8 @@ class ModifyThreadBox {
     this.#target = target;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-modify-thread default-hidden framed";
+    this.main.className =
+        "box-main-modify-thread default-hidden rounded box-thread";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-modify-thread";
@@ -541,7 +544,8 @@ class DeleteThreadBox {
     this.#target = target;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-delete-thread default-hidden framed";
+    this.main.className =
+        "box-main-delete-thread default-hidden rounded box-thread";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-delete-thread";
@@ -656,7 +660,8 @@ class ShowPostsBox {
     this.#showPostsHandler = showPostsHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-show-posts default-hidden framed";
+    this.main.className =
+        "box-main-show-posts default-hidden rounded box-posts";
     // errorContainer
     this.errorContainer = document.createElement("div");
     this.errorContainer.className = "box-error-container-show-posts";
@@ -750,7 +755,8 @@ class AddPostBox {
     this.#addPostHandler = addPostHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-add-post default-hidden framed";
+    this.main.className =
+        "box-main-add-post default-hidden rounded box-post";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-add-post";
@@ -922,7 +928,8 @@ class ModifyPostBox {
     this.#target = target;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-modify-post default-hidden framed";
+    this.main.className =
+        "box-main-modify-post default-hidden rounded box-post";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-modify-post";
@@ -1095,7 +1102,8 @@ class DeletePostBox {
     this.#target = target;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-delete-post default-hidden framed";
+    this.main.className =
+        "box-main-delete-post default-hidden rounded box-post";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-delete-post";
@@ -1216,7 +1224,8 @@ class RegisterBox {
     this.#registerHandler = registerHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-register default-hidden framed";
+    this.main.className =
+        "box-main-register default-hidden rounded box-session";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-register";
@@ -1357,7 +1366,8 @@ class LoginBox {
     this.#loginHandler = loginHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-login default-hidden framed";
+    this.main.className =
+        "box-main-login default-hidden rounded box-session";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-login";
@@ -1518,7 +1528,8 @@ class LogoutBox {
     this.#logoutHandler = logoutHandler;
     // main
     this.main = document.createElement("div");
-    this.main.className = "box-main-logout default-hidden framed";
+    this.main.className =
+        "box-main-logout default-hidden rounded box-session";
     // heading
     this.heading = document.createElement("h3");
     this.heading.className = "box-heading-logout";
