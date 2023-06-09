@@ -1,6 +1,0 @@
-/templates/tests/
---------------------------------------------------------------------------------
-See static files at /static/tests/
-
-"{{ url_for('static', filename='tests/style.css') }}"
-"{{ url_for('static', filename='tests/script.js') }}"

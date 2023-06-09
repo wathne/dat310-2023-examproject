@@ -1,6 +1,0 @@
-/static/tests/
---------------------------------------------------------------------------------
-These static files are used by templates at /templates/tests/
-
-"{{ url_for('static', filename='tests/style.css') }}"
-"{{ url_for('static', filename='tests/script.js') }}"

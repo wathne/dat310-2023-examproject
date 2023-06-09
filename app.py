@@ -185,7 +185,6 @@ from database_handler import update_thread
 from flask import Flask # current_app real type.
 from flask import g # g is a LocalProxy.
 from flask import redirect
-from flask import render_template
 from flask import request # request is a LocalProxy.
 from flask import send_from_directory
 from flask import session # session is a LocalProxy.
@@ -353,8 +352,6 @@ def before_request() -> None:
         "imageboard", # Authentication is not required.
         "index", # Authentication is not required.
         #"static", # See path_whitelist below.
-        "_tests_api", # Authentication is not required.
-        "_tests_login_deprecated", # login_deprecated() will call load_user().
     }
     if request_.endpoint in endpoint_whitelist:
         print(f"{request_.endpoint} is whitelisted, bypassing load_user().")
@@ -370,9 +367,6 @@ def before_request() -> None:
         "/static/imageboard.css", # Authentication is not required.
         "/static/imageboard.html", # Authentication is not required.
         "/static/imageboard.js", # Authentication is not required.
-        "/static/tests/api.html", # Authentication is not required.
-        "/static/tests/script.js", # Authentication is not required.
-        "/static/tests/style.css", # Authentication is not required.
     }
     if request_.path in path_whitelist:
         print(f"{request_.path} is whitelisted, bypassing load_user().")
@@ -588,127 +582,6 @@ def favicon() -> WerkzeugResponse | Response:
         ),
         code=302,
     )
-
-
-# Obsolete or testing, please ignore.
-@app.route(rule="/tests/user_info")
-def _tests_user_info() -> tuple[str, int]:
-    # pylint: disable=protected-access
-    scs: SCS = cast(LP[SCS], session)._get_current_object()
-    scs_username: str | None = scs.get(key="username", default=None)
-    scs_password: str | None = scs.get(key="password", default=None)
-    return (render_template(
-        template_name_or_list="tests/user_info.html",
-        username=scs_username,
-        password=scs_password,
-    ), 200)
-
-
-# Obsolete or testing, please ignore.
-@app.route(rule="/tests/clear_user")
-def _tests_clear_user() -> WerkzeugResponse | Response:
-    # pylint: disable=protected-access
-    scs: SCS = cast(LP[SCS], session)._get_current_object()
-    scs.pop(key="username", default=None)
-    scs.pop(key="password", default=None)
-    return redirect(
-        location=url_for(
-            endpoint="_tests_user_info",
-        ),
-        code=302,
-    )
-
-
-# Obsolete or testing, please ignore.
-@app.route(rule="/tests/session_info")
-def _tests_session_info() -> tuple[str, int]:
-    # pylint: disable=protected-access
-    scs: SCS = cast(LP[SCS], session)._get_current_object()
-    return (render_template(
-        template_name_or_list="tests/session_info.html",
-        scs=scs,
-    ), 200)
-
-
-# Obsolete or testing, please ignore.
-@app.route(rule="/tests/clear_session")
-def _tests_clear_session() -> WerkzeugResponse | Response:
-    # pylint: disable=protected-access
-    scs: SCS = cast(LP[SCS], session)._get_current_object()
-    scs.clear()
-    return redirect(
-        location=url_for(
-            endpoint="_tests_session_info",
-        ),
-        code=302,
-    )
-
-
-# Obsolete or testing, please ignore.
-@app.route(rule="/tests/")
-@app.route(rule="/tests/index")
-def _tests_index() -> tuple[str, int]:
-    return (render_template(
-        template_name_or_list="tests/index.html",
-    ), 200)
-
-
-# Obsolete or testing, please ignore.
-@app.route(rule="/tests/api")
-def _tests_api() -> WerkzeugResponse | Response:
-    # See before_request(), endpoint_whitelist.
-    # _tests_api() is whitelisted.
-    return redirect(
-        location=url_for(
-            endpoint="static",
-            filename="tests/api.html",
-        ),
-        code=302,
-    )
-
-
-# Obsolete or testing, please ignore.
-@app.route(
-    rule="/tests/login_deprecated",
-    methods=["GET", "POST"],
-)
-def _tests_login_deprecated() -> tuple[str, int]:
-    # pylint: disable=protected-access
-    acg: ACG = cast(LP[ACG], g)._get_current_object()
-    request_: Request = cast(LP[Request], request)._get_current_object()
-    scs: SCS = cast(LP[SCS], session)._get_current_object()
-    db_con: Connection | None = get_database_connection()
-
-    if request_.method == "POST":
-        scs["username"] = request_.form.get(
-            key="username",
-            default=None,
-            type=str,
-        )
-        scs["password"] = request_.form.get(
-            key="password",
-            default=None,
-            type=str,
-        )
-
-        if db_con is None:
-            return ("No database connection.", 500)
-
-        # See before_request(), endpoint_whitelist.
-        # login_deprecated() is whitelisted. We need to call load_user().
-        load_user()
-        if acg.user_id is None:
-            return (render_template(
-                template_name_or_list="tests/form_login_error.html",
-            ), 200)
-
-        return (render_template(
-            template_name_or_list="tests/form_login_success.html",
-        ), 200)
-
-    return (render_template(
-        template_name_or_list="tests/form_login.html",
-    ), 200)
 
 
 @app.route(
