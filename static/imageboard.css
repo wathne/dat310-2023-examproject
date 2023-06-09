@@ -69,6 +69,7 @@
 }
 
 .thread-post-text {
+  overflow-wrap: break-word;
 }
 
 .thread-post-last-modified {
@@ -121,6 +122,7 @@
 }
 
 .post-text {
+  overflow-wrap: break-word;
 }
 
 .post-last-modified {
@@ -187,11 +189,15 @@
   padding: 0px 18px 18px 18px;
 }
 
+.float-container {
+}
+
 .thumbnail-container {
   background-color: #ffffff;
   border-style: solid;
   border-color: #000000;
   border-width: 1px 1px 1px 1px;
+  float: left;
   height: 100px;
   margin: 6px 12px 6px 0px;
   width: 100px;

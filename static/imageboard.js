@@ -166,7 +166,7 @@ class Thread {
   #mainElement;
   #threadSubjectElement;
   #userNameElement;
-  #flexLeftAligned;
+  #floatContainerElement;
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
@@ -211,9 +211,9 @@ class Thread {
     // userName
     this.#userNameElement = document.createElement("div");
     this.#userNameElement.className = "thread-user-name";
-    // flexLeftAligned
-    this.#flexLeftAligned = document.createElement("div");
-    this.#flexLeftAligned.className = "flex-left-aligned";
+    // floatContainer
+    this.#floatContainerElement = document.createElement("div");
+    this.#floatContainerElement.className = "float-container";
     // thumbnailContainer
     this.#thumbnailContainerElement = document.createElement("div");
     this.#thumbnailContainerElement.className =
@@ -258,10 +258,10 @@ class Thread {
     // Element structure.
     this.#mainElement.appendChild(this.#threadSubjectElement);
     this.#mainElement.appendChild(this.#userNameElement);
-    this.#mainElement.appendChild(this.#flexLeftAligned);
-    this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
+    this.#mainElement.appendChild(this.#floatContainerElement);
+    this.#floatContainerElement.appendChild(this.#thumbnailContainerElement);
     this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
-    this.#flexLeftAligned.appendChild(this.#postTextElement);
+    this.#floatContainerElement.appendChild(this.#postTextElement);
     this.#mainElement.appendChild(this.#postLastModifiedElement);
     this.#mainElement.appendChild(this.#postTimestampElement);
     this.#mainElement.appendChild(this.#threadLastModifiedElement);
@@ -323,10 +323,11 @@ class Thread {
     for (const child of this.#mainElement.children) {
       child.style.display = "none";
     }
-    for (const child of this.#flexLeftAligned.children) {
+    for (const child of this.#floatContainerElement.children) {
       child.style.display = "none";
     }
-    this.#flexLeftAligned.style.display = "block";
+    this.#floatContainerElement.style.minHeight = "0px";
+    this.#floatContainerElement.style.display = "block";
     this.#threadSubjectElement.textContent = "";
     this.#userNameElement.textContent = "";
     const previousURL = this.#thumbnailElement.src;
@@ -448,6 +449,8 @@ class Thread {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
+    // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
+    this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
     // TODO(wathne): Fetch user and imageBlob in async parallel.
     const user = await retrieveUser(this.#userId)
@@ -535,6 +538,8 @@ class Thread {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
+    // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
+    this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
     // TODO(wathne): Fetch user and imageBlob in async parallel.
     const user = await retrieveUser(this.#userId)
@@ -965,7 +970,7 @@ class Post {
   // Post elements.
   #mainElement;
   #userNameElement;
-  #flexLeftAligned;
+  #floatContainerElement;
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
@@ -999,9 +1004,9 @@ class Post {
     // userName
     this.#userNameElement = document.createElement("div");
     this.#userNameElement.className = "post-user-name";
-    // flexLeftAligned
-    this.#flexLeftAligned = document.createElement("div");
-    this.#flexLeftAligned.className = "flex-left-aligned";
+    // floatContainer
+    this.#floatContainerElement = document.createElement("div");
+    this.#floatContainerElement.className = "float-container";
     // thumbnailContainer
     this.#thumbnailContainerElement = document.createElement("div");
     this.#thumbnailContainerElement.className =
@@ -1030,10 +1035,10 @@ class Post {
     this.#extraElement.className = "post-extra";
     // Element structure.
     this.#mainElement.appendChild(this.#userNameElement);
-    this.#mainElement.appendChild(this.#flexLeftAligned);
-    this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
+    this.#mainElement.appendChild(this.#floatContainerElement);
+    this.#floatContainerElement.appendChild(this.#thumbnailContainerElement);
     this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
-    this.#flexLeftAligned.appendChild(this.#postTextElement);
+    this.#floatContainerElement.appendChild(this.#postTextElement);
     this.#mainElement.appendChild(this.#postLastModifiedElement);
     this.#mainElement.appendChild(this.#postTimestampElement);
     this.#mainElement.appendChild(this.#testElement);
@@ -1076,10 +1081,11 @@ class Post {
     for (const child of this.#mainElement.children) {
       child.style.display = "none";
     }
-    for (const child of this.#flexLeftAligned.children) {
+    for (const child of this.#floatContainerElement.children) {
       child.style.display = "none";
     }
-    this.#flexLeftAligned.style.display = "block";
+    this.#floatContainerElement.style.minHeight = "0px";
+    this.#floatContainerElement.style.display = "block";
     this.#userNameElement.textContent = "";
     const previousURL = this.#thumbnailElement.src;
     if (previousURL !== pixelPNG && previousURL !== "") {
@@ -1166,6 +1172,8 @@ class Post {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
+    // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
+    this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
     // TODO(wathne): Fetch user and imageBlob in async parallel.
     const user = await retrieveUser(this.#userId)
@@ -1231,6 +1239,8 @@ class Post {
     }
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
+    // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
+    this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
     // TODO(wathne): Fetch user and imageBlob in async parallel.
     const user = await retrieveUser(this.#userId)
