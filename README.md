@@ -22,6 +22,40 @@ firefox http://localhost:5000/
 ```
 
 
+**Rough overview:**
+-------------------
+- [x] Project report | 5 |
+- [x] Log in works | 3 |
+- [x] Register user | 3 |
+- [x] JS Form validation | 5 |
+  - *(See /static/form-validation.js)*
+- [x] Sort or search possible | 3 |
+  - *(search/sort/filter ascending/descending by date/subject/text/image/user)*
+- [x] Sort or search stored | 4 |
+  - *(Settings stored as json in SecureCookieSession.)*
+- [x] Update, delete working | 3 |
+- [x] AJAX request used | 3 |
+- [x] Fluid layout | 5 |
+- [x] Absolute used | 2 |
+  - *(absolute and z-index used by text background in footer.)*
+- [x] Flex used | 2 |
+- [x] Semantic tags | 2 |
+- [x] Phone layout (bootstrap) | 5 |
+  - *(800px width looks ok.)*
+- [x] Layout extra | 3 |
+  - *(Sticky footer and probably something else.)*
+- [x] Components | 5 |
+- [x] Data stored, updated, deleted | 6 |
+- [x] Rest API | 6 |
+- [x] Server side validation | 5 |
+- [x] Errors displayed | 5 |
+- [x] Authentication | 5 |
+- [x] Access control | 5 |
+  - *(User groups, only moderator/admin can modify/delete threads.)*
+- [x] Extra feature | 15 |
+  - *(Images, dates and probably something else.)*
+
+
 **Dev stuff:**
 --------------
 Google style guides:
