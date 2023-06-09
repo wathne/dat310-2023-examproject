@@ -437,6 +437,18 @@ class Thread {
     this.#postTimestampElement.textContent =
         `Post created: ${new Date(this.#postTimestamp * 1000)}`;
     this.#postTimestampElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -452,18 +464,6 @@ class Thread {
     // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
     this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
-    // TODO(wathne): Fetch user and imageBlob in async parallel.
-    const user = await retrieveUser(this.#userId)
-        .catch((error) => {
-          console.error(error);
-        });
-    if (user["code"] !== undefined) {
-      return this.#finally();
-    }
-    this.#userName = user["user_name"];
-    this.#retrievedUser = true;
-    this.#userNameElement.textContent = `Username: ${this.#userName}`;
-    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -526,6 +526,18 @@ class Thread {
     this.#postTimestampElement.textContent =
         `Post created: ${new Date(this.#postTimestamp * 1000)}`;
     this.#postTimestampElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -541,18 +553,6 @@ class Thread {
     // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
     this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
-    // TODO(wathne): Fetch user and imageBlob in async parallel.
-    const user = await retrieveUser(this.#userId)
-        .catch((error) => {
-          console.error(error);
-        });
-    if (user["code"] !== undefined) {
-      return this.#finally();
-    }
-    this.#userName = user["user_name"];
-    this.#retrievedUser = true;
-    this.#userNameElement.textContent = `Username: ${this.#userName}`;
-    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -1160,6 +1160,18 @@ class Post {
     this.#postTimestampElement.textContent =
         `Post created: ${new Date(this.#postTimestamp * 1000)}`;
     this.#postTimestampElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -1175,18 +1187,6 @@ class Post {
     // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
     this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
-    // TODO(wathne): Fetch user and imageBlob in async parallel.
-    const user = await retrieveUser(this.#userId)
-        .catch((error) => {
-          console.error(error);
-        });
-    if (user["code"] !== undefined) {
-      return this.#finally();
-    }
-    this.#userName = user["user_name"];
-    this.#retrievedUser = true;
-    this.#userNameElement.textContent = `Username: ${this.#userName}`;
-    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -1227,6 +1227,18 @@ class Post {
     this.#postTimestampElement.textContent =
         `Post created: ${new Date(this.#postTimestamp * 1000)}`;
     this.#postTimestampElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -1242,18 +1254,6 @@ class Post {
     // TODO(wathne): Make this more dynamic/robust, not fixed to 120px.
     this.#floatContainerElement.style.minHeight = "120px";
     this.#thumbnailContainerElement.style.display = "block";
-    // TODO(wathne): Fetch user and imageBlob in async parallel.
-    const user = await retrieveUser(this.#userId)
-        .catch((error) => {
-          console.error(error);
-        });
-    if (user["code"] !== undefined) {
-      return this.#finally();
-    }
-    this.#userName = user["user_name"];
-    this.#retrievedUser = true;
-    this.#userNameElement.textContent = `Username: ${this.#userName}`;
-    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
