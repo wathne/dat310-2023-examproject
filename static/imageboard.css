@@ -64,6 +64,10 @@
   font-size: 1.2em;
 }
 
+.thread-user-name {
+  font-size: 0.8em;
+}
+
 .thread-post-text {
 }
 
@@ -110,6 +114,10 @@
   background-color: #fff9b1; /* light shade */
   margin: 6px 0px 6px 0px;
   padding: 6px 12px 6px 12px;
+}
+
+.post-user-name {
+  font-size: 0.8em;
 }
 
 .post-text {

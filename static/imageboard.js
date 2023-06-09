@@ -48,6 +48,7 @@
  *   sessionLogout()
  *   setSettings(settings)
  *   getSettings()
+ *   retrieveUser(userId)
  *   insertImage(imageFile)
  *   retrieveImage(imageId)
  *   retrieveThumbnail(imageId)
@@ -121,11 +122,10 @@
  *   FilterHandler
  * 
  * 
- * TODO(wathne): Display username.
  * TODO(wathne): Display post id.
  * TODO(wathne): Enlarge image on mouseclick or mouseover.
  * TODO(wathne): Do not show top post in posts list.
- * TODO(wathne): Fix duplicate display of Threads bug.
+ * TODO(wathne): Fix duplicate display of Threads bug. Create async call stack?
  * TODO(wathne): Improve reloadList().
  * TODO(wathne): Delete testElement.
  * TODO(wathne): Delete a few console.log() lines.
@@ -148,6 +148,7 @@ class Thread {
   #retrievedThread;
   #retrievedPost;
   #retrievedImage;
+  #retrievedUser;
   #done;
   #hidden;
   // Data.
@@ -161,9 +162,11 @@ class Thread {
   #threadSubject;
   #threadTimestamp;
   #userId;
+  #userName
   // Thread elements.
   #mainElement;
   #threadSubjectElement;
+  #userNameElement;
   #flexLeftAligned;
   #thumbnailContainerElement;
   #thumbnailElement;
@@ -206,6 +209,9 @@ class Thread {
     // threadSubject
     this.#threadSubjectElement = document.createElement("div");
     this.#threadSubjectElement.className = "thread-subject";
+    // userName
+    this.#userNameElement = document.createElement("div");
+    this.#userNameElement.className = "thread-user-name";
     // flexLeftAligned
     this.#flexLeftAligned = document.createElement("div");
     this.#flexLeftAligned.className = "flex-left-aligned";
@@ -252,6 +258,7 @@ class Thread {
     this.#postsListElement.className = "thread-posts-list";
     // Element structure.
     this.#mainElement.appendChild(this.#threadSubjectElement);
+    this.#mainElement.appendChild(this.#userNameElement);
     this.#mainElement.appendChild(this.#flexLeftAligned);
     this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
     this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
@@ -288,7 +295,8 @@ class Thread {
            `threadLastModified: "${this.#threadLastModified}", ` +
            `threadSubject: "${this.#threadSubject}", ` +
            `threadTimestamp: "${this.#threadTimestamp}", ` +
-           `userId: "${this.#userId}"`;
+           `userId: "${this.#userId}", ` +
+           `userName: "${this.#userName}"`;
   }
 
   #empty() {
@@ -296,6 +304,7 @@ class Thread {
     this.#retrievedThread = false;
     this.#retrievedPost = false;
     this.#retrievedImage = false;
+    this.#retrievedUser = false;
     this.#done = false;
     this.#hidden = true;
     // Data.
@@ -309,6 +318,7 @@ class Thread {
     this.#threadSubject = null;
     this.#threadTimestamp = null;
     this.#userId = null;
+    this.#userName = null;
   }
 
   #demolish() {
@@ -320,6 +330,7 @@ class Thread {
     }
     this.#flexLeftAligned.style.display = "block";
     this.#threadSubjectElement.textContent = "";
+    this.#userNameElement.textContent = "";
     const previousURL = this.#thumbnailElement.src;
     if (previousURL !== pixelPNG && previousURL !== "") {
       this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
@@ -441,6 +452,18 @@ class Thread {
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
     this.#thumbnailContainerElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -516,6 +539,18 @@ class Thread {
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
     this.#thumbnailContainerElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -529,6 +564,10 @@ class Thread {
 
   hasImage() {
     return this.#retrievedImage; // Boolean.
+  }
+
+  hasUser() {
+    return this.#retrievedUser; // Boolean.
   }
 
   isDone() {
@@ -559,6 +598,10 @@ class Thread {
     return this.#threadTimestamp;
   }
 
+  getUserName() {
+    return this.#userName;
+  }
+
   getMainElement() {
     return this.#mainElement;
   }
@@ -574,13 +617,6 @@ class Thread {
     }
     const searchLC = filterSearch.toLowerCase();
     switch (filterCriteria) {
-      case "image":
-        if (this.#retrievedImage) {
-          this.#hidden = false;
-          return;
-        }
-        this.#hidden = true;
-        return;
       case "last-modified":
         this.#hidden = false;
         return;
@@ -596,6 +632,23 @@ class Thread {
         if (this.#retrievedPost) {
           const textLC = this.#postText.toLowerCase();
           if (textLC.includes(searchLC)) {
+            this.#hidden = false;
+            return;
+          }
+        }
+        this.#hidden = true;
+        return;
+      case "image":
+        if (this.#retrievedImage) {
+          this.#hidden = false;
+          return;
+        }
+        this.#hidden = true;
+        return;
+      case "username":
+        if (this.#retrievedUser) {
+          const usernameLC = this.#userName.toLowerCase();
+          if (usernameLC.includes(searchLC)) {
             this.#hidden = false;
             return;
           }
@@ -900,6 +953,7 @@ class Post {
   // Status.
   #retrievedPost;
   #retrievedImage;
+  #retrievedUser;
   #done;
   #hidden;
   // Data.
@@ -910,8 +964,10 @@ class Post {
   #postTimestamp;
   #threadId;
   #userId;
+  #userName;
   // Post elements.
   #mainElement;
+  #userNameElement;
   #flexLeftAligned;
   #thumbnailContainerElement;
   #thumbnailElement;
@@ -943,6 +999,9 @@ class Post {
     // main
     this.#mainElement = document.createElement("div");
     this.#mainElement.className = "post rounded";
+    // userName
+    this.#userNameElement = document.createElement("div");
+    this.#userNameElement.className = "post-user-name";
     // flexLeftAligned
     this.#flexLeftAligned = document.createElement("div");
     this.#flexLeftAligned.className = "flex-left-aligned";
@@ -973,6 +1032,7 @@ class Post {
     this.#extraElement = document.createElement("div");
     this.#extraElement.className = "post-extra";
     // Element structure.
+    this.#mainElement.appendChild(this.#userNameElement);
     this.#mainElement.appendChild(this.#flexLeftAligned);
     this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
     this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
@@ -994,13 +1054,15 @@ class Post {
            `postText: "${this.#postText}", ` +
            `postTimestamp: "${this.#postTimestamp}", ` +
            `threadId: "${this.#threadId}", ` +
-           `userId: "${this.#userId}"`;
+           `userId: "${this.#userId}", ` +
+           `userName: "${this.#userName}"`;
   }
 
   #empty() {
     // Status.
     this.#retrievedPost = false;
     this.#retrievedImage = false;
+    this.#retrievedUser = false;
     this.#done = false;
     this.#hidden = true;
     // Data.
@@ -1011,6 +1073,7 @@ class Post {
     this.#postTimestamp = null;
     this.#threadId = null;
     this.#userId = null;
+    this.#userName = null;
   }
 
   #demolish() {
@@ -1021,6 +1084,7 @@ class Post {
       child.style.display = "none";
     }
     this.#flexLeftAligned.style.display = "block";
+    this.#userNameElement.textContent = "";
     const previousURL = this.#thumbnailElement.src;
     if (previousURL !== pixelPNG && previousURL !== "") {
       this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
@@ -1108,6 +1172,18 @@ class Post {
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
     this.#thumbnailContainerElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -1161,6 +1237,18 @@ class Post {
     this.#retrievedImage = true;
     this.#thumbnailElement.src = URL.createObjectURL(imageBlob);
     this.#thumbnailContainerElement.style.display = "block";
+    // TODO(wathne): Fetch user and imageBlob in async parallel.
+    const user = await retrieveUser(this.#userId)
+        .catch((error) => {
+          console.error(error);
+        });
+    if (user["code"] !== undefined) {
+      return this.#finally();
+    }
+    this.#userName = user["user_name"];
+    this.#retrievedUser = true;
+    this.#userNameElement.textContent = `Username: ${this.#userName}`;
+    this.#userNameElement.style.display = "block";
     return this.#finally();
   }
 
@@ -1170,6 +1258,10 @@ class Post {
 
   hasImage() {
     return this.#retrievedImage; // Boolean.
+  }
+
+  hasUser() {
+    return this.#retrievedUser; // Boolean.
   }
 
   isDone() {
@@ -1192,6 +1284,10 @@ class Post {
     return this.#postTimestamp;
   }
 
+  getUserName() {
+    return this.#userName;
+  }
+
   getMainElement() {
     return this.#mainElement;
   }
@@ -1207,13 +1303,6 @@ class Post {
     }
     const searchLC = filterSearch.toLowerCase();
     switch (filterCriteria) {
-      case "image":
-        if (this.#retrievedImage) {
-          this.#hidden = false;
-          return;
-        }
-        this.#hidden = true;
-        return;
       case "last-modified":
         this.#hidden = false;
         return;
@@ -1225,6 +1314,23 @@ class Post {
         if (textLC.includes(searchLC)) {
           this.#hidden = false;
           return;
+        }
+        this.#hidden = true;
+        return;
+      case "image":
+        if (this.#retrievedImage) {
+          this.#hidden = false;
+          return;
+        }
+        this.#hidden = true;
+        return;
+      case "username":
+        if (this.#retrievedUser) {
+          const usernameLC = this.#userName.toLowerCase();
+          if (usernameLC.includes(searchLC)) {
+            this.#hidden = false;
+            return;
+          }
         }
         this.#hidden = true;
         return;

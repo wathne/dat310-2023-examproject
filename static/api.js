@@ -17,6 +17,7 @@
  *   sessionLogout()
  *   setSettings(settings)
  *   getSettings()
+ *   retrieveUser(userId)
  *   insertImage(imageFile)
  *   retrieveImage(imageId)
  *   retrieveThumbnail(imageId)
@@ -144,6 +145,28 @@ async function getSettings() {
   // Returns settings or null.
   return response.json();
 }
+
+
+async function retrieveUser(userId) {
+  const response = await fetch(
+      `/api/users/${userId}`,
+      {
+        method: "GET",
+        headers: {
+          "accept": "application/json",
+        },
+      },
+  );
+  // Returns user or response status.
+  return response.json();
+}
+/* user = {
+ *   "user_group": int,
+ *   "user_id": int,
+ *   "user_name": str,
+ *   "user_timestamp": int,
+ * };
+*/
 
 
 async function insertImage(imageFile) {

@@ -85,7 +85,7 @@ REST API:
         [POST]   (Create user.)(See session API.)
 
     /api/users/<user_id>
-        [GET]    (Retrieve user.)(Not implemented.)
+        [GET]    (Retrieve user.)
         [PUT]    (Update user.)(Not implemented.)
         [DELETE] (Delete user.)(Not implemented.)
 
@@ -177,7 +177,7 @@ from database_handler import retrieve_post
 from database_handler import retrieve_posts
 from database_handler import retrieve_thread
 from database_handler import retrieve_threads
-#from database_handler import retrieve_user_by_id
+from database_handler import retrieve_user_by_id
 from database_handler import retrieve_user_by_name
 from database_handler import update_post
 from database_handler import update_thread
@@ -584,6 +584,30 @@ def favicon() -> WerkzeugResponse | Response:
     )
 
 
+# TODO(wathne): Return and raise proper status codes.
+@app.route(
+    rule="/api/cookie/settings",
+    methods=["GET", "POST"],
+)
+def api_cookie_settings() -> Response:
+    # pylint: disable=protected-access
+    request_: Request = cast(LP[Request], request)._get_current_object()
+    scs: SCS = cast(LP[SCS], session)._get_current_object()
+
+    # See before_request(), endpoint_whitelist.
+    # api_cookie_settings() is whitelisted.
+
+    if request_.method == "POST":
+        if request_.is_json:
+            scs["settings"] = request_.get_json(
+                force=False,
+                silent=True,
+                cache=False,
+            )
+
+    return jsonify(scs.get(key="settings", default=None))
+
+
 @app.route(
     rule="/api/login",
     methods=["POST"],
@@ -696,28 +720,61 @@ def api_users() -> Response:
     return jsonify(acg.user_id)
 
 
-# TODO(wathne): Return and raise proper status codes.
 @app.route(
-    rule="/api/cookie/settings",
-    methods=["GET", "POST"],
+    rule="/api/users/<int:user_id>",
+    methods=["GET"],
 )
-def api_cookie_settings() -> Response:
+def api_user(user_id: int | None = None) -> Response:
     # pylint: disable=protected-access
+    acg: ACG = cast(LP[ACG], g)._get_current_object()
     request_: Request = cast(LP[Request], request)._get_current_object()
-    scs: SCS = cast(LP[SCS], session)._get_current_object()
+    db_con: Connection | None = get_database_connection()
 
-    # See before_request(), endpoint_whitelist.
-    # api_cookie_settings() is whitelisted.
+    print(f"/api/users/{user_id} [{request_.method}] "
+          f"as user_id: {acg.user_id}")
 
-    if request_.method == "POST":
-        if request_.is_json:
-            scs["settings"] = request_.get_json(
-                force=False,
-                silent=True,
-                cache=False,
-            )
+    if user_id is None:
+        raise BadRequest(description="No user id.")
 
-    return jsonify(scs.get(key="settings", default=None))
+    if acg.user_id is None:
+        raise Unauthorized(description="Not logged in.")
+
+    if db_con is None:
+        raise InternalServerError(description="No database connection.")
+
+    # Retrieve user.
+    if request_.method == "GET":
+        # retrieve_user_status ~ user dict
+        retrieve_user_status: dict[str, str | int] | None
+        retrieve_user_status = retrieve_user_by_id(
+            db_con=db_con,
+            user_id=user_id,
+        )
+        # TODO(wathne): Return and raise proper status codes.
+        if retrieve_user_status is None:
+            raise InternalServerError(description="Something went wrong.")
+        user_key_whitelist: set[str] = {
+            "user_group",
+            "user_id",
+            "user_name",
+            "user_timestamp",
+        }
+        # To avoid leaking sensitive information I think a whitelist is better
+        # than a blacklist. If we blacklist the "user_password_hash" key and
+        # then later change the key string without also updating this blacklist,
+        # then we would leak the users password hash. Similarly, some not yet
+        # invented user keys may also contain sensitive information. A whitelist
+        # will stop these keys by default.
+        secure_user: dict[str, str | int] = {}
+        for key, value in retrieve_user_status.items():
+            if key in user_key_whitelist:
+                secure_user[key] = value
+        return jsonify(secure_user)
+
+    raise MethodNotAllowed(description=(
+        f'Request method "{request_.method}" is not allowed at request path '
+        f'"{request_.path}".'
+    ))
 
 
 @app.route(
