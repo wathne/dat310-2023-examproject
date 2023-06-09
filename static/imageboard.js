@@ -122,11 +122,11 @@
  *   FilterHandler
  * 
  * 
- * TODO(wathne): Display post id.
  * TODO(wathne): Enlarge image on mouseclick or mouseover.
- * TODO(wathne): Do not show top post in posts list.
  * TODO(wathne): Fix duplicate display of Threads bug. Create async call stack?
  * TODO(wathne): Improve reloadList().
+ * TODO(wathne): Display post id.
+ * TODO(wathne): Add clear image button.
  * TODO(wathne): Delete a few console.log() lines.
  */
 
@@ -1559,10 +1559,13 @@ class PostsManager {
         .catch((error) => {
           console.error(error);
         });
+    const topPostId = this.#thread.getPostId();
     for (const settlement of settlements) {
       if (settlement["status"] === "fulfilled") {
         const post = settlement["value"];
-        this.#posts.push(post);
+        if (post.getPostId() !== topPostId) {
+          this.#posts.push(post);
+        }
         console.log(post.toHumanReadable());
       }
       if (settlement["status"] === "rejected") {
