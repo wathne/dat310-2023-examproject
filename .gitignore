@@ -5,11 +5,5 @@ wathne_notes
 node_modules/
 package-lock.json
 
-#pdm
-__pypackages__/
-.pdm-python
-pdm.lock
-
 #python
 __pycache__/
-.venv
