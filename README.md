@@ -24,13 +24,6 @@ firefox http://localhost:5000/
 
 **Dev stuff:**
 --------------
-Tests:
-```sh
-python app.py
-firefox http://localhost:5000/tests/
-firefox http://localhost:5000/tests/api
-```
-
 Google style guides:
 - https://google.github.io/styleguide/pyguide.html **(strict)**
 - https://google.github.io/styleguide/jsguide.html *(optional)*
