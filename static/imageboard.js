@@ -153,7 +153,9 @@ class Thread {
   // Data.
   #imageId;
   #postId;
+  #postLastModified;
   #postText;
+  #postTimestamp;
   #threadId;
   #threadLastModified;
   #threadSubject;
@@ -166,6 +168,8 @@ class Thread {
   #thumbnailContainerElement;
   #thumbnailElement;
   #postTextElement;
+  #postLastModifiedElement;
+  #postTimestampElement;
   #threadLastModifiedElement;
   #threadTimestampElement;
   #testElement; // TODO(wathne): Delete testElement.
@@ -216,7 +220,13 @@ class Thread {
     this.#thumbnailElement.src = pixelPNG; // Placeholder URL.
     // postText
     this.#postTextElement = document.createElement("div");
-    this.#postTextElement.className = "thread-text";
+    this.#postTextElement.className = "thread-post-text";
+    // postLastModified
+    this.#postLastModifiedElement = document.createElement("div");
+    this.#postLastModifiedElement.className = "thread-post-last-modified";
+    // postTimestamp
+    this.#postTimestampElement = document.createElement("div");
+    this.#postTimestampElement.className = "thread-post-timestamp";
     // threadLastModified
     this.#threadLastModifiedElement = document.createElement("div");
     this.#threadLastModifiedElement.className = "thread-last-modified";
@@ -246,6 +256,8 @@ class Thread {
     this.#flexLeftAligned.appendChild(this.#thumbnailContainerElement);
     this.#thumbnailContainerElement.appendChild(this.#thumbnailElement);
     this.#flexLeftAligned.appendChild(this.#postTextElement);
+    this.#mainElement.appendChild(this.#postLastModifiedElement);
+    this.#mainElement.appendChild(this.#postTimestampElement);
     this.#mainElement.appendChild(this.#threadLastModifiedElement);
     this.#mainElement.appendChild(this.#threadTimestampElement);
     // TODO(wathne): Delete testElement.
@@ -269,7 +281,9 @@ class Thread {
     return `[Thread] ` +
            `imageId: "${this.#imageId}", ` +
            `postId: "${this.#postId}", ` +
+           `postLastModified: "${this.#postLastModified}", ` +
            `postText: "${this.#postText}", ` +
+           `postTimestamp: "${this.#postTimestamp}", ` +
            `threadId: "${this.#threadId}", ` +
            `threadLastModified: "${this.#threadLastModified}", ` +
            `threadSubject: "${this.#threadSubject}", ` +
@@ -287,7 +301,9 @@ class Thread {
     // Data.
     this.#imageId = null;
     this.#postId = null;
+    this.#postLastModified = null;
     this.#postText = null;
+    this.#postTimestamp = null;
     this.#threadId = null;
     this.#threadLastModified = null;
     this.#threadSubject = null;
@@ -312,6 +328,8 @@ class Thread {
       console.log(`Revoked URL: "${previousURL}"`);
     }
     this.#postTextElement.textContent = "";
+    this.#postLastModifiedElement.textContent = "";
+    this.#postTimestampElement.textContent = "";
     this.#threadLastModifiedElement.textContent = "";
     this.#threadTimestampElement.textContent = "";
     this.#testElement.textContent = ""; // TODO(wathne): Delete testElement.
@@ -398,10 +416,18 @@ class Thread {
       return this.#finally();
     }
     this.#imageId = post["image_id"];
+    this.#postLastModified = post["post_last_modified"];
     this.#postText = post["post_text"];
+    this.#postTimestamp = post["post_timestamp"];
     this.#retrievedPost = true;
+    this.#postLastModifiedElement.textContent =
+        `Post updated: ${new Date(this.#postLastModified * 1000)}`;
+    this.#postLastModifiedElement.style.display = "block";
     this.#postTextElement.textContent = this.#postText;
     this.#postTextElement.style.display = "block";
+    this.#postTimestampElement.textContent =
+        `Post created: ${new Date(this.#postTimestamp * 1000)}`;
+    this.#postTimestampElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }
@@ -465,10 +491,18 @@ class Thread {
       return this.#finally();
     }
     this.#imageId = post["image_id"];
+    this.#postLastModified = post["post_last_modified"];
     this.#postText = post["post_text"];
+    this.#postTimestamp = post["post_timestamp"];
     this.#retrievedPost = true;
+    this.#postLastModifiedElement.textContent =
+        `Post updated: ${new Date(this.#postLastModified * 1000)}`;
+    this.#postLastModifiedElement.style.display = "block";
     this.#postTextElement.textContent = this.#postText;
     this.#postTextElement.style.display = "block";
+    this.#postTimestampElement.textContent =
+        `Post created: ${new Date(this.#postTimestamp * 1000)}`;
+    this.#postTimestampElement.style.display = "block";
     if (this.#imageId === null) {
       return this.#finally();
     }

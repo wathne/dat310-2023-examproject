@@ -64,7 +64,15 @@
   font-size: 1.2em;
 }
 
-.thread-text {
+.thread-post-text {
+}
+
+.thread-post-last-modified {
+  font-size: 0.8em;
+}
+
+.thread-post-timestamp {
+  font-size: 0.8em;
 }
 
 .thread-last-modified {
