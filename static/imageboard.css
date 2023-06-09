@@ -268,6 +268,20 @@ footer {
   flex-shrink: 0;
   height: 50px;
   margin: 6px 0px 0px 0px;
+  z-index: 1;
+}
+
+#footer-text {
+  z-index: 3;
+}
+
+/* https://www.w3.org/TR/css-flexbox-1/#abspos-items */
+#footer-absolute-demo {
+  background-color: #ffffff;
+  height: 30px;
+  position: absolute;
+  width: 106px;
+  z-index: 2;
 }
 
 
