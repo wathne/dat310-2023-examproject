@@ -127,7 +127,6 @@
  * TODO(wathne): Do not show top post in posts list.
  * TODO(wathne): Fix duplicate display of Threads bug. Create async call stack?
  * TODO(wathne): Improve reloadList().
- * TODO(wathne): Delete testElement.
  * TODO(wathne): Delete a few console.log() lines.
  */
 
@@ -175,7 +174,7 @@ class Thread {
   #postTimestampElement;
   #threadLastModifiedElement;
   #threadTimestampElement;
-  #testElement; // TODO(wathne): Delete testElement.
+  #testElement;
   // Box container elements.
   #buttonsElement;
   #extraElement;
@@ -239,7 +238,7 @@ class Thread {
     // threadTimestamp
     this.#threadTimestampElement = document.createElement("div");
     this.#threadTimestampElement.className = "thread-timestamp";
-    // test // TODO(wathne): Delete testElement.
+    // test
     this.#testElement = document.createElement("div");
     // buttons
     this.#buttonsElement = document.createElement("div");
@@ -267,7 +266,6 @@ class Thread {
     this.#mainElement.appendChild(this.#postTimestampElement);
     this.#mainElement.appendChild(this.#threadLastModifiedElement);
     this.#mainElement.appendChild(this.#threadTimestampElement);
-    // TODO(wathne): Delete testElement.
     this.#mainElement.appendChild(this.#testElement);
     this.#mainElement.appendChild(this.#buttonsElement);
     this.#mainElement.appendChild(this.#extraElement);
@@ -343,10 +341,9 @@ class Thread {
     this.#postTimestampElement.textContent = "";
     this.#threadLastModifiedElement.textContent = "";
     this.#threadTimestampElement.textContent = "";
-    this.#testElement.textContent = ""; // TODO(wathne): Delete testElement.
+    this.#testElement.textContent = "";
   }
 
-  // TODO(wathne): Delete testElement.
   #displayTestElement() {
     this.#testElement.textContent = this.toHumanReadable();
     this.#testElement.style.display = "block";
@@ -364,7 +361,7 @@ class Thread {
   }
 
   #finally() {
-    this.#displayTestElement(); // TODO(wathne): Delete testElement.
+    //this.#displayTestElement();
     this.#displayExtra();
     this.#displayPosts();
     this.#done = true;
@@ -974,7 +971,7 @@ class Post {
   #postTextElement;
   #postLastModifiedElement;
   #postTimestampElement;
-  #testElement; // TODO(wathne): Delete testElement.
+  #testElement;
   // Box container elements.
   #buttonsElement;
   #extraElement;
@@ -1023,7 +1020,7 @@ class Post {
     // postTimestamp
     this.#postTimestampElement = document.createElement("div");
     this.#postTimestampElement.className = "post-timestamp";
-    // test // TODO(wathne): Delete testElement.
+    // test
     this.#testElement = document.createElement("div");
     // buttons
     this.#buttonsElement = document.createElement("div");
@@ -1039,7 +1036,6 @@ class Post {
     this.#flexLeftAligned.appendChild(this.#postTextElement);
     this.#mainElement.appendChild(this.#postLastModifiedElement);
     this.#mainElement.appendChild(this.#postTimestampElement);
-    // TODO(wathne): Delete testElement.
     this.#mainElement.appendChild(this.#testElement);
     this.#mainElement.appendChild(this.#buttonsElement);
     this.#mainElement.appendChild(this.#extraElement);
@@ -1095,10 +1091,9 @@ class Post {
     this.#postTextElement.textContent = "";
     this.#postLastModifiedElement.textContent = "";
     this.#postTimestampElement.textContent = "";
-    this.#testElement.textContent = ""; // TODO(wathne): Delete testElement.
+    this.#testElement.textContent = "";
   }
 
-  // TODO(wathne): Delete testElement.
   #displayTestElement() {
     this.#testElement.textContent = this.toHumanReadable();
     this.#testElement.style.display = "block";
@@ -1110,7 +1105,7 @@ class Post {
   }
 
   #finally() {
-    this.#displayTestElement(); // TODO(wathne): Delete testElement.
+    //this.#displayTestElement();
     this.#displayExtra();
     this.#done = true;
     return this;
