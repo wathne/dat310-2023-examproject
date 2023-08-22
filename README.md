@@ -15,8 +15,8 @@ It may be necessary to add flask to the system $PATH.
 **How to run:**
 ---------------
 ```sh
-git clone https://github.com/dat310-2023/asdf.git
-cd asdf
+git clone https://github.com/wathne/dat310-2023-examproject.git
+cd dat310-2023-examproject
 python app.py
 firefox http://localhost:5000/
 ```
@@ -69,7 +69,7 @@ Commit convention:
 
 How to install all devDependencies listed in package.json *(optional)*:
 ```sh
-cd asdf
+cd dat310-2023-examproject
 npm install
 ```
 *This will install commitlint and husky git hook. The husky git hook should work
@@ -79,7 +79,7 @@ How to install and run pylint and mypy *(optional)*:
 ```sh
 pip install --user pylint
 pip install --user mypy
-cd asdf
+cd dat310-2023-examproject
 pylint
 mypy
 ```
